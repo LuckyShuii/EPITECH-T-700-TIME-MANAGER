@@ -21,6 +21,8 @@ This balance allows us to experiment with Go while maintaining productivity and 
 
 ## To launch the project in development mode:
 
+Don't forget to copy the `.env.sample` file into a `.env` file and change the values. Then you can use the following command to startup & build the project.
+
 ```bash
 docker compose -f dev.docker-compose.yml up --build
 ```
