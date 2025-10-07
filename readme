@@ -1,0 +1,7 @@
+# 🚀 Launch the project
+
+To launch the project in development mode:
+
+```bash
+docker compose -f dev.docker-compose.yml up --build
+```
