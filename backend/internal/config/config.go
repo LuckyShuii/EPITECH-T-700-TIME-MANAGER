@@ -1,0 +1,3 @@
+/**
+ * Configuration package for managing application settings such as environment variables, ...
+ */

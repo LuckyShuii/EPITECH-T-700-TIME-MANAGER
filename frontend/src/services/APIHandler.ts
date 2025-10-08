@@ -1,14 +1,14 @@
 import axios from 'axios'
 import { snakeToCamel } from '@/utils/snakeToCamel'
 
-const baseDomain = import.meta.VITE_FRONTEND_URL;
+const baseDomain = import.meta.env.VITE_FRONTEND_URL;
 const baseURL = `${baseDomain}/api/`;
 const APIHandler = axios.create({
     baseURL,
     timeout: 10000,
 });
 
-APIHandler.interceptors.request.use((config: any) => {
+// APIHandler.interceptors.request.use((config: any) => {
     /**
      * Check if the user is authenticated and add the token to the request headers
      * before the request is sent to other services
@@ -16,7 +16,7 @@ APIHandler.interceptors.request.use((config: any) => {
      * if no token is found, the request is sent without the Authorization header
      * if a token exists, add to the request in the header Authorization: config.headers.Authorization = `Bearer <token>`
      */
-});
+// });
 
 APIHandler.interceptors.response.use(
     (response: any) => {
