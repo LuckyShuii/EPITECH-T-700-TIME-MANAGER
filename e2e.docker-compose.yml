@@ -1,0 +1,76 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    container_name: time-manager-backend
+    environment:
+      FRONTEND_URL: ${FRONTEND_URL}
+      DB_DATABASE: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      PROJECT_STATUS: ${PROJECT_STATUS}
+      JWT_SECRET: ${JWT_SECRET}
+    # volumes:
+    # healthcheck:
+    #   test: 'curl --fail --request POST --header ''content-type: application/json'' --url ''http://localhost:8002/api'' --data ''{"query":"query { __typename }"}'' || exit 1'
+    #   interval: 1s
+    #   timeout: 2s
+    #   retries: 5
+    #   start_period: 2s
+    depends_on:
+      database:
+        condition: service_healthy
+
+  frontend:
+    build: ./frontend
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: "curl --fail --request GET --url 'http://localhost:5173' || exit 1"
+      interval: 1s
+      timeout: 2s
+      retries: 100
+
+  database:
+    image: postgres
+    build:
+      context: ./db
+      dockerfile: e2e.Dockerfile
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d postgres -U postgres"]
+      interval: 1s
+      timeout: 2s
+      retries: 100
+    environment:
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./database:/docker-entrypoint-initdb.d
+
+  apigateway:
+    image: nginx
+    container_name: time-manager-apigateway
+    volumes:
+      - ./nginx.dev.conf:/etc/nginx/nginx.conf
+    ports:
+      - "8081:80"
+    depends_on:
+      - database
+
+  e2e:
+    build: ./e2e
+    volumes:
+      - ./e2e/playwright-report:/app/playwright-report
+      - ./e2e/test-results:/app/test-results
+    depends_on:
+      frontend:
+        condition: service_healthy
+
+  redis:
+    image: redis
+    container_name: time-manager-redis
+
+volumes:
+  db_data:
