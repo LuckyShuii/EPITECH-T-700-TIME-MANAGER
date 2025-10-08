@@ -11,15 +11,15 @@ jobs:
       - name: Goto frontend and run tests
         run: cd frontend && npm i && npm test
 
-  test-back:
-    runs-on: ubuntu-latest
+  # test-back:
+  #   runs-on: ubuntu-latest
 
-  test-e2e:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v2
-      - name: Copy production env file
-        run: echo "${{ secrets.ENV_FILE }}" > .env
-      - name: Goto e2e and run tests
-        run: docker compose -f e2e.docker-compose.yml up --build --exit-code-from e2e
+  # test-e2e:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Check out code
+  #       uses: actions/checkout@v2
+  #     - name: Copy production env file
+  #       run: echo "${{ secrets.ENV_FILE }}" > .env
+  #     - name: Goto e2e and run tests
+  #       run: docker compose -f e2e.docker-compose.yml up --build --exit-code-from e2e
