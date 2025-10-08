@@ -1,11 +1,9 @@
-<script setup lang="ts">
-
+<script setup>
+const emit = defineEmits(['toggle-theme'])
 </script>
 
-
 <template>
-    OUI COMPONENT
+  <button @click="emit('toggle-theme')" class="btn">
+    Change theme
+  </button>
 </template>
-
-<style scoped>
-</style>
