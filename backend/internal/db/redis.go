@@ -1,3 +1,4 @@
 /**
- * Redis database connection and query functions
+ * Redis database connection
  */
+package db

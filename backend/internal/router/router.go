@@ -1,31 +1,33 @@
-/**
- * Router for handling API requests and defining route handlers
- * For now all in one file, then start the structure in this folder once basic concepts are understood
- */
-
 package router
 
 import (
-	"net/http"
-	"app/internal/app/user"
+	"app/internal/app/user/handler"
+	"app/internal/app/user/repository"
+	"app/internal/app/user/service"
+	"app/internal/db"
+
 	"github.com/gin-gonic/gin"
 )
 
 func SetupRouter() *gin.Engine {
-	router := gin.Default()
+	r := gin.Default()
 
-	router.GET("/api/ping", user.Ping)
-	router.GET("/api/users", user.ReturnFakeUsers)
-	router.GET("/api/user/:id", user.ReturnFakeUserById)
-	router.POST("/api/users", user.AddUser)
+	db := db.ConnectPostgres()
 
-	router.GET("/api", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"message": "API Working :)"})
-	})
+	/**
+	 * User Module
+	 */
+	userRepo := repository.NewUserRepository(db)
+	userService := service.NewUserService(userRepo)
+	userHandler := handler.NewUserHandler(userService)
 
-	router.GET("/api/example", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"message": "Example route working! :)"})
-	})
+	api := r.Group("/api")
+	{
+		/**
+		 * User Routes
+		 */
+		api.GET("/users", userHandler.GetUsers)
+	}
 
-	return router
+	return r
 }
