@@ -1,1 +1,0 @@
-This folder will regroup common tools/utils functions, such as JWT generator, hashing, etc..

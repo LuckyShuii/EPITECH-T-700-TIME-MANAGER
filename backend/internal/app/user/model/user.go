@@ -31,6 +31,12 @@ type UserRead struct {
 	UpdatedAt time.Time `json:"updated_at" gorm:"autoUpdateTime"`
 }
 
+type UserReadJWT struct {
+	UUID         string         `json:"uuid" gorm:"type:uuid;default:uuid_generate_v4();unique;not null"`
+	Roles        pq.StringArray `json:"roles" gorm:"type:text[];default:'{user}'"`
+	PasswordHash string         `json:"password_hash" gorm:"not null"`
+}
+
 type UserUpdate struct {
 	UserBase
 	PasswordHash *string `json:"password_hash,omitempty"`
@@ -42,10 +48,13 @@ type UserDelete struct {
 
 type UserCreate struct {
 	UserBase
+	UUID         string `json:"uuid" gorm:"type:uuid;default:uuid_generate_v4();unique;not null"`
 	PasswordHash string `json:"password_hash" gorm:"not null"`
+	Password     string `json:"password" gorm:"-:all"` // Ignored by GORM, used only for input
 }
 
 type UserLogin struct {
-	Username string `json:"username" gorm:"unique;not null"`
-	Password string `json:"password" gorm:"not null"`
+	Username *string `json:"username" gorm:"unique;not null"`
+	Email    *string `json:"email" gorm:"unique;not null"`
+	Password string  `json:"password" gorm:"not null"`
 }
