@@ -109,3 +109,21 @@ func (handler *AuthHandler) MeHandler(c *gin.Context) {
 		"phone_number": claims.PhoneNumber,
 	})
 }
+
+func (handler *AuthHandler) LogoutHandler(c *gin.Context) {
+	/**
+	 * Logout Module
+	 * Clear the JWT token cookie
+	 */
+	c.SetCookie(
+		"token",
+		"",
+		-1,
+		"/",
+		config.LoadConfig().FrontendURL,
+		config.LoadConfig().ProjectStatus == "PROD",
+		true,
+	)
+
+	c.JSON(http.StatusOK, gin.H{"message": "logged out"})
+}
