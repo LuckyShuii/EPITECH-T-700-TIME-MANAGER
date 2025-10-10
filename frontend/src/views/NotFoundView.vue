@@ -3,5 +3,5 @@
 </script>
 
 <template>
-   IDIOT
+   Y'A RIEN ICI NULLOS
 </template>
