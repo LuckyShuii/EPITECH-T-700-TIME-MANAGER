@@ -1,3 +1,1 @@
-/**
- * Logger middleware for logging requests and responses
- */
+package middleware

@@ -6,8 +6,9 @@ import (
 	"app/internal/app/user/service"
 	"app/internal/db"
 
-	authHandler "app/internal/app/auth/handler"
-	authService "app/internal/app/auth/service"
+	authH "app/internal/app/auth/handler"
+	authS "app/internal/app/auth/service"
+	authM "app/internal/middleware"
 
 	"github.com/gin-gonic/gin"
 )
@@ -15,35 +16,36 @@ import (
 func SetupRouter() *gin.Engine {
 	r := gin.Default()
 
-	db := db.ConnectPostgres()
+	// ✅ éviter le conflit de nom
+	database := db.ConnectPostgres()
 
 	/**
 	 * User Module
 	 */
-	userRepo := repository.NewUserRepository(db)
+	userRepo := repository.NewUserRepository(database)
 	userService := service.NewUserService(userRepo)
 	userHandler := handler.NewUserHandler(userService)
 
 	/**
 	 * Auth Module
 	 */
-	authService := authService.NewAuthService(userService)
-	authHandler := authHandler.NewAuthHandler(authService)
+	authService := authS.NewAuthService(userService)
+	authHandler := authH.NewAuthHandler(authService)
+	authMiddleware := &authM.AuthHandler{Service: authService}
 
-	api := r.Group("/api")
+	/**
+	 * Public Routes
+	 */
+	r.POST("/api/authenticate", authHandler.LoginHandler)
+
+	// ✅ Protected Routes
+	protected := r.Group("/api")
+	protected.Use(authMiddleware.AuthenticationMiddleware)
 	{
-		/**
-		 * Auth Routes
-		 */
-		api.POST("/authenticate", authHandler.LoginHandler)
-		api.POST("/logout", authHandler.LogoutHandler)
-		api.GET("/me", authHandler.MeHandler)
-
-		/**
-		 * User Routes
-		 */
-		api.GET("/users", userHandler.GetUsers)
-		api.POST("/users/register", userHandler.RegisterUser)
+		protected.POST("/logout", authHandler.LogoutHandler)
+		protected.GET("/me", authHandler.MeHandler)
+		protected.GET("/users", userHandler.GetUsers)
+		protected.POST("/users/register", userHandler.RegisterUser)
 	}
 
 	return r

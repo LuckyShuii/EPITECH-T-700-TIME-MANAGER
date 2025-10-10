@@ -1,3 +1,1 @@
-/**
- * CORS middleware for handling Cross-Origin Resource Sharing
- */
+package middleware
