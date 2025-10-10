@@ -16,7 +16,6 @@ import (
 func SetupRouter() *gin.Engine {
 	r := gin.Default()
 
-	// ✅ éviter le conflit de nom
 	database := db.ConnectPostgres()
 
 	/**
@@ -38,7 +37,9 @@ func SetupRouter() *gin.Engine {
 	 */
 	r.POST("/api/authenticate", authHandler.LoginHandler)
 
-	// ✅ Protected Routes
+	/**
+	 * Protected Routes
+	 */
 	protected := r.Group("/api")
 	protected.Use(authMiddleware.AuthenticationMiddleware)
 	{
