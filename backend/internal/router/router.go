@@ -44,8 +44,8 @@ func SetupRouter() *gin.Engine {
 	{
 		protected.POST("/logout", authHandler.LogoutHandler)
 		protected.GET("/me", authHandler.MeHandler)
-		protected.GET("/users", userHandler.GetUsers)
-		protected.POST("/users/register", userHandler.RegisterUser)
+		protected.GET("/users", authMiddleware.RequireRoles("user_manager"), userHandler.GetUsers)
+		protected.POST("/users/register", authMiddleware.RequireRoles("user_manager"), userHandler.RegisterUser)
 	}
 
 	return r
