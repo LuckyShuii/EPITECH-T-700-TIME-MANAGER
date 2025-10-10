@@ -4,7 +4,6 @@
 package config
 
 import (
-	"log"
 	"os"
 )
 
@@ -35,7 +34,6 @@ func LoadConfig() *Config {
 		FrontendURL:        getEnv("FRONTEND_URL", os.Getenv("FRONTEND_URL")),
 	}
 
-	log.Printf("Configuration loaded: %+v\n", config)
 	return config
 }
 
