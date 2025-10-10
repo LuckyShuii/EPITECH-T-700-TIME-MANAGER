@@ -5,7 +5,8 @@ const baseDomain = import.meta.env.VITE_FRONTEND_URL;
 const baseURL = `${baseDomain}/api/`;
 const APIHandler = axios.create({
     baseURL,
-    timeout: 10000,
+    withCredentials: false,
+    timeout: 10000
 });
 
 // APIHandler.interceptors.request.use((config: any) => {

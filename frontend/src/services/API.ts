@@ -1,5 +1,7 @@
 import ExampleAPI from "@/services/routers/ExampleAPI";
+import AuthAPI from "./routers/AuthAPI";
 
 export default {
-    example: ExampleAPI
+    example: ExampleAPI,
+    authAPI: AuthAPI
 }

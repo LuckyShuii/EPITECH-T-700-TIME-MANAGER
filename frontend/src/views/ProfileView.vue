@@ -1,7 +1,10 @@
-<scrip>
+<script setup lang="ts">
+import FormProfile from '@/components/FormProfile.vue';
 
-</scrip>
+</script>
 
 <template>
-    
+
+<FormProfile/>
+
 </template>
