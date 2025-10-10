@@ -13,10 +13,10 @@ services:
       DB_PORT: ${DB_PORT}
       PROJECT_STATUS: ${PROJECT_STATUS}
       JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION_HOURS: ${JWT_EXPIRATION_HOURS}
     volumes:
       - ./backend/cmd:/app/cmd
       - ./backend/internal:/app/internal
-      - ./backend/pkg:/app/pkg
     depends_on:
       database:
         condition: service_healthy

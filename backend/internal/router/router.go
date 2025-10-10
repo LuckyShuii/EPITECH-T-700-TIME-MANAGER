@@ -36,6 +36,7 @@ func SetupRouter() *gin.Engine {
 		 * Auth Routes
 		 */
 		api.POST("/authenticate", authHandler.LoginHandler)
+		api.GET("/me", authHandler.MeHandler)
 
 		/**
 		 * User Routes

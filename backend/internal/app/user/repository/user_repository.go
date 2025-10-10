@@ -34,7 +34,7 @@ func (repo *userRepository) FindByTypeAuth(typeOf string, data string) (*model.U
 		return nil, fmt.Errorf("invalid type: %s", typeOf)
 	}
 
-	query := fmt.Sprintf("SELECT uuid, roles, password_hash FROM users WHERE %s = ?", typeOf)
+	query := fmt.Sprintf("SELECT uuid, email, roles, first_name, last_name, username, phone_number, password_hash FROM users WHERE %s = ?", typeOf)
 
 	err := repo.db.Raw(query, data).Scan(&user).Error
 	if err != nil {

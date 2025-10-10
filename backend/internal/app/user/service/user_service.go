@@ -3,6 +3,9 @@ package service
 import (
 	"app/internal/app/user/model"
 	"app/internal/app/user/repository"
+
+	"github.com/google/uuid"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type UserService interface {
@@ -28,5 +31,14 @@ func (service *userService) GetUserByEmailAuth(typeOf string, data string) (*mod
 }
 
 func (service *userService) RegisterUser(user model.UserCreate) error {
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+
+	if err != nil {
+		return err
+	}
+
+	user.PasswordHash = string(hashedPassword)
+	user.UUID = uuid.New().String()
+
 	return service.repo.RegisterUser(user)
 }

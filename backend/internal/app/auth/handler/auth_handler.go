@@ -4,6 +4,8 @@ import (
 	"net/http"
 
 	authService "app/internal/app/auth/service"
+	"app/internal/config"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 
@@ -59,5 +61,51 @@ func (handler *AuthHandler) LoginHandler(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"token": token})
+	jwtExpirationHours, err := strconv.Atoi(config.LoadConfig().JWTExpirationHours)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "invalid JWT expiration configuration"})
+		return
+	}
+	expiration := jwtExpirationHours * 3600
+
+	c.SetCookie(
+		"token",
+		token,
+		expiration,
+		"/",
+		config.LoadConfig().FrontendURL,
+		config.LoadConfig().ProjectStatus == "PROD",
+		true,
+	)
+
+	c.JSON(http.StatusOK, gin.H{"message": "logged in"})
+}
+
+func (handler *AuthHandler) MeHandler(c *gin.Context) {
+	/**
+	 * Me Module
+	 * Return the current logged in user based on the JWT token
+	 */
+	tokenStr, err := c.Cookie("token")
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "no token"})
+		return
+	}
+
+	claims, err := handler.service.ValidateJWT(tokenStr)
+
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid token"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"user_uuid":    claims.UUID,
+		"roles":        claims.Roles,
+		"email":        claims.Email,
+		"username":     claims.Username,
+		"first_name":   claims.FirstName,
+		"last_name":    claims.LastName,
+		"phone_number": claims.PhoneNumber,
+	})
 }

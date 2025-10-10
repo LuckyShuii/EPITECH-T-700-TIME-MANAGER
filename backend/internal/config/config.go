@@ -17,6 +17,8 @@ type Config struct {
 	DBPort             string
 	JWTSecret          string
 	JWTExpirationHours string
+	ProjectStatus      string
+	FrontendURL        string
 }
 
 func LoadConfig() *Config {
@@ -29,6 +31,8 @@ func LoadConfig() *Config {
 		DBPort:             getEnv("DB_PORT", os.Getenv("DB_PORT")),
 		JWTSecret:          getEnv("JWT_SECRET", os.Getenv("JWT_SECRET")),
 		JWTExpirationHours: getEnv("JWT_EXPIRATION_HOURS", os.Getenv("JWT_EXPIRATION_HOURS")),
+		ProjectStatus:      getEnv("PROJECT_STATUS", os.Getenv("PROJECT_STATUS")),
+		FrontendURL:        getEnv("FRONTEND_URL", os.Getenv("FRONTEND_URL")),
 	}
 
 	log.Printf("Configuration loaded: %+v\n", config)

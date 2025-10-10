@@ -7,8 +7,6 @@ import (
 	"app/internal/app/user/service"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
-	"golang.org/x/crypto/bcrypt"
 )
 
 type UserHandler struct {
@@ -35,19 +33,10 @@ func (handler *UserHandler) RegisterUser(c *gin.Context) {
 		return
 	}
 
-	/**
-	 * Get the user to check if it doesn't already exist
-	 */
-
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
-
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to hash password"})
+	if req.Email == "" || req.Password == "" || req.Username == "" || req.FirstName == "" || req.LastName == "" || len(req.Roles) == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "missing required fields"})
 		return
 	}
-
-	req.PasswordHash = string(hashedPassword)
-	req.UUID = uuid.New().String()
 
 	registerErr := handler.service.RegisterUser(req)
 	if registerErr != nil {

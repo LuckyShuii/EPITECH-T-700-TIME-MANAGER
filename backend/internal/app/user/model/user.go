@@ -7,6 +7,7 @@ import (
 )
 
 type UserBase struct {
+	UUID        string         `json:"uuid" gorm:"type:uuid;default:uuid_generate_v4();unique;not null"`
 	Username    string         `json:"username" gorm:"unique;not null"`
 	Email       string         `json:"email" gorm:"unique;not null"`
 	FirstName   string         `json:"first_name"`
@@ -18,7 +19,6 @@ type UserBase struct {
 type UserAll struct {
 	// Never display the ID
 	UserBase
-	UUID         string    `json:"uuid" gorm:"type:uuid;default:uuid_generate_v4();unique;not null"`
 	PasswordHash string    `json:"password_hash" gorm:"not null"`
 	CreatedAt    time.Time `json:"created_at" gorm:"autoCreateTime"`
 	UpdatedAt    time.Time `json:"updated_at" gorm:"autoUpdateTime"`
@@ -26,15 +26,13 @@ type UserAll struct {
 
 type UserRead struct {
 	UserBase
-	UUID      string    `json:"uuid" gorm:"type:uuid;default:uuid_generate_v4();unique;not null"`
 	CreatedAt time.Time `json:"created_at" gorm:"autoCreateTime"`
 	UpdatedAt time.Time `json:"updated_at" gorm:"autoUpdateTime"`
 }
 
 type UserReadJWT struct {
-	UUID         string         `json:"uuid" gorm:"type:uuid;default:uuid_generate_v4();unique;not null"`
-	Roles        pq.StringArray `json:"roles" gorm:"type:text[];default:'{user}'"`
-	PasswordHash string         `json:"password_hash" gorm:"not null"`
+	UserBase
+	PasswordHash string `json:"password_hash" gorm:"not null"`
 }
 
 type UserUpdate struct {
@@ -48,7 +46,6 @@ type UserDelete struct {
 
 type UserCreate struct {
 	UserBase
-	UUID         string `json:"uuid" gorm:"type:uuid;default:uuid_generate_v4();unique;not null"`
 	PasswordHash string `json:"password_hash" gorm:"not null"`
 	Password     string `json:"password" gorm:"-:all"` // Ignored by GORM, used only for input
 }

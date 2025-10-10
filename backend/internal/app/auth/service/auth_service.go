@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"time"
 
+	"app/internal/app/user/model"
 	userService "app/internal/app/user/service"
 
 	"app/internal/config"
@@ -17,14 +18,20 @@ import (
  * {Claims} are the JWT parameters
  */
 type Claims struct {
-	UUID  string   `json:"uuid"`
-	Roles []string `json:"roles"`
+	UUID        string   `json:"uuid"`
+	Roles       []string `json:"roles"`
+	FirstName   string   `json:"first_name"`
+	LastName    string   `json:"last_name"`
+	Email       string   `json:"email"`
+	Username    string   `json:"username"`
+	PhoneNumber *string  `json:"phone_number,omitempty"`
 	jwt.RegisteredClaims
 }
 
 type AuthService interface {
 	AuthenticateUser(typeOf string, data string, password string) (string, error)
-	GenerateJWT(uuid string, roles []string) (string, error)
+	GenerateJWT(user model.UserReadJWT) (string, error)
+	ValidateJWT(tokenStr string) (*Claims, error)
 }
 
 type authService struct {
@@ -35,7 +42,7 @@ func NewAuthService(userService userService.UserService) AuthService {
 	return &authService{userService}
 }
 
-func (service *authService) GenerateJWT(uuid string, roles []string) (string, error) {
+func (service *authService) GenerateJWT(user model.UserReadJWT) (string, error) {
 	secret := config.LoadConfig().JWTSecret
 	expiration := config.LoadConfig().JWTExpirationHours
 
@@ -53,8 +60,13 @@ func (service *authService) GenerateJWT(uuid string, roles []string) (string, er
 	expirationTime := time.Now().Add(time.Duration(expirationInt) * time.Hour)
 
 	claims := &Claims{
-		UUID:  uuid,
-		Roles: roles,
+		UUID:        user.UUID,
+		Roles:       user.Roles,
+		FirstName:   user.FirstName,
+		LastName:    user.LastName,
+		Email:       user.Email,
+		Username:    user.Username,
+		PhoneNumber: user.PhoneNumber,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(expirationTime),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
@@ -95,7 +107,7 @@ func (service *authService) AuthenticateUser(typeOf string, data string, passwor
 		return "", errors.New("invalid credentials")
 	}
 
-	token, err := service.GenerateJWT(user.UUID, user.Roles)
+	token, err := service.GenerateJWT(*user)
 	if err != nil {
 		return "", errors.New("failed to generate token")
 	}
