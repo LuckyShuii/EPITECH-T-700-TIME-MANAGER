@@ -6,6 +6,9 @@ import (
 	"app/internal/app/user/service"
 	"app/internal/db"
 
+	authHandler "app/internal/app/auth/handler"
+	authService "app/internal/app/auth/service"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -21,12 +24,26 @@ func SetupRouter() *gin.Engine {
 	userService := service.NewUserService(userRepo)
 	userHandler := handler.NewUserHandler(userService)
 
+	/**
+	 * Auth Module
+	 */
+	authService := authService.NewAuthService(userService)
+	authHandler := authHandler.NewAuthHandler(authService)
+
 	api := r.Group("/api")
 	{
+		/**
+		 * Auth Routes
+		 */
+		api.POST("/authenticate", authHandler.LoginHandler)
+		api.POST("/logout", authHandler.LogoutHandler)
+		api.GET("/me", authHandler.MeHandler)
+
 		/**
 		 * User Routes
 		 */
 		api.GET("/users", userHandler.GetUsers)
+		api.POST("/users/register", userHandler.RegisterUser)
 	}
 
 	return r
