@@ -1,13 +1,13 @@
 import { defineStore } from "pinia";
-import type { UserLogin } from "@/types/userType";
+import type { UserLogin, UserProfile } from "@/types/userType";
 import API from "@/services/API";
 import { ref, computed } from "vue"
-import { error } from "console";
 
 export const useAuthStore = defineStore("auth", () => {
 
-    const user = ref(null)
-    const isAuthentificated = computed(() => ! !user.value)
+    const user = ref<UserProfile | null>(null)
+    const isAuthenticated = computed(() =>  ! !user.value)
+    const isClockedIn = ref<boolean | undefined>(false)
 
     const login = async(credentials : UserLogin) => {
         try{
@@ -18,7 +18,8 @@ export const useAuthStore = defineStore("auth", () => {
 
             //Request catch the cookie 
 
-            //await fetchUserProfile()
+            await fetchUserProfile()
+            await isClocked()
 
             console.log("Connected")
         }
@@ -27,21 +28,54 @@ export const useAuthStore = defineStore("auth", () => {
             throw error
         }
     }
+    const isClocked = async() =>{
+        return ''
+        // try{
+        //     const response = (await API.WorkSession.getClockedStatus()).data
+        //     isClockedIn.value = response.is_clocked
 
-    // const fetchUserProfile = async() => {
-    //     try{
-    //         //cookie's sending auto by the browser
+        // }
+        // catch(error){
+        //     console.error('ClockedIN failed:', error)
+        //     isClockedIn.value = undefined
+        //     throw error
+            
+            
+        // }
+    }
 
-    //         const response = await API.userAPI.me()
-    //         user.value = null
-    //         throw error
-    //     }
-    //     catch(error){
-    //         console.error('Profile fetching failed:', error)
-    //         user.value = null
-    //         throw error
-    //     }
-    // }
+   const updateClocking = async(clockIn: boolean) =>{
+
+    try{
+        //Call POST with param
+
+        await API.WorkSession.updateClocking(clockIn);
+        isClockedIn.value = clockIn
+
+    }
+    catch(error){
+        console.error('Update clocking failed:', error)
+        throw error
+
+    }
+
+   }
+
+
+
+    const fetchUserProfile = async() => {
+        try{
+            //cookie's sending auto by the browser
+
+            const response = (await API.authAPI.getUserInfo()).data
+            user.value = response
+        }
+        catch(error){
+            console.error('Profile fetching failed:', error)
+            user.value = null
+            throw error
+        }
+    }
 
     const logout = async() => {
         try{
@@ -60,10 +94,13 @@ export const useAuthStore = defineStore("auth", () => {
 
     return{
         user, 
-        isAuthentificated, 
+        isAuthenticated, 
         login, 
         logout, 
-        //fetchUserProfile
+        fetchUserProfile, 
+        isClockedIn, 
+        updateClocking, 
+        isClocked
     }
 
 
