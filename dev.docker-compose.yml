@@ -9,20 +9,17 @@ services:
       DB_DATABASE: ${DB_NAME}
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
       PROJECT_STATUS: ${PROJECT_STATUS}
       JWT_SECRET: ${JWT_SECRET}
-    # volumes:
-    # healthcheck:
-    #   test: 'curl --fail --request POST --header ''content-type: application/json'' --url ''http://localhost:8002/api'' --data ''{"query":"query { __typename }"}'' || exit 1'
-    #   interval: 1s
-    #   timeout: 2s
-    #   retries: 5
-    #   start_period: 2s
+      JWT_EXPIRATION_HOURS: ${JWT_EXPIRATION_HOURS}
+    volumes:
+      - ./backend/cmd:/app/cmd
+      - ./backend/internal:/app/internal
     depends_on:
       database:
         condition: service_healthy
-    ports:
-      - "8002:8002"
 
   frontend:
     build:
@@ -77,6 +74,8 @@ services:
       - "8081:80"
     depends_on:
       - database
+      - backend
+      - frontend
 
 volumes:
   db_data:
