@@ -29,7 +29,7 @@ type Claims struct {
 }
 
 type AuthService interface {
-	AuthenticateUser(typeOf string, data string, password string) (string, error)
+	AuthenticateUser(typeOf string, data string, password string) (model.UserReadJWT, string, error)
 	GenerateJWT(user model.UserReadJWT) (string, error)
 	ValidateJWT(tokenStr string) (*Claims, error)
 }
@@ -96,21 +96,21 @@ func (service *authService) ValidateJWT(tokenStr string) (*Claims, error) {
 }
 
 // Authenticates a user using the userService
-func (service *authService) AuthenticateUser(typeOf string, data string, password string) (string, error) {
+func (service *authService) AuthenticateUser(typeOf string, data string, password string) (model.UserReadJWT, string, error) {
 	// get user by email or username
 	user, err := service.userService.GetUserByEmailAuth(typeOf, data)
 	if err != nil {
-		return "", errors.New("invalid credentials")
+		return model.UserReadJWT{}, "", errors.New("invalid credentials")
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password)); err != nil {
-		return "", errors.New("invalid credentials")
+		return model.UserReadJWT{}, "", errors.New("invalid credentials")
 	}
 
 	token, err := service.GenerateJWT(*user)
 	if err != nil {
-		return "", errors.New("failed to generate token")
+		return model.UserReadJWT{}, "", errors.New("failed to generate token")
 	}
 
-	return token, nil
+	return *user, token, nil
 }
