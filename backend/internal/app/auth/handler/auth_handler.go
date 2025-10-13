@@ -55,7 +55,7 @@ func (handler *AuthHandler) LoginHandler(c *gin.Context) {
 		login.Type = "email"
 	}
 
-	token, err := handler.service.AuthenticateUser(login.Type, login.Login, req.Password)
+	user, token, err := handler.service.AuthenticateUser(login.Type, login.Login, req.Password)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid credentials"})
 		return
@@ -67,6 +67,8 @@ func (handler *AuthHandler) LoginHandler(c *gin.Context) {
 		return
 	}
 	expiration := jwtExpirationHours * 3600
+
+	c.Set("userID", user.ID)
 
 	c.SetCookie(
 		"token",
@@ -124,6 +126,8 @@ func (handler *AuthHandler) LogoutHandler(c *gin.Context) {
 		config.LoadConfig().ProjectStatus == "PROD",
 		true,
 	)
+
+	c.Set("userID", "")
 
 	c.JSON(http.StatusOK, gin.H{"message": "logged out"})
 }

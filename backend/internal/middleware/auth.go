@@ -17,12 +17,14 @@ func (handler *AuthHandler) AuthenticationMiddleware(c *gin.Context) {
 	tokenString, err := c.Cookie("token")
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Missing or invalid authentication cookie"})
+		c.Set("userID", "")
 		return
 	}
 
 	claims, err := handler.Service.ValidateJWT(tokenString)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired token"})
+		c.Set("userID", "")
 		return
 	}
 
