@@ -11,6 +11,7 @@ type UserRepository interface {
 	FindAll() ([]model.UserRead, error)
 	FindByTypeAuth(typeOf string, data string) (*model.UserReadJWT, error)
 	RegisterUser(user model.UserCreate) error
+	FindIdByUuid(id string) (userId int, err error)
 }
 
 type userRepository struct {
@@ -25,6 +26,14 @@ func (repo *userRepository) FindAll() ([]model.UserRead, error) {
 	var users []model.UserRead
 	err := repo.db.Raw("SELECT uuid, username, email, first_name, last_name, phone_number, roles, created_at, updated_at FROM users").Scan(&users).Error
 	return users, err
+}
+
+func (repo *userRepository) FindIdByUuid(uuid string) (userId int, err error) {
+	err = repo.db.Raw("SELECT id FROM users WHERE uuid = ?", uuid).Scan(&userId).Error
+	if err != nil {
+		return 0, err
+	}
+	return userId, nil
 }
 
 func (repo *userRepository) FindByTypeAuth(typeOf string, data string) (*model.UserReadJWT, error) {

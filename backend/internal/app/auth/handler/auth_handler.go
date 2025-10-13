@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"log"
 	"net/http"
 
 	authService "app/internal/app/auth/service"
@@ -61,14 +62,17 @@ func (handler *AuthHandler) LoginHandler(c *gin.Context) {
 		return
 	}
 
+	if user.UUID == "" || token == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid credentials"})
+		return
+	}
+
 	jwtExpirationHours, err := strconv.Atoi(config.LoadConfig().JWTExpirationHours)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "invalid JWT expiration configuration"})
 		return
 	}
 	expiration := jwtExpirationHours * 3600
-
-	c.Set("userID", user.ID)
 
 	c.SetCookie(
 		"token",
@@ -110,6 +114,8 @@ func (handler *AuthHandler) MeHandler(c *gin.Context) {
 		"last_name":    claims.LastName,
 		"phone_number": claims.PhoneNumber,
 	})
+
+	log.Println("USER ID FROM CONTEXT:", c.GetString("userID"))
 }
 
 func (handler *AuthHandler) LogoutHandler(c *gin.Context) {
@@ -126,8 +132,6 @@ func (handler *AuthHandler) LogoutHandler(c *gin.Context) {
 		config.LoadConfig().ProjectStatus == "PROD",
 		true,
 	)
-
-	c.Set("userID", "")
 
 	c.JSON(http.StatusOK, gin.H{"message": "logged out"})
 }

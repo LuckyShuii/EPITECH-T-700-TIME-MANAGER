@@ -12,6 +12,7 @@ type UserService interface {
 	GetUsers() ([]model.UserRead, error)
 	GetUserByEmailAuth(typeOf string, data string) (*model.UserReadJWT, error)
 	RegisterUser(user model.UserCreate) error
+	GetIdByUuid(id string) (int, error)
 }
 
 type userService struct {
@@ -28,6 +29,11 @@ func (service *userService) GetUsers() ([]model.UserRead, error) {
 
 func (service *userService) GetUserByEmailAuth(typeOf string, data string) (*model.UserReadJWT, error) {
 	return service.repo.FindByTypeAuth(typeOf, data)
+}
+
+func (service *userService) GetIdByUuid(id string) (int, error) {
+	userID, err := service.repo.FindIdByUuid(id)
+	return userID, err
 }
 
 func (service *userService) RegisterUser(user model.UserCreate) error {
