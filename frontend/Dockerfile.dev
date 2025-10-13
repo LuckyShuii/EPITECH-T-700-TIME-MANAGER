@@ -3,6 +3,7 @@ FROM node:lts-alpine
 WORKDIR /app
 
 COPY package*.json ./
+COPY vite.config.ts ./
 
 RUN npm install
 

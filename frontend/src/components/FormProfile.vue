@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue';
 import type { UserLogin} from "@/types/userType";
-import API from '@/services/API';
+import { useAuthStore } from '@/store/AuthStore';
+import router from '@/router';
 
 const loading = ref<boolean>(false)
+const AuthStore = useAuthStore()
 
 const form = reactive<UserLogin>({
   username: '',
@@ -19,17 +21,18 @@ const getPayload = () => {
 
 const handleSubmit = async () => {
   loading.value = true
-  try {
-    const response = (await API.authAPI.login(getPayload()))
-    console.log(response)
-  } catch (error) {
-    console.log("marche pas")
-  } finally {
-    loading.value = false
+  try{
+    await AuthStore.login(getPayload())
+    router.push('/')
   }
-  console.log(getPayload());
-
+  catch(error){
+    //envoie vers message d'erreur (toast)?
+  }
+  finally{
+    loading.value=false
+  }
 }
+ 
 
 </script>
 

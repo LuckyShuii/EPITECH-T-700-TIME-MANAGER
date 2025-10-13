@@ -1,13 +1,12 @@
 import { defineStore } from "pinia";
-import type { UserLogin } from "@/types/userType";
+import type { UserLogin, UserProfile } from "@/types/userType";
 import API from "@/services/API";
 import { ref, computed } from "vue"
-import { error } from "console";
 
 export const useAuthStore = defineStore("auth", () => {
 
-    const user = ref(null)
-    const isAuthentificated = computed(() => ! !user.value)
+    const user = ref<UserProfile | null>(null)
+    const isAuthenticated = computed(() => ! !user.value)
 
     const login = async(credentials : UserLogin) => {
         try{
@@ -18,7 +17,7 @@ export const useAuthStore = defineStore("auth", () => {
 
             //Request catch the cookie 
 
-            //await fetchUserProfile()
+            await fetchUserProfile()
 
             console.log("Connected")
         }
@@ -28,20 +27,19 @@ export const useAuthStore = defineStore("auth", () => {
         }
     }
 
-    // const fetchUserProfile = async() => {
-    //     try{
-    //         //cookie's sending auto by the browser
+    const fetchUserProfile = async() => {
+        try{
+            //cookie's sending auto by the browser
 
-    //         const response = await API.userAPI.me()
-    //         user.value = null
-    //         throw error
-    //     }
-    //     catch(error){
-    //         console.error('Profile fetching failed:', error)
-    //         user.value = null
-    //         throw error
-    //     }
-    // }
+            const response = await API.userAPI.getUserInfo()
+            user.value = response.data
+        }
+        catch(error){
+            console.error('Profile fetching failed:', error)
+            user.value = null
+            throw error
+        }
+    }
 
     const logout = async() => {
         try{
@@ -60,10 +58,10 @@ export const useAuthStore = defineStore("auth", () => {
 
     return{
         user, 
-        isAuthentificated, 
+        isAuthenticated, 
         login, 
         logout, 
-        //fetchUserProfile
+        fetchUserProfile
     }
 
 

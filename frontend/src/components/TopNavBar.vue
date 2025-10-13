@@ -1,6 +1,9 @@
 <script setup lang="ts">
-import { RouterLink } from 'vue-router';
+import { RouterLink, useRouter } from 'vue-router';
 import ThemeToggle from './ThemeToggle.vue';
+import { useAuthStore } from '@/store/AuthStore';
+import { storeToRefs } from 'pinia';
+
 
 defineProps<{
     currentTheme: string
@@ -9,11 +12,23 @@ defineProps<{
 defineEmits<{
     'toggle-theme': []
 }>();
+
+const authStore = useAuthStore()
+
+const { isAuthenticated } = storeToRefs(authStore);
+
+const router = useRouter();
+
+const handleLogout = async () => {
+    await authStore.logout();
+    router.push('/');
+}
+
 </script>
 <template>
-    <div class="navbar shadow-sm sticky top-0 z-50 bg-neutral">
+    <div class="navbar shadow-sm sticky top-0 z-50 base-content">
         <div class="flex-1">
-            <RouterLink to="/"class="btn btn-ghost text-xl">TML </RouterLink>
+            <RouterLink to="/" class="btn btn-ghost text-xl ">TML </RouterLink>
         </div>
         <div class="flex-none gap-2">
             <!-- Passe le thème actuel au bouton -->
@@ -32,7 +47,16 @@ defineEmits<{
                             Profile
                         </RouterLink>
                     </li>
-                    <li><a>Logout</a></li>
+                    <li v-if="!isAuthenticated">
+                        <RouterLink to="login" class="justify-between">
+                            Login
+                        </RouterLink>
+                    </li>
+                    <li v-if="isAuthenticated">
+                        <a @click="handleLogout" class="justify-between">
+                            Logout
+                        </a>
+                    </li>
                 </ul>
             </div>
         </div>
