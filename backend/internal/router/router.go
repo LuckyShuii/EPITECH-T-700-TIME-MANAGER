@@ -54,11 +54,6 @@ func SetupRouter() *gin.Engine {
 	protected := r.Group("/api")
 	protected.Use(authMiddleware.AuthenticationMiddleware)
 	{
-		/**
-		 * Public Routes
-		 */
-		r.POST("/api/auth/login", authHandler.LoginHandler)
-
 		protected.GET("/auth/me", authHandler.MeHandler)
 		protected.POST("/auth/logout", authHandler.LogoutHandler)
 

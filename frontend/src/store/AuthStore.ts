@@ -29,19 +29,19 @@ export const useAuthStore = defineStore("auth", () => {
         }
     }
     const isClocked = async() =>{
+        return ''
+        // try{
+        //     const response = (await API.WorkSession.getClockedStatus()).data
+        //     isClockedIn.value = response.is_clocked
 
-        try{
-            const response = (await API.WorkSession.getClockedStatus()).data
-            isClockedIn.value = response.is_clocked
-
-        }
-        catch(error){
-            console.error('ClockedIN failed:', error)
-            isClockedIn.value = undefined
-            throw error
+        // }
+        // catch(error){
+        //     console.error('ClockedIN failed:', error)
+        //     isClockedIn.value = undefined
+        //     throw error
             
             
-        }
+        // }
     }
 
    const updateClocking = async(clockIn: boolean) =>{
