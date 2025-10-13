@@ -6,7 +6,8 @@ import { ref, computed } from "vue"
 export const useAuthStore = defineStore("auth", () => {
 
     const user = ref<UserProfile | null>(null)
-    const isAuthenticated = computed(() => ! !user.value)
+    const isAuthenticated = computed(() =>  ! !user.value)
+    const isClockedIn = ref<boolean | undefined>(false)
 
     const login = async(credentials : UserLogin) => {
         try{
@@ -18,6 +19,7 @@ export const useAuthStore = defineStore("auth", () => {
             //Request catch the cookie 
 
             await fetchUserProfile()
+            await isClocked()
 
             console.log("Connected")
         }
@@ -26,13 +28,47 @@ export const useAuthStore = defineStore("auth", () => {
             throw error
         }
     }
+    const isClocked = async() =>{
+
+        try{
+            const response = (await API.WorkSession.getClockedStatus()).data
+            isClockedIn.value = response.is_clocked
+
+        }
+        catch(error){
+            console.error('ClockedIN failed:', error)
+            isClockedIn.value = undefined
+            throw error
+            
+            
+        }
+    }
+
+   const updateClocking = async(clockIn: boolean) =>{
+
+    try{
+        //Call POST with param
+
+        await API.WorkSession.updateClocking(clockIn);
+        isClockedIn.value = clockIn
+
+    }
+    catch(error){
+        console.error('Update clocking failed:', error)
+        throw error
+
+    }
+
+   }
+
+
 
     const fetchUserProfile = async() => {
         try{
             //cookie's sending auto by the browser
 
-            const response = await API.userAPI.getUserInfo()
-            user.value = response.data
+            const response = (await API.authAPI.getUserInfo()).data
+            user.value = response
         }
         catch(error){
             console.error('Profile fetching failed:', error)
@@ -61,7 +97,10 @@ export const useAuthStore = defineStore("auth", () => {
         isAuthenticated, 
         login, 
         logout, 
-        fetchUserProfile
+        fetchUserProfile, 
+        isClockedIn, 
+        updateClocking, 
+        isClocked
     }
 
 

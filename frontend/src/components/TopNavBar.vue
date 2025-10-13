@@ -5,17 +5,17 @@ import { useAuthStore } from '@/store/AuthStore';
 import { storeToRefs } from 'pinia';
 
 
-defineProps<{
-    currentTheme: string
+const props = defineProps<{
+  currentTheme: string
 }>();
 
-defineEmits<{
-    'toggle-theme': []
+const emit = defineEmits<{
+  'toggle-theme': []
 }>();
 
 const authStore = useAuthStore()
 
-const { isAuthenticated } = storeToRefs(authStore);
+const { isAuthenticated, user } = storeToRefs(authStore);
 
 const router = useRouter();
 
@@ -32,13 +32,13 @@ const handleLogout = async () => {
         </div>
         <div class="flex-none gap-2">
             <!-- Passe le thème actuel au bouton -->
-            <ThemeToggle :currentTheme="currentTheme" @toggle-theme="$emit('toggle-theme')" />
+            <ThemeToggle :currentTheme="props.currentTheme" @toggle-theme="emit('toggle-theme')" />
 
             <div class="dropdown dropdown-end">
                 <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar">
                     <div class="w-10 rounded-full">
                         <img alt="Tailwind CSS Navbar component"
-                            src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp" />
+                            src="https://img.echeval.com/content/159/illustration/akhal-teke-dore-4.jpg" />
                     </div>
                 </div>
                 <ul tabindex="0" class="menu menu-sm dropdown-content bg-base-100 rounded-box z-1 mt-3 w-52 p-2 shadow">

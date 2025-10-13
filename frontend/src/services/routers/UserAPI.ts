@@ -1,8 +1,6 @@
 import APIHandler from '../APIHandler';
-const resource = 'me';
+const resource = 'users';
 
 export default {
-    getUserInfo() {
-        return APIHandler.get(`${resource}`);
-    }
+    //
 }
