@@ -10,6 +10,10 @@ import (
 	authS "app/internal/app/auth/service"
 	authM "app/internal/middleware"
 
+	workSessionH "app/internal/app/work-session/handler"
+	workSessionR "app/internal/app/work-session/repository"
+	workSessionS "app/internal/app/work-session/service"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -33,16 +37,23 @@ func SetupRouter() *gin.Engine {
 	authMiddleware := &authM.AuthHandler{Service: authService}
 
 	/**
+	* Work Sessions Routes
+	 */
+	workSessionRepo := workSessionR.NewWorkSessionRepository(database)
+	workSessionService := workSessionS.NewWorkSessionService(workSessionRepo, userService)
+	workSessionHandler := workSessionH.NewWorkSessionHandler(workSessionService)
+
+	/**
+	* Public Routes
+	 */
+	r.POST("/api/auth/login", authHandler.LoginHandler)
+
+	/**
 	 * Protected Routes
 	 */
 	protected := r.Group("/api")
 	protected.Use(authMiddleware.AuthenticationMiddleware)
 	{
-		/**
-		 * Public Routes
-		 */
-		r.POST("/api/auth/login", authHandler.LoginHandler)
-
 		protected.GET("/auth/me", authHandler.MeHandler)
 		protected.POST("/auth/logout", authHandler.LogoutHandler)
 
@@ -55,7 +66,8 @@ func SetupRouter() *gin.Engine {
 		/**
 		 * Work Sessions Routes
 		 */
-
+		// authMiddleware.RequireRoles("user")
+		protected.POST("/work-session/update-clocking", workSessionHandler.UpdateWorkSessionClocking)
 	}
 
 	return r

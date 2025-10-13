@@ -62,14 +62,17 @@ func (handler *AuthHandler) LoginHandler(c *gin.Context) {
 		return
 	}
 
+	if user.UUID == "" || token == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid credentials"})
+		return
+	}
+
 	jwtExpirationHours, err := strconv.Atoi(config.LoadConfig().JWTExpirationHours)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "invalid JWT expiration configuration"})
 		return
 	}
 	expiration := jwtExpirationHours * 3600
-
-	c.Set("userID", user.ID)
 
 	c.SetCookie(
 		"token",
@@ -129,8 +132,6 @@ func (handler *AuthHandler) LogoutHandler(c *gin.Context) {
 		config.LoadConfig().ProjectStatus == "PROD",
 		true,
 	)
-
-	c.Set("userID", "")
 
 	c.JSON(http.StatusOK, gin.H{"message": "logged out"})
 }
