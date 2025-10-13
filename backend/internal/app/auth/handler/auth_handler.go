@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"log"
 	"net/http"
 
 	authService "app/internal/app/auth/service"
@@ -110,6 +111,8 @@ func (handler *AuthHandler) MeHandler(c *gin.Context) {
 		"last_name":    claims.LastName,
 		"phone_number": claims.PhoneNumber,
 	})
+
+	log.Println("USER ID FROM CONTEXT:", c.GetString("userID"))
 }
 
 func (handler *AuthHandler) LogoutHandler(c *gin.Context) {

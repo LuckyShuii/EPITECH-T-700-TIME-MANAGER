@@ -33,20 +33,29 @@ func SetupRouter() *gin.Engine {
 	authMiddleware := &authM.AuthHandler{Service: authService}
 
 	/**
-	 * Public Routes
-	 */
-	r.POST("/api/authenticate", authHandler.LoginHandler)
-
-	/**
 	 * Protected Routes
 	 */
 	protected := r.Group("/api")
 	protected.Use(authMiddleware.AuthenticationMiddleware)
 	{
-		protected.POST("/logout", authHandler.LogoutHandler)
-		protected.GET("/me", authHandler.MeHandler)
+		/**
+		 * Public Routes
+		 */
+		r.POST("/api/auth/login", authHandler.LoginHandler)
+
+		protected.GET("/auth/me", authHandler.MeHandler)
+		protected.POST("/auth/logout", authHandler.LogoutHandler)
+
+		/**
+		 * User Management Routes
+		 */
 		protected.GET("/users", authMiddleware.RequireRoles("user_manager"), userHandler.GetUsers)
 		protected.POST("/users/register", authMiddleware.RequireRoles("user_manager"), userHandler.RegisterUser)
+
+		/**
+		 * Work Sessions Routes
+		 */
+
 	}
 
 	return r
