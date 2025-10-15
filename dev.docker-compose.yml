@@ -4,31 +4,21 @@ services:
       context: ./backend
       dockerfile: Dockerfile.dev
     container_name: time-manager-backend
-    environment:
-      FRONTEND_URL: ${FRONTEND_URL}
-      DB_DATABASE: ${DB_NAME}
-      DB_USER: ${DB_USER}
-      DB_PASSWORD: ${DB_PASSWORD}
-      DB_HOST: ${DB_HOST}
-      DB_PORT: ${DB_PORT}
-      PROJECT_STATUS: ${PROJECT_STATUS}
-      JWT_SECRET: ${JWT_SECRET}
-      JWT_EXPIRATION_HOURS: ${JWT_EXPIRATION_HOURS}
+    env_file:
+      - ./backend/.env
     volumes:
       - ./backend/cmd:/app/cmd
       - ./backend/internal:/app/internal
     depends_on:
-      database:
-        condition: service_healthy
+      - database
 
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile.dev
     container_name: time-manager-frontend
-    environment:
-      VITE_PROJECT_STATUS: ${PROJECT_STATUS}
-      VITE_FRONTEND_URL: ${FRONTEND_URL}
+    env_file:
+      - ./frontend/.env
     volumes:
       - ./frontend/src:/app/src
     ports:
@@ -39,21 +29,13 @@ services:
   database:
     image: postgres
     container_name: time-manager-database
-    environment:
-      POSTGRES_DB: ${DB_NAME}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_USER: ${DB_USER}
+    env_file:
+      - ./database/.env
     volumes:
       - db_data:/var/lib/postgresql/data
       - ./database:/docker-entrypoint-initdb.d
     expose:
       - 5432
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
-      interval: 1s
-      timeout: 2s
-      retries: 5
-      start_period: 2s
 
   redis:
     image: redis

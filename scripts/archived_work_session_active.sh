@@ -1,7 +1,7 @@
 #!/bin/bash
 
 PWD=$(pwd)
-source ../.env
+source .env
 
 SQL_QUERY=$(cat "$PWD/sql/archived_work_session_active.sql")
 
