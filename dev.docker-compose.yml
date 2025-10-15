@@ -9,8 +9,11 @@ services:
     volumes:
       - ./backend/cmd:/app/cmd
       - ./backend/internal:/app/internal
+      - ./logs/backend.log:/var/log/app.log
     depends_on:
       - database
+    command: >
+      sh -c "go run cmd/server/main.go 2>&1 | tee -a /var/log/app.log"
 
   frontend:
     build:
@@ -21,10 +24,12 @@ services:
       - ./frontend/.env
     volumes:
       - ./frontend/src:/app/src
+      - ./logs/frontend.log:/var/log/app.log
     ports:
       - "5173:5173"
       - "7002:7002"
-    command: ["npm", "run", "dev"]
+    command: >
+      sh -c "npm run dev 2>&1 | tee -a /var/log/app.log"
 
   database:
     image: postgres
@@ -34,8 +39,12 @@ services:
     volumes:
       - db_data:/var/lib/postgresql/data
       - ./database:/docker-entrypoint-initdb.d
+      - ./logs/database.log:/var/log/app.log
     expose:
       - 5432
+      # start the postgres using the user in the env variables
+    command: >
+      sh -c "docker-entrypoint.sh postgres 2>&1 | tee -a /var/log/app.log"
 
   redis:
     image: redis
@@ -52,12 +61,15 @@ services:
     container_name: time-manager-apigateway
     volumes:
       - ./nginx.dev.conf:/etc/nginx/nginx.conf
+      - ./logs/apigateway.log:/var/log/nginx/access.log
     ports:
       - "8081:80"
     depends_on:
       - database
       - backend
       - frontend
+    command: >
+      sh -c "nginx -g 'daemon off;' 2>&1 | tee -a /var/log/nginx/access.log"
 
 volumes:
   db_data:
