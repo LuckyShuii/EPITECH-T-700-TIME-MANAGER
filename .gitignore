@@ -2,8 +2,4 @@
 .env
 frontend/package-lock.json
 
-
-logs/*.log
-
-!logs/
-!logs/*.log
+logs/
