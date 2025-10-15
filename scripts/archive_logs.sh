@@ -4,8 +4,7 @@ PWD=$(pwd)
 LOGS_DIR="$PWD/../logs"
 ARCHIVES_DIR="$LOGS_DIR/archives"
 TIMESTAMP=$(date +"%Y%m%s%d-%H%M")
-# MAX_SIZE=$((5 * 1024 * 1024)) # 5MB in bytes
-MAX_SIZE=-1 # 1B in bytes
+MAX_SIZE=$((5 * 1024 * 1024)) # 5MB in bytes
 
 # Detect OS type for stat compatibility
 if [[ "$OSTYPE" == "darwin"* ]]; then
