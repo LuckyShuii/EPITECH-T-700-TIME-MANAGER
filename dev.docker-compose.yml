@@ -34,17 +34,19 @@ services:
   database:
     image: postgres
     container_name: time-manager-database
-    env_file:
-      - ./database/.env
     volumes:
       - db_data:/var/lib/postgresql/data
       - ./database:/docker-entrypoint-initdb.d
       - ./logs/database.log:/var/log/app.log
-    expose:
-      - 5432
-      # start the postgres using the user in the env variables
+    ports:
+      - "5432:5432"
     command: >
       sh -c "docker-entrypoint.sh postgres 2>&1 | tee -a /var/log/app.log"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 2s
+      timeout: 2s
+      retries: 5
 
   redis:
     image: redis
@@ -70,6 +72,21 @@ services:
       - frontend
     command: >
       sh -c "nginx -g 'daemon off;' 2>&1 | tee -a /var/log/nginx/access.log"
+
+  migrator:
+    image: migrate/migrate:latest
+    container_name: time-manager-migrator
+    depends_on:
+      database:
+        condition: service_healthy
+    volumes:
+      - ./backend/migrations:/migrations
+    env_file:
+      - ./backend/.env
+    entrypoint: [""]
+    command: sh -c "migrate -path=/migrations -database postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@database:5432/${POSTGRES_DB}?sslmode=disable up"
+    restart: "no"
+
 
 volumes:
   db_data:
