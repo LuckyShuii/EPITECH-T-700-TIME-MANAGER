@@ -14,7 +14,7 @@ import (
 )
 
 type WorkSessionService interface {
-	UpdateWorkSessionClocking(data WorkSessionModel.WorkSessionUpdate) (bool, error)
+	UpdateWorkSessionClocking(data WorkSessionModel.WorkSessionUpdate) (WorkSessionModel.WorkSessionUpdateResponse, error)
 }
 
 type workSessionService struct {
@@ -26,15 +26,16 @@ func NewWorkSessionService(repo WorkSessionRepository.WorkSessionRepository, use
 	return &workSessionService{WorkSessionRepo: repo, UserService: userService}
 }
 
-func (service *workSessionService) UpdateWorkSessionClocking(data WorkSessionModel.WorkSessionUpdate) (bool, error) {
-	log.Println("User UUID: ", data.UserUUID, " has just clocked, status: ", *data.IsClocked)
+func (service *workSessionService) UpdateWorkSessionClocking(data WorkSessionModel.WorkSessionUpdate) (WorkSessionModel.WorkSessionUpdateResponse, error) {
+	var response WorkSessionModel.WorkSessionUpdateResponse
 
 	/**
 	 * Check if user exists and get the user ID based on his UUID
 	 */
 	userID, userErr := service.UserService.GetIdByUuid(data.UserUUID)
 	if userErr != nil {
-		return false, userErr
+		response.Success = false
+		return response, userErr
 	}
 
 	/**
@@ -42,21 +43,26 @@ func (service *workSessionService) UpdateWorkSessionClocking(data WorkSessionMod
 	 */
 	workSessionFound, err := service.WorkSessionRepo.GetUserActiveWorkSession(userID, "active")
 	if err != nil {
-		return false, err
+		response.Success = false
+		return response, err
+	}
+
+	if workSessionFound.WorkSessionUUID != "" {
+		response.ClockInTime = workSessionFound.ClockIn
 	}
 
 	/**
 	 * If user is clocking in & an active work session already exists, return an error message
 	 */
 	if workSessionFound.WorkSessionUUID != "" && *data.IsClocked {
-		return false, fmt.Errorf("an active work session already exists for this user, cannot clock in again")
+		return response, fmt.Errorf("an active work session already exists for this user, cannot clock in again")
 	}
 
 	/**
 	 * If user is clocking in & no active work session found, start a new one
 	 */
 	if workSessionFound.WorkSessionUUID == "" && *data.IsClocked {
-		log.Println("No active work session found for the user: ", data.UserUUID, "Creating a new one...")
+		response.ClockInTime = time.Now().In(time.FixedZone("Europe/Paris", 2*60*60)).Format(time.RFC3339Nano)
 		service.WorkSessionRepo.CreateWorkSession(uuid.New().String(), userID, "active")
 	}
 
@@ -64,21 +70,22 @@ func (service *workSessionService) UpdateWorkSessionClocking(data WorkSessionMod
 	 * If user is clocking out & and no active work session found, return an error message
 	 */
 	if workSessionFound.WorkSessionUUID == "" && !*data.IsClocked {
-		return false, fmt.Errorf("no active work session found for this user, cannot clock out")
+		response.Success = false
+		return response, fmt.Errorf("no active work session found for this user, cannot clock out")
 	}
 
 	/**
 	 * If user is clocking out & an active work session found, close it
 	 */
 	if workSessionFound.WorkSessionUUID != "" && !*data.IsClocked {
-		log.Println("Active work session found for the user: ", data.UserUUID, "Closing it...")
-
 		t1, err := time.Parse(time.RFC3339Nano, workSessionFound.ClockIn)
 		if err != nil {
 			log.Println("parse error:", err)
 		}
 
-		t2 := time.Now().UTC()
+		loc, _ := time.LoadLocation("Europe/Paris")
+
+		t2 := time.Now().In(loc)
 
 		duration := t2.Sub(t1)
 		minutes := duration.Minutes()
@@ -86,7 +93,17 @@ func (service *workSessionService) UpdateWorkSessionClocking(data WorkSessionMod
 		rounded := math.Floor(minutes + 0.5)
 
 		service.WorkSessionRepo.CompleteWorkSession(workSessionFound.WorkSessionUUID, userID, int(rounded))
+
+		clockOutTimeStr := t2.Format(time.RFC3339Nano)
+		response.ClockOutTime = &clockOutTimeStr
 	}
 
-	return *data.IsClocked, nil
+	response.Success = true
+	if !*data.IsClocked {
+		response.Status = "clocked_out"
+	} else {
+		response.Status = "clocked_in"
+	}
+
+	return response, nil
 }

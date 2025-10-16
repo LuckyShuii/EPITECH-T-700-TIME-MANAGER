@@ -49,3 +49,10 @@ type WorkSessionCreate struct {
 	// status is either "active", "paused" or "completed"
 	Status string `json:"status"`
 }
+
+type WorkSessionUpdateResponse struct {
+	Success      bool    `json:"success"`
+	ClockInTime  string  `json:"clock_in_time"`
+	ClockOutTime *string `json:"clock_out_time"`
+	Status       string  `json:"status"`
+}
