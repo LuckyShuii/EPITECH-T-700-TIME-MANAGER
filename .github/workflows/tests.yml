@@ -19,23 +19,6 @@ jobs:
       - name: Goto backend and run tests
         run: cd backend && go test ./... -v
 
-  sonarcloud:
-    name: 🔍 SonarCloud analysis
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: SonarCloud Scan
-        uses: sonarsource/sonarcloud-github-action@master
-        with:
-          args: >
-            -Dsonar.organization=luckyshuii
-            -Dsonar.projectKey=time_manager
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-
   # test-e2e:
   #   runs-on: ubuntu-latest
   #   steps:
