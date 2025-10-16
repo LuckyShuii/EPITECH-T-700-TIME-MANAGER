@@ -9,10 +9,11 @@ import (
 )
 
 type WorkSessionBase struct {
-	UUID            string `json:"uuid"`
-	ClockIn         string `json:"clock_in"`
-	ClockOut        string `json:"clock_out"`
-	DurationMinutes int    `json:"duration_minutes"`
+	UUID                  string `json:"uuid"`
+	ClockIn               string `json:"clock_in"`
+	ClockOut              string `json:"clock_out"`
+	DurationMinutes       int    `json:"duration_minutes"`
+	BreaksDurationMinutes *int   `json:"breaks_duration_minutes"`
 	// status is either "active", "paused" or "completed"
 	Status string `json:"status"`
 }

@@ -34,8 +34,11 @@ NETWORK_NAME="t-dev-700-project-par_19_default"
 echo "📡 Using network: $NETWORK_NAME"
 echo "🔗 postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@database:5432/${POSTGRES_DB}?sslmode=disable ($COMMAND)"
 
-# If the command is "down", we want to run "down -all" to drop all tables
-if [ "$COMMAND" = "down" ]; then
+# If the command is "down", we want to apply only one down migration
+if [ "$COMMAND" = "down" ] && [ -z "$ARG" ]; then
+  COMMAND="down 1"
+# If the command is "down all", we want to apply all down migrations
+elif [ "$COMMAND" = "down" ] && [ "$ARG" = "all" ]; then
   COMMAND="down -all"
 fi
 
