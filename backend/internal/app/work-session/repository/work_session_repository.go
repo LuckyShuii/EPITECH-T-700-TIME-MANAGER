@@ -23,10 +23,10 @@ func NewWorkSessionRepository(db *gorm.DB) WorkSessionRepository {
 	return &workSessionRepository{db}
 }
 
-func (repo *workSessionRepository) GetUserActiveWorkSession(user_id int, status string) (workSession WorkSessionModel.WorkSessionRead, err error) {
+func (repo *workSessionRepository) GetUserActiveWorkSession(userId int, status string) (workSession WorkSessionModel.WorkSessionRead, err error) {
 	var workSessionFound WorkSessionModel.WorkSessionRead
 	err = repo.db.Raw(
-		"SELECT w.uuid as work_session_uuid, w.clock_in, w.clock_out, w.status, u.uuid as user_uuid, u.username, u.first_name, u.last_name, u.email, u.phone_number FROM work_session_active as w INNER JOIN users as u ON u.id = ? WHERE w.user_id = ? AND w.status = ? ORDER BY w.clock_in DESC LIMIT 1", user_id, user_id, status,
+		"SELECT w.uuid as work_session_uuid, w.clock_in, w.clock_out, w.status, u.uuid as user_uuid, u.username, u.first_name, u.last_name, u.email, u.phone_number FROM work_session_active as w INNER JOIN users as u ON u.id = ? WHERE w.user_id = ? AND w.status = ? ORDER BY w.clock_in DESC LIMIT 1", userId, userId, status,
 	).Scan(&workSessionFound).Error
 
 	if err != nil {
