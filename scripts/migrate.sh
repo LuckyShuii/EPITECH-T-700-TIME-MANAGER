@@ -12,7 +12,16 @@
 # ./migrate.sh version
 # ./migrate.sh force 5
 
+# Generate a migration in CLI:
+# docker run --rm -v backend/migrations:/migrations migrate/migrate create -ext sql -dir /migrations -seq create_users_table
+
 COMMAND=$1
+ARG=$2
+
+if [ "$COMMAND" = "force" ] && [ -n "$ARG" ]; then
+  COMMAND="force $ARG"
+fi
+
 if [ -z "$COMMAND" ]; then
   echo "Usage: ./migrate.sh [up|down|version|force VERSION]"
   exit 1

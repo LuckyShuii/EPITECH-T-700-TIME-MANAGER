@@ -13,7 +13,7 @@ type UserBase struct {
 	FirstName   string         `json:"first_name"`
 	LastName    string         `json:"last_name"`
 	PhoneNumber *string        `json:"phone_number,omitempty"`
-	Roles       pq.StringArray `json:"roles" gorm:"type:text[];default:'{user}'"`
+	Roles       pq.StringArray `json:"roles" gorm:"type:text[];default:'{employee}'"`
 }
 
 type UserAll struct {

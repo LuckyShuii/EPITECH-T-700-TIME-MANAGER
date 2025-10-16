@@ -16,7 +16,7 @@ CREATE TABLE users (
     first_name VARCHAR(100),
     last_name VARCHAR(100),
     phone_number VARCHAR(15),
-    roles TEXT[] default '{"user"}',
+    roles TEXT[] default '{"employee"}',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
