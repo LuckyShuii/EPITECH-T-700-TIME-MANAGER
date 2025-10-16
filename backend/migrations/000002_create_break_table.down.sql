@@ -1,0 +1,3 @@
+DROP TABLE IF EXISTS breaks;
+
+DROP TYPE IF EXISTS break_status;
