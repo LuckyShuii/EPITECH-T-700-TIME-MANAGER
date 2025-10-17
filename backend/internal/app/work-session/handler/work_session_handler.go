@@ -130,8 +130,13 @@ func (handler *WorkSessionHandler) GetWorkSessionHistory(c *gin.Context) {
 		return
 	}
 
-	if startDate < twoYearsAgo || endDate > nowTimestamp {
+	if startDate < twoYearsAgo {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "date range cannot exceed 2 years from the current date"})
+		return
+	}
+
+	if endDate > nowTimestamp {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "end_date cannot be in the future"})
 		return
 	}
 
