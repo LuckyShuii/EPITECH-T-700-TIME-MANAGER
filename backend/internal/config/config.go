@@ -43,3 +43,9 @@ func getEnv(key, defaultValue string) string {
 	}
 	return defaultValue
 }
+
+func ErrorMessages() map[string]string {
+	return map[string]string{
+		"NO_CLAIMS": "missing claims",
+	}
+}

@@ -62,21 +62,26 @@ func SetupRouter() *gin.Engine {
 	protected := r.Group("/api")
 	protected.Use(authMiddleware.AuthenticationMiddleware)
 	{
-		protected.GET("/auth/me", authHandler.MeHandler)
 		protected.POST("/auth/logout", authHandler.LogoutHandler)
+
+		protected.GET("/auth/me", authHandler.MeHandler)
 
 		/**
 		 * User Management Routes
 		 */
-		protected.GET("/users", authMiddleware.RequireRoles("admin"), userHandler.GetUsers)
 		protected.POST("/users/register", authMiddleware.RequireRoles("admin"), userHandler.RegisterUser)
 
+		protected.GET("/users", authMiddleware.RequireRoles("admin"), userHandler.GetUsers)
+
 		/**
-		 * Work Sessions Routes
+		 * Work Sessions & Breaks Routes
 		 */
-		protected.POST("/work-session/update-clocking", authMiddleware.RequireRoles("employee", "manager"), workSessionHandler.UpdateWorkSessionClocking)
-		protected.POST("/work-session/update-breaking", authMiddleware.RequireRoles("employee", "manager"), breakHandler.UpdateBreak)
-		protected.GET("/work-session/status", authMiddleware.RequireRoles("employee", "manager"), workSessionHandler.GetWorkSessionStatus)
+		protected.POST("/work-session/update-clocking", authMiddleware.RequireRoles("all"), workSessionHandler.UpdateWorkSessionClocking)
+		protected.POST("/work-session/update-breaking", authMiddleware.RequireRoles("all"), breakHandler.UpdateBreak)
+
+		protected.GET("/work-session/history", authMiddleware.RequireRoles("all"), workSessionHandler.GetWorkSessionHistory)
+
+		protected.GET("/work-session/status", authMiddleware.RequireRoles("all"), workSessionHandler.GetWorkSessionStatus)
 	}
 
 	return r

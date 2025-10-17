@@ -9,7 +9,6 @@ import (
 )
 
 type WorkSessionBase struct {
-	UUID                  string `json:"uuid"`
 	ClockIn               string `json:"clock_in"`
 	ClockOut              string `json:"clock_out"`
 	DurationMinutes       int    `json:"duration_minutes"`
@@ -20,7 +19,7 @@ type WorkSessionBase struct {
 
 type WorkSessionRead struct {
 	WorkSessionBase
-
+	UUID            string `json:"uuid"`
 	WorkSessionUUID string `json:"work_session_uuid"`
 
 	// User fields
@@ -33,8 +32,19 @@ type WorkSessionRead struct {
 	Roles       pq.StringArray `json:"roles" gorm:"type:text[]"`
 }
 
+type WorkSessionReadHistory struct {
+	WorkSessionBase
+
+	WorkSessionUUID string `json:"work_session_uuid"`
+
+	// User fields
+	UserUUID string `json:"user_uuid"`
+	Username string `json:"username"`
+}
+
 type WorkSessionReadAll struct {
 	WorkSessionBase
+	UUID      string         `json:"uuid"`
 	User      model.UserBase `json:"user" gorm:"foreignKey:UserID"`
 	CreatedAt time.Time      `json:"created_at"`
 	UpdatedAt time.Time      `json:"updated_at"`
@@ -59,7 +69,8 @@ type WorkSessionUpdateResponse struct {
 }
 
 type WorkSessionStatus struct {
-	IsClocked   bool    `json:"is_clocked"`
-	ClockInTime *string `json:"clock_in_time"`
-	Status      string  `json:"status"`
+	WorkSessionUUID string  `json:"work_session_uuid"`
+	IsClocked       bool    `json:"is_clocked"`
+	ClockInTime     *string `json:"clock_in_time"`
+	Status          string  `json:"status"`
 }

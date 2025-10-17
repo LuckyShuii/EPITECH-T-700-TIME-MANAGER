@@ -18,6 +18,7 @@ import (
 type WorkSessionService interface {
 	UpdateWorkSessionClocking(data WorkSessionModel.WorkSessionUpdate) (WorkSessionModel.WorkSessionUpdateResponse, error)
 	GetWorkSessionStatus(userUUID string) (WorkSessionModel.WorkSessionStatus, error)
+	GetWorkSessionHistory(userUUID string, startDate string, endDate string, limit int, offset int) ([]WorkSessionModel.WorkSessionReadHistory, error)
 }
 
 type workSessionService struct {
@@ -99,16 +100,31 @@ func (service *workSessionService) GetWorkSessionStatus(userUUID string) (WorkSe
 	}
 
 	if workSessionFound.WorkSessionUUID != "" {
+		response.WorkSessionUUID = workSessionFound.WorkSessionUUID
 		response.IsClocked = true
 		response.ClockInTime = &workSessionFound.ClockIn
 		response.Status = workSessionFound.Status
 	} else {
 		response.IsClocked = false
 		response.Status = "no_active_session"
-		response.ClockInTime = nil
 	}
 
 	return response, nil
+}
+
+func (service *workSessionService) GetWorkSessionHistory(userUUID string, startDate string, endDate string, limit int, offset int) ([]WorkSessionModel.WorkSessionReadHistory, error) {
+	// 1️⃣ Get user ID from UUID
+	userID, userErr := service.UserService.GetIdByUuid(userUUID)
+	if userErr != nil {
+		return []WorkSessionModel.WorkSessionReadHistory{}, userErr
+	}
+
+	// 2️⃣ Get work session history
+	workSessions, err := service.WorkSessionRepo.GetWorkSessionHistoryByUserId(userID, startDate, endDate, limit, offset)
+	if err != nil {
+		return []WorkSessionModel.WorkSessionReadHistory{}, err
+	}
+	return workSessions, nil
 }
 
 func (service *workSessionService) completeWorkSessionProcess(workSessionFound WorkSessionModel.WorkSessionRead, userID int) (WorkSessionModel.WorkSessionUpdateResponse, error) {
