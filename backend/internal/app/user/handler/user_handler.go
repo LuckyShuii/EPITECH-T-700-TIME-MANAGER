@@ -46,3 +46,26 @@ func (handler *UserHandler) RegisterUser(c *gin.Context) {
 
 	c.JSON(http.StatusCreated, gin.H{"message": "user registered successfully"})
 }
+
+func (handler *UserHandler) DeleteUser(c *gin.Context) {
+	var req struct {
+		UserUUID string `json:"user_uuid"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
+		return
+	}
+
+	if req.UserUUID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "missing user_uuid field"})
+		return
+	}
+
+	deleteErr := handler.service.DeleteUser(req.UserUUID)
+	if deleteErr != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": deleteErr.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "user deleted successfully"})
+}
