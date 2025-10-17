@@ -76,6 +76,7 @@ func SetupRouter() *gin.Engine {
 		 */
 		protected.POST("/work-session/update-clocking", authMiddleware.RequireRoles("employee", "manager"), workSessionHandler.UpdateWorkSessionClocking)
 		protected.POST("/work-session/update-breaking", authMiddleware.RequireRoles("employee", "manager"), breakHandler.UpdateBreak)
+		protected.GET("/work-session/status", authMiddleware.RequireRoles("employee", "manager"), workSessionHandler.GetWorkSessionStatus)
 	}
 
 	return r

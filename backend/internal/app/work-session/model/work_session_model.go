@@ -57,3 +57,9 @@ type WorkSessionUpdateResponse struct {
 	ClockOutTime *string `json:"clock_out_time"`
 	Status       string  `json:"status"`
 }
+
+type WorkSessionStatus struct {
+	IsClocked   bool    `json:"is_clocked"`
+	ClockInTime *string `json:"clock_in_time"`
+	Status      string  `json:"status"`
+}
