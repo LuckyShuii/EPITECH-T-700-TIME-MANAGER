@@ -61,7 +61,7 @@ func SetupRouter() *gin.Engine {
 		 * User Management Routes
 		 */
 		protected.GET("/users", authMiddleware.RequireRoles("user_manager"), userHandler.GetUsers)
-		protected.POST("/users/register", authMiddleware.RequireRoles("user_manager"), userHandler.RegisterUser)
+		protected.POST("/users/register", authMiddleware.RequireRoles("admin"), userHandler.RegisterUser)
 
 		/**
 		 * Work Sessions Routes
