@@ -40,7 +40,7 @@ func (handler *WorkSessionHandler) UpdateWorkSessionClocking(c *gin.Context) {
 		return
 	}
 
-	IsClockedNew, registerErr := handler.service.UpdateWorkSessionClocking(WorkSessionModel.WorkSessionUpdate{
+	Response, registerErr := handler.service.UpdateWorkSessionClocking(WorkSessionModel.WorkSessionUpdate{
 		UserUUID:  userUUID,
 		IsClocked: req.IsClocked,
 	})
@@ -50,5 +50,5 @@ func (handler *WorkSessionHandler) UpdateWorkSessionClocking(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"is_clocked": IsClockedNew})
+	c.JSON(http.StatusCreated, Response)
 }

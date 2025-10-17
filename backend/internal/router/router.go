@@ -14,6 +14,10 @@ import (
 	workSessionR "app/internal/app/work-session/repository"
 	workSessionS "app/internal/app/work-session/service"
 
+	BreakH "app/internal/app/break/handler"
+	BreakR "app/internal/app/break/repository"
+	BreakS "app/internal/app/break/service"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -40,8 +44,12 @@ func SetupRouter() *gin.Engine {
 	* Work Sessions Routes
 	 */
 	workSessionRepo := workSessionR.NewWorkSessionRepository(database)
-	workSessionService := workSessionS.NewWorkSessionService(workSessionRepo, userService)
+	workSessionService := workSessionS.NewWorkSessionService(workSessionRepo, userService, BreakR.NewBreakRepository(database))
 	workSessionHandler := workSessionH.NewWorkSessionHandler(workSessionService)
+
+	breakRepo := BreakR.NewBreakRepository(database)
+	breakService := BreakS.NewBreakService(breakRepo, workSessionRepo)
+	breakHandler := BreakH.NewBreakHandler(breakService)
 
 	/**
 	* Public Routes
@@ -66,8 +74,8 @@ func SetupRouter() *gin.Engine {
 		/**
 		 * Work Sessions Routes
 		 */
-		// authMiddleware.RequireRoles("user")
-		protected.POST("/work-session/update-clocking", workSessionHandler.UpdateWorkSessionClocking)
+		protected.POST("/work-session/update-clocking", authMiddleware.RequireRoles("employee", "manager"), workSessionHandler.UpdateWorkSessionClocking)
+		protected.POST("/work-session/update-breaking", authMiddleware.RequireRoles("employee", "manager"), breakHandler.UpdateBreak)
 	}
 
 	return r

@@ -13,6 +13,9 @@ type WorkSessionRepository interface {
 	CompleteWorkSession(uuid string, user_id int, duration int) (err error)
 	CreateWorkSession(uuid string, user_id int, status string) error
 	GetUserActiveWorkSession(user_id int, status string) (workSession WorkSessionModel.WorkSessionRead, err error)
+	FindIdByUuid(uuid string) (workSessionId int, err error)
+	UpdateWorkSessionStatus(uuid string, status string) error
+	UpdateBreakDurationMinutes(uuid string, breakDuration int) error
 }
 
 type workSessionRepository struct {
@@ -21,6 +24,14 @@ type workSessionRepository struct {
 
 func NewWorkSessionRepository(db *gorm.DB) WorkSessionRepository {
 	return &workSessionRepository{db}
+}
+
+func (repo *workSessionRepository) FindIdByUuid(uuid string) (workSessionId int, err error) {
+	err = repo.db.Raw("SELECT id FROM work_session_active WHERE uuid = ?", uuid).Scan(&workSessionId).Error
+	if err != nil {
+		return 0, err
+	}
+	return workSessionId, nil
 }
 
 func (repo *workSessionRepository) GetUserActiveWorkSession(userId int, status string) (workSession WorkSessionModel.WorkSessionRead, err error) {
@@ -36,19 +47,35 @@ func (repo *workSessionRepository) GetUserActiveWorkSession(userId int, status s
 	return workSessionFound, nil
 }
 
-func (repo *workSessionRepository) CompleteWorkSession(uuid string, user_id int, duration int) (err error) {
-	log.Println("Completing work session with UUID: ", uuid, " for user ID: ", user_id)
+func (repo *workSessionRepository) CompleteWorkSession(uuid string, userId int, duration int) (err error) {
+	log.Println("Completing work session with UUID: ", uuid, " for user ID: ", userId)
 	err = repo.db.Exec(
 		"UPDATE work_session_active SET clock_out = now(), status = 'completed', duration_minutes = ? WHERE uuid = ? AND user_id = ?",
-		duration, uuid, user_id,
+		duration, uuid, userId,
 	).Error
 	return err
 }
 
-func (repo *workSessionRepository) CreateWorkSession(uuid string, user_id int, status string) error {
+func (repo *workSessionRepository) CreateWorkSession(uuid string, userId int, status string) error {
 	err := repo.db.Exec(
 		"INSERT INTO work_session_active (uuid, user_id, clock_in, status) VALUES (?, ?, ?, ?)",
-		uuid, user_id, "now()", status,
+		uuid, userId, "now()", status,
+	).Error
+	return err
+}
+
+func (repo *workSessionRepository) UpdateWorkSessionStatus(uuid string, status string) error {
+	err := repo.db.Exec(
+		"UPDATE work_session_active SET status = ? WHERE uuid = ?",
+		status, uuid,
+	).Error
+	return err
+}
+
+func (repo *workSessionRepository) UpdateBreakDurationMinutes(uuid string, breakDuration int) error {
+	err := repo.db.Exec(
+		"UPDATE work_session_active SET breaks_duration_minutes = ? WHERE uuid = ?",
+		breakDuration, uuid,
 	).Error
 	return err
 }
