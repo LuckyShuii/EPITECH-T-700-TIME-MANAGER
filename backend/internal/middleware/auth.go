@@ -46,7 +46,7 @@ func (handler *AuthHandler) RequireRoles(roles ...string) gin.HandlerFunc {
 
 		// Check if user has at least one of the required roles
 		for _, requiredRole := range roles {
-			if slices.Contains(userRoles, requiredRole) || slices.Contains(userRoles, "admin") || slices.Contains(userRoles, "all") {
+			if slices.Contains(userRoles, requiredRole) || slices.Contains(userRoles, "admin") || requiredRole == "all" {
 				c.Next()
 				return
 			}
