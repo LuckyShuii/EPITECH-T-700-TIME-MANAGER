@@ -99,13 +99,13 @@ func (service *workSessionService) GetWorkSessionStatus(userUUID string) (WorkSe
 	}
 
 	if workSessionFound.WorkSessionUUID != "" {
+		response.WorkSessionUUID = workSessionFound.WorkSessionUUID
 		response.IsClocked = true
 		response.ClockInTime = &workSessionFound.ClockIn
 		response.Status = workSessionFound.Status
 	} else {
 		response.IsClocked = false
 		response.Status = "no_active_session"
-		response.ClockInTime = nil
 	}
 
 	return response, nil
