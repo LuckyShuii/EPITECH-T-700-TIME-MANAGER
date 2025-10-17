@@ -5,8 +5,7 @@ import 'v-calendar/style.css'
 import type { ClockHistoryEntry } from '@/types/ClockHistoryEntry'
 import API from '@/services/API'
 
-
-const toLocalISOString = (date: Date): string => {
+const formatDateForAPI = (date: Date): string => {
   const year = date.getFullYear()
   const month = String(date.getMonth() + 1).padStart(2, '0')
   const day = String(date.getDate()).padStart(2, '0')
@@ -14,13 +13,24 @@ const toLocalISOString = (date: Date): string => {
   const minutes = String(date.getMinutes()).padStart(2, '0')
   const seconds = String(date.getSeconds()).padStart(2, '0')
   
-  // Obtenir l'offset du timezone (ex: +02:00)
-  const offset = -date.getTimezoneOffset()
-  const offsetHours = String(Math.floor(Math.abs(offset) / 60)).padStart(2, '0')
-  const offsetMinutes = String(Math.abs(offset) % 60).padStart(2, '0')
-  const offsetSign = offset >= 0 ? '+' : '-'
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
+}
+const formatDuration = (minutes: number): string => {
+  if (minutes < 60) {
+    return `${minutes}min`
+  }
   
-  return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}${offsetSign}${offsetHours}:${offsetMinutes}`
+  const hours = Math.floor(minutes / 60)
+  const remainingMinutes = minutes % 60
+  
+  if (remainingMinutes === 0) {
+    return `${hours}h`
+  }
+  
+  return `${hours}h${String(remainingMinutes).padStart(2, '0')}`
+}
+const minutesToHours = (minutes: number): number => {
+  return Math.round((minutes / 60) * 100) / 100 // Arrondi à 2 décimales
 }
 
 // Données de l'historique
@@ -45,8 +55,8 @@ const getMonthRange = (date: Date) => {
   const finalEndDate = endDate > now ? now : endDate
   
   return {
-    start_date: toLocalISOString(startDate),  // <-- ICI
-    end_date: toLocalISOString(finalEndDate)   // <-- ICI
+    start_date: formatDateForAPI(startDate),
+    end_date: formatDateForAPI(finalEndDate)
   }
 }
 
@@ -119,7 +129,7 @@ const calendarAttributes = computed(() => {
       ? `${clockOutDate.getHours()}:${String(clockOutDate.getMinutes()).padStart(2, '0')}` 
       : "En cours"
     
-    const totalHours = minutesToHours(entry.duration_minutes)
+    const totalFormatted = formatDuration(entry.duration_minutes) // ICI
     
     return {
       dates: clockInDate,
@@ -128,13 +138,16 @@ const calendarAttributes = computed(() => {
         fillMode: 'light'
       },
       popover: {
-        label: `Arrivée: ${heureArrivee}\nDépart: ${heureDepart}\nTotal: ${totalHours}h`
+        label: `Arrivée: ${heureArrivee}\nDépart: ${heureDepart}\nTotal: ${totalFormatted}` // ICI
       }
     }
   })
   
   return [...workDayAttributes, todayAttribute]
 })
+
+
+
 </script>
 
 <template>
