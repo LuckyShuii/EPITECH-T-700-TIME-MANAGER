@@ -52,3 +52,21 @@ func (handler *WorkSessionHandler) UpdateWorkSessionClocking(c *gin.Context) {
 
 	c.JSON(http.StatusCreated, Response)
 }
+
+func (handler *WorkSessionHandler) GetWorkSessionStatus(c *gin.Context) {
+	claims, exists := c.Get("userClaims")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "missing claims"})
+		return
+	}
+
+	userUUID := claims.(*AuthService.Claims).UUID
+
+	status, err := handler.service.GetWorkSessionStatus(userUUID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, status)
+}

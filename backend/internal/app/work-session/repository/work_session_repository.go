@@ -12,7 +12,7 @@ import (
 type WorkSessionRepository interface {
 	CompleteWorkSession(uuid string, user_id int, duration int) (err error)
 	CreateWorkSession(uuid string, user_id int, status string) error
-	GetUserActiveWorkSession(user_id int, status string) (workSession WorkSessionModel.WorkSessionRead, err error)
+	GetUserActiveWorkSession(user_id int, status []string) (workSession WorkSessionModel.WorkSessionRead, err error)
 	FindIdByUuid(uuid string) (workSessionId int, err error)
 	UpdateWorkSessionStatus(uuid string, status string) error
 	UpdateBreakDurationMinutes(uuid string, breakDuration int) error
@@ -34,10 +34,10 @@ func (repo *workSessionRepository) FindIdByUuid(uuid string) (workSessionId int,
 	return workSessionId, nil
 }
 
-func (repo *workSessionRepository) GetUserActiveWorkSession(userId int, status string) (workSession WorkSessionModel.WorkSessionRead, err error) {
+func (repo *workSessionRepository) GetUserActiveWorkSession(userId int, status []string) (workSession WorkSessionModel.WorkSessionRead, err error) {
 	var workSessionFound WorkSessionModel.WorkSessionRead
 	err = repo.db.Raw(
-		"SELECT w.uuid as work_session_uuid, w.clock_in, w.clock_out, w.status, u.uuid as user_uuid, u.username, u.first_name, u.last_name, u.email, u.phone_number FROM work_session_active as w INNER JOIN users as u ON u.id = ? WHERE w.user_id = ? AND w.status = ? ORDER BY w.clock_in DESC LIMIT 1", userId, userId, status,
+		"SELECT w.uuid as work_session_uuid, w.clock_in, w.clock_out, w.status, u.uuid as user_uuid, u.username, u.first_name, u.last_name, u.email, u.phone_number FROM work_session_active as w INNER JOIN users as u ON u.id = ? WHERE w.user_id = ? AND w.status IN (?) ORDER BY w.clock_in DESC LIMIT 1", userId, userId, status,
 	).Scan(&workSessionFound).Error
 
 	if err != nil {

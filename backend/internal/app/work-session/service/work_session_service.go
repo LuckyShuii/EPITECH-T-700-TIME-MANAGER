@@ -17,6 +17,7 @@ import (
 
 type WorkSessionService interface {
 	UpdateWorkSessionClocking(data WorkSessionModel.WorkSessionUpdate) (WorkSessionModel.WorkSessionUpdateResponse, error)
+	GetWorkSessionStatus(userUUID string) (WorkSessionModel.WorkSessionStatus, error)
 }
 
 type workSessionService struct {
@@ -40,7 +41,7 @@ func (service *workSessionService) UpdateWorkSessionClocking(data WorkSessionMod
 	}
 
 	// 2️⃣ Check for active work session
-	workSessionFound, err := service.WorkSessionRepo.GetUserActiveWorkSession(userID, "active")
+	workSessionFound, err := service.WorkSessionRepo.GetUserActiveWorkSession(userID, []string{"active", "paused"})
 	if err != nil {
 		response.Success = false
 		return response, err
@@ -74,7 +75,7 @@ func (service *workSessionService) UpdateWorkSessionClocking(data WorkSessionMod
 
 	// 6️⃣ Clock-out process
 	if workSessionFound.WorkSessionUUID != "" && !*data.IsClocked {
-		return service.CompleteWorkSessionProcess(workSessionFound, userID)
+		return service.completeWorkSessionProcess(workSessionFound, userID)
 	}
 
 	response.Success = true
@@ -82,7 +83,35 @@ func (service *workSessionService) UpdateWorkSessionClocking(data WorkSessionMod
 	return response, nil
 }
 
-func (service *workSessionService) CompleteWorkSessionProcess(workSessionFound WorkSessionModel.WorkSessionRead, userID int) (WorkSessionModel.WorkSessionUpdateResponse, error) {
+func (service *workSessionService) GetWorkSessionStatus(userUUID string) (WorkSessionModel.WorkSessionStatus, error) {
+	response := WorkSessionModel.WorkSessionStatus{}
+
+	// 1️⃣ Get user ID from UUID
+	userID, userErr := service.UserService.GetIdByUuid(userUUID)
+	if userErr != nil {
+		return WorkSessionModel.WorkSessionStatus{}, userErr
+	}
+
+	// 2️⃣ Check for active work session
+	workSessionFound, err := service.WorkSessionRepo.GetUserActiveWorkSession(userID, []string{"active", "paused"})
+	if err != nil {
+		return WorkSessionModel.WorkSessionStatus{}, err
+	}
+
+	if workSessionFound.WorkSessionUUID != "" {
+		response.IsClocked = true
+		response.ClockInTime = &workSessionFound.ClockIn
+		response.Status = workSessionFound.Status
+	} else {
+		response.IsClocked = false
+		response.Status = "no_active_session"
+		response.ClockInTime = nil
+	}
+
+	return response, nil
+}
+
+func (service *workSessionService) completeWorkSessionProcess(workSessionFound WorkSessionModel.WorkSessionRead, userID int) (WorkSessionModel.WorkSessionUpdateResponse, error) {
 	var response WorkSessionModel.WorkSessionUpdateResponse
 
 	loc, _ := time.LoadLocation("Europe/Paris")
