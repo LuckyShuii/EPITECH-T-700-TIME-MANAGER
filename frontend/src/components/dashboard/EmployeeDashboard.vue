@@ -3,13 +3,11 @@ import EmployeeLayout from '../layout/EmployeeLayout.vue'
 import ClockWidget from '@/components/widget/ClockWidget.vue'
 import CalendarWidget from '@/components/widget/CalendarWidget.vue'
 import ClockButton from '@/components/ClockButton.vue'
+import { useAuthStore } from '@/store/AuthStore'
+import { storeToRefs } from 'pinia'
 
-// Mock data pour le ClockWidget
-const mockClockData = {
-  clockInTime: new Date(new Date().setHours(8, 30, 0, 0)).toISOString(),
-  clockOutTime: null,
-  status: 'CLOCKED_IN' as const
-}
+const authStore = useAuthStore()
+const { clockInTime, sessionStatus } = storeToRefs(authStore)
 </script>
 
 <template>
@@ -21,12 +19,8 @@ const mockClockData = {
 
     <!-- Position 3 : Clock (bas gauche) -->
     <template #clock>
-      <ClockWidget 
-        :clockInTime="mockClockData.clockInTime" 
-        :clockOutTime="mockClockData.clockOutTime"
-        :status="mockClockData.status" 
-      />
-      <ClockButton/>
+      <ClockWidget :clockInTime="clockInTime" :status="sessionStatus" />
+      <ClockButton />
     </template>
 
     <!-- Position 4 : Calendar (haut centre - 2 colonnes) -->

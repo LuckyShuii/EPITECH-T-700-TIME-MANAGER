@@ -6,10 +6,10 @@ PWD=$(pwd)
 mkdir -p "$PWD/../logs"
 mkdir -p "$PWD/../logs/archives"
 
-mkdir -p "$PWD/../logs/archive/frontend"
-mkdir -p "$PWD/../logs/archive/backend"
-mkdir -p "$PWD/../logs/archive/database"
-mkdir -p "$PWD/../logs/archive/apigateway"
+mkdir -p "$PWD/../logs/archives/frontend"
+mkdir -p "$PWD/../logs/archives/backend"
+mkdir -p "$PWD/../logs/archives/database"
+mkdir -p "$PWD/../logs/archives/apigateway"
 
 # Create empty log files if they don't exist
 touch "$PWD/../logs/frontend.log"
