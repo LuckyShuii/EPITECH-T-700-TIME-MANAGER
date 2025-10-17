@@ -29,28 +29,42 @@ export const useAuthStore = defineStore("auth", () => {
     )
 
     const initAuth = async () => {
+    try {
+        await fetchUserProfile()
+        
+        // Charger le statut de travail si disponible
         try {
-            await fetchUserProfile()
             await fetchWorkSessionStatus()
-            console.log('✅ Session restaurée depuis cookie')
         } catch (error) {
-            console.log('ℹ️ Pas de session active')
-            user.value = null
+            console.log('ℹ️ Aucune session de travail active')
         }
+        
+        console.log('✅ Session restaurée depuis cookie')
+    } catch (error) {
+        console.log('ℹ️ Pas de session active')
+        user.value = null
     }
+}
 
     const login = async (credentials: UserLogin) => {
+    try {
+        await API.authAPI.login(credentials)
+        await fetchUserProfile()
+        console.log("Connected")
+        
+        // Essayer de charger le statut de travail, mais ne pas bloquer si ça échoue
         try {
-            await API.authAPI.login(credentials)
-            await fetchUserProfile()
             await fetchWorkSessionStatus()
-            console.log("Connected")
-        }
-        catch (error) {
-            user.value = null
-            throw error
+        } catch (error) {
+            console.log('ℹ️ Aucune session de travail active')
+            // On ne throw pas l'erreur, c'est normal de ne pas avoir de session
         }
     }
+    catch (error) {
+        user.value = null
+        throw error
+    }
+}
 
 const fetchWorkSessionStatus = async () => {
     try {

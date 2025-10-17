@@ -31,6 +31,7 @@ const formatDuration = (milliseconds: number): string => {
 const workedTime = computed(() => {
   // Force la réactivité avec currentTime
   currentTime.value
+
   
   // Vérifie si on est dans un état "clocké" (active ou paused)
   if (!props.clockInTime || (props.status !== 'active' && props.status !== 'paused')) {
@@ -40,6 +41,9 @@ const workedTime = computed(() => {
   const clockIn = new Date(props.clockInTime)
   const now = new Date()
   const duration = now.getTime() - clockIn.getTime()
+  
+
+  
   return formatDuration(duration)
 })
 

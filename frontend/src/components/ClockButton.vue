@@ -97,11 +97,6 @@ const pipiCaca = async (clockingStatus: boolean) => {
         class="btn btn-warning btn-lg flex-1">
         ⏸️ Pause
       </button>
-
-      <!-- État PAUSED : Stop -->
-      <button v-else-if="currentState === 'PAUSED'" key="stop" @click="stopShift" class="btn btn-error btn-lg flex-1">
-        ⏹️ Stop
-      </button>
     </Transition>
   </div>
 </template>
