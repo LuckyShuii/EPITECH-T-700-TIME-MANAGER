@@ -7,6 +7,8 @@ import (
 	"app/internal/app/user/service"
 
 	"github.com/gin-gonic/gin"
+
+	Config "app/internal/config"
 )
 
 type UserHandler struct {
@@ -29,7 +31,7 @@ func (handler *UserHandler) GetUsers(c *gin.Context) {
 func (handler *UserHandler) RegisterUser(c *gin.Context) {
 	var req model.UserCreate
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": Config.ErrorMessages()["INVALID_REQUEST"]})
 		return
 	}
 
@@ -52,7 +54,7 @@ func (handler *UserHandler) DeleteUser(c *gin.Context) {
 		UserUUID string `json:"user_uuid"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": Config.ErrorMessages()["INVALID_REQUEST"]})
 		return
 	}
 
@@ -68,4 +70,40 @@ func (handler *UserHandler) DeleteUser(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "user deleted successfully"})
+}
+
+// UpdateUserStatus
+func (handler *UserHandler) UpdateUserStatus(c *gin.Context) {
+	// status is either active, disabled or pending
+	var req struct {
+		UserUUID string `json:"user_uuid"`
+		Status   string `json:"status"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": Config.ErrorMessages()["INVALID_REQUEST"]})
+		return
+	}
+
+	if req.UserUUID == "" || req.Status == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "missing required fields"})
+		return
+	}
+
+	if req.Status != "active" && req.Status != "disabled" && req.Status != "pending" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid status value"})
+		return
+	}
+
+	err := handler.service.UpdateUserStatus(req.UserUUID, req.Status)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message":    "user status updated successfully",
+		"new_status": req.Status,
+	})
 }

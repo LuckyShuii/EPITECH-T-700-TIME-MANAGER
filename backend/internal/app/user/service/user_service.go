@@ -13,6 +13,7 @@ type UserService interface {
 	GetUserByEmailAuth(typeOf string, data string) (*model.UserReadJWT, error)
 	RegisterUser(user model.UserCreate) error
 	GetIdByUuid(id string) (int, error)
+	UpdateUserStatus(userUUID string, status string) error
 	DeleteUser(userUUID string) error
 }
 
@@ -52,4 +53,8 @@ func (service *userService) RegisterUser(user model.UserCreate) error {
 
 func (service *userService) DeleteUser(userUUID string) error {
 	return service.repo.DeleteUser(userUUID)
+}
+
+func (service *userService) UpdateUserStatus(userUUID string, status string) error {
+	return service.repo.UpdateUserStatus(userUUID, status)
 }

@@ -39,7 +39,7 @@ func (handler *AuthHandler) LoginHandler(c *gin.Context) {
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": config.ErrorMessages()["INVALID_REQUEST"]})
 		return
 	}
 

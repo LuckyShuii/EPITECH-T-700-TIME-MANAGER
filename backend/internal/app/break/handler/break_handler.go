@@ -7,6 +7,8 @@ import (
 	BreakService "app/internal/app/break/service"
 
 	"github.com/gin-gonic/gin"
+
+	Config "app/internal/config"
 )
 
 type BreakHandler struct {
@@ -21,7 +23,7 @@ func (handler *BreakHandler) UpdateBreak(c *gin.Context) {
 	var req BreakModel.BreakUpdate
 
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": Config.ErrorMessages()["INVALID_REQUEST"]})
 		return
 	}
 
