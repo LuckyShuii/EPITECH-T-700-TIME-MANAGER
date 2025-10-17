@@ -15,6 +15,7 @@ type WorkSessionRepository interface {
 	GetUserActiveWorkSession(user_id int, status string) (workSession WorkSessionModel.WorkSessionRead, err error)
 	FindIdByUuid(uuid string) (workSessionId int, err error)
 	UpdateWorkSessionStatus(uuid string, status string) error
+	UpdateBreakDurationMinutes(uuid string, breakDuration int) error
 }
 
 type workSessionRepository struct {
@@ -67,6 +68,14 @@ func (repo *workSessionRepository) UpdateWorkSessionStatus(uuid string, status s
 	err := repo.db.Exec(
 		"UPDATE work_session_active SET status = ? WHERE uuid = ?",
 		status, uuid,
+	).Error
+	return err
+}
+
+func (repo *workSessionRepository) UpdateBreakDurationMinutes(uuid string, breakDuration int) error {
+	err := repo.db.Exec(
+		"UPDATE work_session_active SET breaks_duration_minutes = ? WHERE uuid = ?",
+		breakDuration, uuid,
 	).Error
 	return err
 }

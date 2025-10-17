@@ -12,6 +12,8 @@ type BreakRepository interface {
 	CompleteBreak(uuid string, workSessionId int, duration int) (err error)
 	CreateBreak(uuid string, workSessionId int, status string) error
 	GetWorkSessionBreak(work_session_id int, status string) (breakSession BreakModel.BreakRead, err error)
+	GetTotalBreakDurationByWorkSessionId(workSessionId int) (totalDuration int, err error)
+	DeleteRelatedBreaksToWorkSession(workSessionId int) error
 }
 
 type breakRepository struct {
@@ -47,6 +49,22 @@ func (repo *breakRepository) CreateBreak(uuid string, workSessionId int, status 
 	err := repo.db.Exec(
 		"INSERT INTO breaks (uuid, work_session_active_id, start_time, status) VALUES (?, ?, ?, ?)",
 		uuid, workSessionId, "now()", status,
+	).Error
+	return err
+}
+
+func (repo *breakRepository) GetTotalBreakDurationByWorkSessionId(workSessionId int) (totalDuration int, err error) {
+	err = repo.db.Raw("SELECT COALESCE(SUM(duration_minutes), 0) FROM breaks WHERE work_session_active_id = ?", workSessionId).Scan(&totalDuration).Error
+	if err != nil {
+		return 0, err
+	}
+	return totalDuration, nil
+}
+
+func (repo *breakRepository) DeleteRelatedBreaksToWorkSession(workSessionId int) error {
+	err := repo.db.Exec(
+		"DELETE FROM breaks WHERE work_session_active_id = ?",
+		workSessionId,
 	).Error
 	return err
 }

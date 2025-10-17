@@ -44,7 +44,7 @@ func SetupRouter() *gin.Engine {
 	* Work Sessions Routes
 	 */
 	workSessionRepo := workSessionR.NewWorkSessionRepository(database)
-	workSessionService := workSessionS.NewWorkSessionService(workSessionRepo, userService)
+	workSessionService := workSessionS.NewWorkSessionService(workSessionRepo, userService, BreakR.NewBreakRepository(database))
 	workSessionHandler := workSessionH.NewWorkSessionHandler(workSessionService)
 
 	breakRepo := BreakR.NewBreakRepository(database)

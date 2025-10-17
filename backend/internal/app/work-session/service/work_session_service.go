@@ -10,6 +10,8 @@ import (
 	UserService "app/internal/app/user/service"
 	WorkSessionRepository "app/internal/app/work-session/repository"
 
+	BreakRepository "app/internal/app/break/repository"
+
 	"github.com/google/uuid"
 )
 
@@ -20,90 +22,125 @@ type WorkSessionService interface {
 type workSessionService struct {
 	WorkSessionRepo WorkSessionRepository.WorkSessionRepository
 	UserService     UserService.UserService
+	BreakRepository BreakRepository.BreakRepository
 }
 
-func NewWorkSessionService(repo WorkSessionRepository.WorkSessionRepository, userService UserService.UserService) WorkSessionService {
-	return &workSessionService{WorkSessionRepo: repo, UserService: userService}
+func NewWorkSessionService(repo WorkSessionRepository.WorkSessionRepository, userService UserService.UserService, breakRepo BreakRepository.BreakRepository) WorkSessionService {
+	return &workSessionService{WorkSessionRepo: repo, UserService: userService, BreakRepository: breakRepo}
 }
 
 func (service *workSessionService) UpdateWorkSessionClocking(data WorkSessionModel.WorkSessionUpdate) (WorkSessionModel.WorkSessionUpdateResponse, error) {
 	var response WorkSessionModel.WorkSessionUpdateResponse
 
-	/**
-	 * Check if user exists and get the user ID based on his UUID
-	 */
+	// 1️⃣ Get user ID from UUID
 	userID, userErr := service.UserService.GetIdByUuid(data.UserUUID)
 	if userErr != nil {
 		response.Success = false
 		return response, userErr
 	}
 
-	/**
-	 * Check if a work session exists for the user
-	 */
+	// 2️⃣ Check for active work session
 	workSessionFound, err := service.WorkSessionRepo.GetUserActiveWorkSession(userID, "active")
 	if err != nil {
 		response.Success = false
 		return response, err
 	}
 
-	if workSessionFound.WorkSessionUUID != "" {
-		response.ClockInTime = workSessionFound.ClockIn
-	}
-
-	/**
-	 * If user is clocking in & an active work session already exists, return an error message
-	 */
+	// 3️⃣ Clock-in while already clocked-in → error
 	if workSessionFound.WorkSessionUUID != "" && *data.IsClocked {
 		return response, fmt.Errorf("an active work session already exists for this user, cannot clock in again")
 	}
 
-	/**
-	 * If user is clocking in & no active work session found, start a new one
-	 */
+	// 4️⃣ No active session but clock-in → create session
 	if workSessionFound.WorkSessionUUID == "" && *data.IsClocked {
-		response.ClockInTime = time.Now().In(time.FixedZone("Europe/Paris", 2*60*60)).Format(time.RFC3339Nano)
-		service.WorkSessionRepo.CreateWorkSession(uuid.New().String(), userID, "active")
+		now := time.Now().In(time.FixedZone("Europe/Paris", 2*60*60))
+		response.ClockInTime = now.Format(time.RFC3339Nano)
+		response.Status = "clocked_in"
+		response.Success = true
+
+		err := service.WorkSessionRepo.CreateWorkSession(uuid.New().String(), userID, "active")
+		if err != nil {
+			response.Success = false
+			return response, err
+		}
+		return response, nil
 	}
 
-	/**
-	 * If user is clocking out & and no active work session found, return an error message
-	 */
+	// 5️⃣ No active session and clock-out → error
 	if workSessionFound.WorkSessionUUID == "" && !*data.IsClocked {
 		response.Success = false
 		return response, fmt.Errorf("no active work session found for this user, cannot clock out")
 	}
 
-	/**
-	 * If user is clocking out & an active work session found, close it
-	 */
+	// 6️⃣ Clock-out process
 	if workSessionFound.WorkSessionUUID != "" && !*data.IsClocked {
-		t1, err := time.Parse(time.RFC3339Nano, workSessionFound.ClockIn)
-		if err != nil {
-			log.Println("parse error:", err)
-		}
-
-		loc, _ := time.LoadLocation("Europe/Paris")
-
-		t2 := time.Now().In(loc)
-
-		duration := t2.Sub(t1)
-		minutes := duration.Minutes()
-
-		rounded := math.Floor(minutes + 0.5)
-
-		service.WorkSessionRepo.CompleteWorkSession(workSessionFound.WorkSessionUUID, userID, int(rounded))
-
-		clockOutTimeStr := t2.Format(time.RFC3339Nano)
-		response.ClockOutTime = &clockOutTimeStr
+		return service.CompleteWorkSessionProcess(workSessionFound, userID)
 	}
 
 	response.Success = true
-	if !*data.IsClocked {
-		response.Status = "clocked_out"
-	} else {
-		response.Status = "clocked_in"
+	response.Status = "clocked_in"
+	return response, nil
+}
+
+func (service *workSessionService) CompleteWorkSessionProcess(workSessionFound WorkSessionModel.WorkSessionRead, userID int) (WorkSessionModel.WorkSessionUpdateResponse, error) {
+	var response WorkSessionModel.WorkSessionUpdateResponse
+
+	loc, _ := time.LoadLocation("Europe/Paris")
+	t2 := time.Now().In(loc)
+
+	// Parse the clock-in time
+	t1, err := time.Parse(time.RFC3339Nano, workSessionFound.ClockIn)
+	if err != nil {
+		log.Println("parse error:", err)
+		response.Success = false
+		return response, err
 	}
+
+	// Get the duration in minutes
+	duration := t2.Sub(t1)
+	minutes := math.Floor(duration.Minutes() + 0.5)
+
+	// Update the work session
+	err = service.WorkSessionRepo.CompleteWorkSession(workSessionFound.WorkSessionUUID, userID, int(minutes))
+	if err != nil {
+		response.Success = false
+		return response, err
+	}
+
+	// Get the internal ID of the work session
+	workSessionId, err := service.WorkSessionRepo.FindIdByUuid(workSessionFound.WorkSessionUUID)
+	if err != nil {
+		response.Success = false
+		return response, err
+	}
+
+	// Get total break duration
+	breakDuration, err := service.BreakRepository.GetTotalBreakDurationByWorkSessionId(workSessionId)
+	if err != nil {
+		response.Success = false
+		return response, err
+	}
+
+	// Update break duration in work session
+	err = service.WorkSessionRepo.UpdateBreakDurationMinutes(workSessionFound.WorkSessionUUID, breakDuration)
+	if err != nil {
+		response.Success = false
+		return response, err
+	}
+
+	// Delete related breaks
+	err = service.BreakRepository.DeleteRelatedBreaksToWorkSession(workSessionId)
+	if err != nil {
+		response.Success = false
+		return response, err
+	}
+
+	// Prepare response
+	response.ClockInTime = workSessionFound.ClockIn
+	formattedTime := t2.Format(time.RFC3339Nano)
+	response.ClockOutTime = &formattedTime
+	response.Status = "clocked_out"
+	response.Success = true
 
 	return response, nil
 }
