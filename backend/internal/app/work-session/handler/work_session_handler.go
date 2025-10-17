@@ -51,7 +51,7 @@ func (handler *WorkSessionHandler) UpdateWorkSessionClocking(c *gin.Context) {
 	userUUID := claims.(*AuthService.Claims).UUID
 
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": Config.ErrorMessages()["INVALID_REQUEST"]})
 		return
 	}
 

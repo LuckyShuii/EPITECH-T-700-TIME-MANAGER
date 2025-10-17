@@ -12,6 +12,8 @@ type UserRepository interface {
 	FindByTypeAuth(typeOf string, data string) (*model.UserReadJWT, error)
 	RegisterUser(user model.UserCreate) error
 	FindIdByUuid(id string) (userId int, err error)
+	UpdateUserStatus(userUUID string, status string) error
+	DeleteUser(userUUID string) error
 }
 
 type userRepository struct {
@@ -58,5 +60,15 @@ func (repo *userRepository) RegisterUser(user model.UserCreate) error {
 		"INSERT INTO users (uuid, first_name, last_name, email, username, phone_number, roles, password_hash) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
 		user.UUID, user.FirstName, user.LastName, user.Email, user.Username, user.PhoneNumber, user.Roles, user.PasswordHash,
 	).Error
+	return err
+}
+
+func (repo *userRepository) DeleteUser(userUUID string) error {
+	err := repo.db.Exec("DELETE FROM users WHERE uuid = ?", userUUID).Error
+	return err
+}
+
+func (repo *userRepository) UpdateUserStatus(userUUID string, status string) error {
+	err := repo.db.Exec("UPDATE users SET status = ? WHERE uuid = ?", status, userUUID).Error
 	return err
 }
