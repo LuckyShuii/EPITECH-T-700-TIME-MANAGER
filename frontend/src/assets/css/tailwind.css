@@ -1,4 +1,76 @@
 @import "tailwindcss";
 @plugin "daisyui" {
    themes: light --default, dark --prefersdark ;
- }
+}
+
+/* Configuration du thème avec @theme */
+@theme {
+  /* Couleurs personnalisées */
+  --color-primary-50: #f5f7ff;
+  --color-primary-100: #ebf0ff;
+  --color-primary-200: #d6e0ff;
+  --color-primary-300: #b3c5ff;
+  --color-primary-400: #8099ff;
+  --color-primary-500: #667eea;
+  --color-primary-600: #5568d3;
+  --color-primary-700: #4451b8;
+  --color-primary-800: #363f94;
+  --color-primary-900: #2d3475;
+
+  --color-secondary-50: #faf5ff;
+  --color-secondary-100: #f3e8ff;
+  --color-secondary-200: #e9d5ff;
+  --color-secondary-300: #d8b4fe;
+  --color-secondary-400: #c084fc;
+  --color-secondary-500: #764ba2;
+  --color-secondary-600: #6a3f8f;
+  --color-secondary-700: #5e357d;
+  --color-secondary-800: #4c2a63;
+  --color-secondary-900: #3d2250;
+
+  /* Couleurs sémantiques */
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
+  --color-info: #3b82f6;
+  --color-ouioui: #fc3503;
+
+  /* Ombres personnalisées */
+  --shadow-card: 0 10px 40px rgb(0 0 0 / 0.1);
+  --shadow-card-hover: 0 20px 60px rgb(0 0 0 / 0.15);
+  --shadow-glow: 0 0 20px rgb(102 126 234 / 0.5);
+
+  /* Animations personnalisées */
+  --animate-pulse-slow: pulse-slow 3s ease-in-out infinite;
+  --animate-float: float 3s ease-in-out infinite;
+}
+
+/* Keyframes pour les animations */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+@keyframes pulse-slow {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Gradients personnalisés via classes utilitaires */
+@layer utilities {
+  .bg-gradient-primary {
+    background-image: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  }
+  
+  .bg-gradient-dark {
+    background-image: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+  }
+}
