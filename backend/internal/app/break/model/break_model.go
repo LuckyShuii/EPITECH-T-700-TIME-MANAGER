@@ -24,6 +24,9 @@ type BreakReadAll struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
+// BreakUpdate represents the payload to update a break status.
+//
+// swagger:model
 type BreakUpdate struct {
 	WorkSessionUUID string `json:"work_session_uuid"`
 	IsBreaking      *bool  `json:"is_breaking"`
@@ -35,6 +38,9 @@ type BreakCreate struct {
 	Status string `json:"status"`
 }
 
+// BreakResponse represents the response returned when updating a break status.
+//
+// swagger:model
 type BreakUpdateResponse struct {
 	Success   bool    `json:"success"`
 	StartTime string  `json:"start_time"`

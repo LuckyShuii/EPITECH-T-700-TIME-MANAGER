@@ -6,9 +6,9 @@ import (
 	"app/internal/app/user/model"
 	"app/internal/app/user/service"
 
-	"github.com/gin-gonic/gin"
-
 	Config "app/internal/config"
+
+	"github.com/gin-gonic/gin"
 )
 
 type UserHandler struct {
@@ -19,6 +19,15 @@ func NewUserHandler(service service.UserService) *UserHandler {
 	return &UserHandler{service: service}
 }
 
+// GetUsers retrieves all registered users.
+//
+// @Summary      Get all users
+// @Description  Returns a list of all registered users. 🔒 Requires role: **admin**
+// @Tags         Users
+// @Security     BearerAuth
+// @Produce      json
+// @Success      200  {array}   model.UserRead  "List of users retrieved successfully"
+// @Router       /users [get]
 func (handler *UserHandler) GetUsers(c *gin.Context) {
 	users, err := handler.service.GetUsers()
 	if err != nil {
@@ -28,6 +37,17 @@ func (handler *UserHandler) GetUsers(c *gin.Context) {
 	c.JSON(http.StatusOK, users)
 }
 
+// RegisterUser registers a new user.
+//
+// @Summary      Register a new user
+// @Description  Creates a new user with the provided information. 🔒 Requires role: **admin**
+// @Tags         Users
+// @Security     BearerAuth
+// @Accept       json
+// @Produce      json
+// @Param        body  body      model.UserCreate  true  "User creation payload"
+// @Success      201   {object}  response.UserCreatedResponse  "User registered successfully"
+// @Router       /users/register [post]
 func (handler *UserHandler) RegisterUser(c *gin.Context) {
 	var req model.UserCreate
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -49,6 +69,17 @@ func (handler *UserHandler) RegisterUser(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"message": "user registered successfully"})
 }
 
+// DeleteUser deletes an existing user by UUID.
+//
+// @Summary      Delete a user
+// @Description  Deletes a user by their UUID. 🔒 Requires role: **admin**
+// @Tags         Users
+// @Security     BearerAuth
+// @Accept       json
+// @Produce      json
+// @Param        body  body      model.UserUUIDPayload  true  "User UUID payload"
+// @Success      200   {object}  response.UserDeletedResponse  "User deleted successfully"
+// @Router       /users/delete [delete]
 func (handler *UserHandler) DeleteUser(c *gin.Context) {
 	var req struct {
 		UserUUID string `json:"user_uuid"`
@@ -72,9 +103,18 @@ func (handler *UserHandler) DeleteUser(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "user deleted successfully"})
 }
 
-// UpdateUserStatus
+// UpdateUserStatus updates the status of an existing user.
+//
+// @Summary      Update user status
+// @Description  Updates a user's status (active, disabled, or pending). 🔒 Requires role: **admin**
+// @Tags         Users
+// @Security     BearerAuth
+// @Accept       json
+// @Produce      json
+// @Param        body  body      model.UserStatusUpdatePayload  true  "User status update payload"
+// @Success      200   {object}  response.UserStatusUpdatedResponse  "User status updated successfully"
+// @Router       /users/update-status [put]
 func (handler *UserHandler) UpdateUserStatus(c *gin.Context) {
-	// status is either active, disabled or pending
 	var req struct {
 		UserUUID string `json:"user_uuid"`
 		Status   string `json:"status"`
@@ -96,7 +136,6 @@ func (handler *UserHandler) UpdateUserStatus(c *gin.Context) {
 	}
 
 	err := handler.service.UpdateUserStatus(req.UserUUID, req.Status)
-
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
