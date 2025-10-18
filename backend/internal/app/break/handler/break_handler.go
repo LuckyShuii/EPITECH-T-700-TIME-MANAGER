@@ -23,7 +23,7 @@ func NewBreakHandler(service BreakService.BreakService) *BreakHandler {
 //
 // @Summary      Update break status
 // @Description  Starts or ends a break for the current work session depending on the value of `is_breaking`. 🔒 Requires role: **any**
-// @Tags         Break
+// @Tags         WorkSession
 // @Security     BearerAuth
 // @Accept       json
 // @Produce      json

@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"time"
 
-	WorkSessionModel "app/internal/app/work-session/model"
+	"app/internal/app/work-session/model"
 	WorkSessionService "app/internal/app/work-session/service"
 
 	AuthService "app/internal/app/auth/service"
@@ -39,8 +39,18 @@ func NewWorkSessionHandler(service WorkSessionService.WorkSessionService) *WorkS
 	return &WorkSessionHandler{service: service}
 }
 
+// UpdateWorkSessionClocking godoc
+// @Summary      Update work session clocking status
+// @Description  Starts or stops a work session for the authenticated user 🔒 Requires role: **any**
+// @Tags         WorkSession
+// @Security     BearerAuth
+// @Accept       json
+// @Produce      json
+// @Param        request  body      model.WorkSessionUpdate  true  "Clocking payload"
+// @Success      201   {object}  model.WorkSessionUpdateResponse  "Work session updated successfully"
+// @Router       /work-session/update-clocking [post]
 func (handler *WorkSessionHandler) UpdateWorkSessionClocking(c *gin.Context) {
-	var req WorkSessionModel.WorkSessionUpdate
+	var req model.WorkSessionUpdate
 
 	claims, exists := c.Get("userClaims")
 	if !exists {
@@ -60,7 +70,7 @@ func (handler *WorkSessionHandler) UpdateWorkSessionClocking(c *gin.Context) {
 		return
 	}
 
-	Response, registerErr := handler.service.UpdateWorkSessionClocking(WorkSessionModel.WorkSessionUpdate{
+	Response, registerErr := handler.service.UpdateWorkSessionClocking(model.WorkSessionUpdate{
 		UserUUID:  userUUID,
 		IsClocked: req.IsClocked,
 	})
@@ -73,6 +83,14 @@ func (handler *WorkSessionHandler) UpdateWorkSessionClocking(c *gin.Context) {
 	c.JSON(http.StatusCreated, Response)
 }
 
+// GetWorkSessionStatus godoc
+// @Summary      Get current work session status
+// @Description  Returns whether the authenticated user is currently clocked in 🔒 Requires role: **any**
+// @Tags         WorkSession
+// @Security     BearerAuth
+// @Produce      json
+// @Success      200   {object}  model.WorkSessionStatus  "Current work session status"
+// @Router       /work-session/status [get]
 func (handler *WorkSessionHandler) GetWorkSessionStatus(c *gin.Context) {
 	claims, exists := c.Get("userClaims")
 	if !exists {
@@ -91,6 +109,19 @@ func (handler *WorkSessionHandler) GetWorkSessionStatus(c *gin.Context) {
 	c.JSON(http.StatusOK, status)
 }
 
+// GetWorkSessionHistory godoc
+// @Summary      Get user work session history
+// @Description  Returns paginated history of work sessions between a start and end date 🔒 Requires role: **admin or manager** to get history from any users. If the user is employee, only their own history can be accessed.
+// @Tags         WorkSession
+// @Security     BearerAuth
+// @Produce      json
+// @Param        user_uuid    query     string  false  "UUID of the user (optional, defaults to authenticated user)"
+// @Param        start_date   query     string  true   "Start date in ISO 8601 format (from 2 years ago up to now)"
+// @Param        end_date     query     string  true   "End date in ISO 8601 format (can't be in the future)"
+// @Param        limit        query     int     false  "Number of results to return (default 50)"
+// @Param        offset       query     int     false  "Pagination offset (default 0)"
+// @Success      200   {array}  model.WorkSessionReadHistory  "List of work session history entries"
+// @Router       /work-session/history [get]
 func (handler *WorkSessionHandler) GetWorkSessionHistory(c *gin.Context) {
 	claims, exists := c.Get("userClaims")
 	if !exists {
@@ -98,10 +129,19 @@ func (handler *WorkSessionHandler) GetWorkSessionHistory(c *gin.Context) {
 		return
 	}
 
+	roles := claims.(*AuthService.Claims).Roles
+	isAdminOrManager := false
+	for _, role := range roles {
+		if role == "admin" || role == "manager" {
+			isAdminOrManager = true
+			break
+		}
+	}
+
 	userUUID := ""
 
 	// if the param user_uuid is not present, use the uuid from the claims
-	if c.Query("user_uuid") != "" {
+	if c.Query("user_uuid") != "" && isAdminOrManager {
 		userUUID = c.Query("user_uuid")
 	} else {
 		userUUID = claims.(*AuthService.Claims).UUID
@@ -155,7 +195,7 @@ func (handler *WorkSessionHandler) GetWorkSessionHistory(c *gin.Context) {
 	}
 
 	if history == nil {
-		history = []WorkSessionModel.WorkSessionReadHistory{}
+		history = []model.WorkSessionReadHistory{}
 	}
 
 	c.JSON(http.StatusOK, history)

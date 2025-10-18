@@ -250,6 +250,93 @@ const docTemplate = `{
                 }
             }
         },
+        "/work-session/history": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns paginated history of work sessions between a start and end date 🔒 Requires role: **admin or manager** to get history from any users. If the user is employee, only their own history can be accessed.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "WorkSession"
+                ],
+                "summary": "Get user work session history",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "UUID of the user (optional, defaults to authenticated user)",
+                        "name": "user_uuid",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Start date in ISO 8601 format (from 2 years ago up to now)",
+                        "name": "start_date",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "End date in ISO 8601 format (can't be in the future)",
+                        "name": "end_date",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Number of results to return (default 50)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Pagination offset (default 0)",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of work session history entries",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/model.WorkSessionReadHistory"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/work-session/status": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns whether the authenticated user is currently clocked in 🔒 Requires role: **any**",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "WorkSession"
+                ],
+                "summary": "Get current work session status",
+                "responses": {
+                    "200": {
+                        "description": "Current work session status",
+                        "schema": {
+                            "$ref": "#/definitions/model.WorkSessionStatus"
+                        }
+                    }
+                }
+            }
+        },
         "/work-session/update-breaking": {
             "post": {
                 "security": [
@@ -265,7 +352,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Break"
+                    "WorkSession"
                 ],
                 "summary": "Update break status",
                 "parameters": [
@@ -284,6 +371,45 @@ const docTemplate = `{
                         "description": "Break updated successfully",
                         "schema": {
                             "$ref": "#/definitions/model.BreakUpdateResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/work-session/update-clocking": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Starts or stops a work session for the authenticated user 🔒 Requires role: **any**",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "WorkSession"
+                ],
+                "summary": "Update work session clocking status",
+                "parameters": [
+                    {
+                        "description": "Clocking payload",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.WorkSessionUpdate"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Work session updated successfully",
+                        "schema": {
+                            "$ref": "#/definitions/model.WorkSessionUpdateResponse"
                         }
                     }
                 }
@@ -452,6 +578,82 @@ const docTemplate = `{
                 "user_uuid": {
                     "type": "string",
                     "example": "e1234abc-5678-90de-f123-4567890abcde"
+                }
+            }
+        },
+        "model.WorkSessionReadHistory": {
+            "type": "object",
+            "properties": {
+                "breaks_duration_minutes": {
+                    "type": "integer"
+                },
+                "clock_in": {
+                    "type": "string"
+                },
+                "clock_out": {
+                    "type": "string"
+                },
+                "duration_minutes": {
+                    "type": "integer"
+                },
+                "status": {
+                    "description": "status is either \"active\", \"paused\" or \"completed\"",
+                    "type": "string"
+                },
+                "user_uuid": {
+                    "description": "User fields",
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                },
+                "work_session_uuid": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.WorkSessionStatus": {
+            "type": "object",
+            "properties": {
+                "clock_in_time": {
+                    "type": "string"
+                },
+                "is_clocked": {
+                    "type": "boolean"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "work_session_uuid": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.WorkSessionUpdate": {
+            "type": "object",
+            "properties": {
+                "is_clocked": {
+                    "type": "boolean"
+                },
+                "user_uuid": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.WorkSessionUpdateResponse": {
+            "type": "object",
+            "properties": {
+                "clock_in_time": {
+                    "type": "string"
+                },
+                "clock_out_time": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
                 }
             }
         },

@@ -107,6 +107,56 @@ definitions:
         example: e1234abc-5678-90de-f123-4567890abcde
         type: string
     type: object
+  model.WorkSessionReadHistory:
+    properties:
+      breaks_duration_minutes:
+        type: integer
+      clock_in:
+        type: string
+      clock_out:
+        type: string
+      duration_minutes:
+        type: integer
+      status:
+        description: status is either "active", "paused" or "completed"
+        type: string
+      user_uuid:
+        description: User fields
+        type: string
+      username:
+        type: string
+      work_session_uuid:
+        type: string
+    type: object
+  model.WorkSessionStatus:
+    properties:
+      clock_in_time:
+        type: string
+      is_clocked:
+        type: boolean
+      status:
+        type: string
+      work_session_uuid:
+        type: string
+    type: object
+  model.WorkSessionUpdate:
+    properties:
+      is_clocked:
+        type: boolean
+      user_uuid:
+        type: string
+    type: object
+  model.WorkSessionUpdateResponse:
+    properties:
+      clock_in_time:
+        type: string
+      clock_out_time:
+        type: string
+      status:
+        type: string
+      success:
+        type: boolean
+    type: object
   response.MessageResponse:
     properties:
       message:
@@ -284,6 +334,64 @@ paths:
       summary: Update user status
       tags:
       - Users
+  /work-session/history:
+    get:
+      description: "Returns paginated history of work sessions between a start and
+        end date \U0001F512 Requires role: **admin or manager** to get history from
+        any users. If the user is employee, only their own history can be accessed."
+      parameters:
+      - description: UUID of the user (optional, defaults to authenticated user)
+        in: query
+        name: user_uuid
+        type: string
+      - description: Start date in ISO 8601 format (from 2 years ago up to now)
+        in: query
+        name: start_date
+        required: true
+        type: string
+      - description: End date in ISO 8601 format (can't be in the future)
+        in: query
+        name: end_date
+        required: true
+        type: string
+      - description: Number of results to return (default 50)
+        in: query
+        name: limit
+        type: integer
+      - description: Pagination offset (default 0)
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of work session history entries
+          schema:
+            items:
+              $ref: '#/definitions/model.WorkSessionReadHistory'
+            type: array
+      security:
+      - BearerAuth: []
+      summary: Get user work session history
+      tags:
+      - WorkSession
+  /work-session/status:
+    get:
+      description: "Returns whether the authenticated user is currently clocked in
+        \U0001F512 Requires role: **any**"
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Current work session status
+          schema:
+            $ref: '#/definitions/model.WorkSessionStatus'
+      security:
+      - BearerAuth: []
+      summary: Get current work session status
+      tags:
+      - WorkSession
   /work-session/update-breaking:
     post:
       consumes:
@@ -308,7 +416,32 @@ paths:
       - BearerAuth: []
       summary: Update break status
       tags:
-      - Break
+      - WorkSession
+  /work-session/update-clocking:
+    post:
+      consumes:
+      - application/json
+      description: "Starts or stops a work session for the authenticated user \U0001F512
+        Requires role: **any**"
+      parameters:
+      - description: Clocking payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.WorkSessionUpdate'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Work session updated successfully
+          schema:
+            $ref: '#/definitions/model.WorkSessionUpdateResponse'
+      security:
+      - BearerAuth: []
+      summary: Update work session clocking status
+      tags:
+      - WorkSession
 securityDefinitions:
   BearerAuth:
     in: header
