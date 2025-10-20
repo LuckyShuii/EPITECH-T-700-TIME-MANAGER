@@ -25,6 +25,7 @@ func SetupRouter() *gin.Engine {
 	r := gin.Default()
 
 	database := db.ConnectPostgres()
+	db.ConnectRedis()
 
 	/**
 	 * User Module

@@ -2,6 +2,9 @@ package service
 
 import (
 	WorkSessionModel "app/internal/app/work-session/model"
+	"app/internal/db"
+	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"math"
@@ -113,17 +116,33 @@ func (service *workSessionService) GetWorkSessionStatus(userUUID string) (WorkSe
 }
 
 func (service *workSessionService) GetWorkSessionHistory(userUUID string, startDate string, endDate string, limit int, offset int) ([]WorkSessionModel.WorkSessionReadHistory, error) {
-	// 1️⃣ Get user ID from UUID
+	ctx := context.Background()
+
+	cacheKey := fmt.Sprintf("worksession:history:%s:%s:%s:%d:%d", userUUID, startDate, endDate, limit, offset)
+
+	cached, err := db.RedisClient.Get(ctx, cacheKey).Result()
+	if err == nil && cached != "" {
+		var cachedHistory []WorkSessionModel.WorkSessionReadHistory
+		if jsonErr := json.Unmarshal([]byte(cached), &cachedHistory); jsonErr == nil {
+			return cachedHistory, nil
+		}
+	}
+
 	userID, userErr := service.UserService.GetIdByUuid(userUUID)
 	if userErr != nil {
 		return []WorkSessionModel.WorkSessionReadHistory{}, userErr
 	}
 
-	// 2️⃣ Get work session history
 	workSessions, err := service.WorkSessionRepo.GetWorkSessionHistoryByUserId(userID, startDate, endDate, limit, offset)
 	if err != nil {
 		return []WorkSessionModel.WorkSessionReadHistory{}, err
 	}
+
+	data, _ := json.Marshal(workSessions)
+	if setErr := db.RedisClient.Set(ctx, cacheKey, data, 30*time.Second).Err(); setErr != nil {
+		log.Printf("⚠️ Error setting cache for %s : %v", cacheKey, setErr)
+	}
+
 	return workSessions, nil
 }
 
