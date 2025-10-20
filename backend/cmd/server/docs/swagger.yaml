@@ -1,0 +1,450 @@
+definitions:
+  handler.LoginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+      username:
+        type: string
+    type: object
+  model.BreakUpdate:
+    properties:
+      is_breaking:
+        type: boolean
+      work_session_uuid:
+        type: string
+    type: object
+  model.BreakUpdateResponse:
+    properties:
+      end_time:
+        type: string
+      start_time:
+        type: string
+      status:
+        type: string
+      success:
+        type: boolean
+    type: object
+  model.UserCreate:
+    properties:
+      email:
+        type: string
+      first_name:
+        type: string
+      last_name:
+        type: string
+      password:
+        description: Ignored by GORM, used only for input
+        type: string
+      password_hash:
+        type: string
+      phone_number:
+        type: string
+      roles:
+        items:
+          type: string
+        type: array
+      username:
+        type: string
+      uuid:
+        type: string
+    type: object
+  model.UserMeJWT:
+    properties:
+      email:
+        type: string
+      first_name:
+        type: string
+      last_name:
+        type: string
+      phone_number:
+        type: string
+      roles:
+        items:
+          type: string
+        type: array
+      user_uuid:
+        type: string
+      username:
+        type: string
+    type: object
+  model.UserRead:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      first_name:
+        type: string
+      last_name:
+        type: string
+      phone_number:
+        type: string
+      roles:
+        items:
+          type: string
+        type: array
+      updated_at:
+        type: string
+      username:
+        type: string
+      uuid:
+        type: string
+    type: object
+  model.UserStatusUpdatePayload:
+    properties:
+      status:
+        example: active
+        type: string
+      user_uuid:
+        example: e1234abc-5678-90de-f123-4567890abcde
+        type: string
+    type: object
+  model.UserUUIDPayload:
+    properties:
+      user_uuid:
+        example: e1234abc-5678-90de-f123-4567890abcde
+        type: string
+    type: object
+  model.WorkSessionReadHistory:
+    properties:
+      breaks_duration_minutes:
+        type: integer
+      clock_in:
+        type: string
+      clock_out:
+        type: string
+      duration_minutes:
+        type: integer
+      status:
+        description: status is either "active", "paused" or "completed"
+        type: string
+      user_uuid:
+        description: User fields
+        type: string
+      username:
+        type: string
+      work_session_uuid:
+        type: string
+    type: object
+  model.WorkSessionStatus:
+    properties:
+      clock_in_time:
+        type: string
+      is_clocked:
+        type: boolean
+      status:
+        type: string
+      work_session_uuid:
+        type: string
+    type: object
+  model.WorkSessionUpdate:
+    properties:
+      is_clocked:
+        type: boolean
+      user_uuid:
+        type: string
+    type: object
+  model.WorkSessionUpdateResponse:
+    properties:
+      clock_in_time:
+        type: string
+      clock_out_time:
+        type: string
+      status:
+        type: string
+      success:
+        type: boolean
+    type: object
+  response.MessageResponse:
+    properties:
+      message:
+        example: logged in successfully
+        type: string
+    type: object
+  response.UserCreatedResponse:
+    properties:
+      message:
+        example: user registered successfully
+        type: string
+    type: object
+  response.UserDeletedResponse:
+    properties:
+      message:
+        example: user deleted successfully
+        type: string
+    type: object
+  response.UserStatusUpdatedResponse:
+    properties:
+      message:
+        example: user status updated successfully
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticates a user via email or username and returns a JWT cookie
+        on success.
+      parameters:
+      - description: Login credentials
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: logged in successfully
+          schema:
+            $ref: '#/definitions/response.MessageResponse'
+      summary: Login a user
+      tags:
+      - Auth
+  /auth/logout:
+    post:
+      consumes:
+      - application/json
+      description: Clears the JWT cookie and invalidates the user's session.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Logout successful
+          schema:
+            $ref: '#/definitions/response.MessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Logout the current user
+      tags:
+      - Auth
+  /auth/me:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves information about the currently logged-in user based
+        on the JWT token.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Current user information
+          schema:
+            $ref: '#/definitions/model.UserMeJWT'
+      security:
+      - BearerAuth: []
+      summary: Get current user info
+      tags:
+      - Auth
+  /users:
+    get:
+      description: "Returns a list of all registered users. \U0001F512 Requires role:
+        **admin**"
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of users retrieved successfully
+          schema:
+            items:
+              $ref: '#/definitions/model.UserRead'
+            type: array
+      security:
+      - BearerAuth: []
+      summary: Get all users
+      tags:
+      - Users
+  /users/delete:
+    delete:
+      consumes:
+      - application/json
+      description: "Deletes a user by their UUID. \U0001F512 Requires role: **admin**"
+      parameters:
+      - description: User UUID payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.UserUUIDPayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User deleted successfully
+          schema:
+            $ref: '#/definitions/response.UserDeletedResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete a user
+      tags:
+      - Users
+  /users/register:
+    post:
+      consumes:
+      - application/json
+      description: "Creates a new user with the provided information. \U0001F512 Requires
+        role: **admin**"
+      parameters:
+      - description: User creation payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.UserCreate'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: User registered successfully
+          schema:
+            $ref: '#/definitions/response.UserCreatedResponse'
+      security:
+      - BearerAuth: []
+      summary: Register a new user
+      tags:
+      - Users
+  /users/update-status:
+    put:
+      consumes:
+      - application/json
+      description: "Updates a user's status (active, disabled, or pending). \U0001F512
+        Requires role: **admin**"
+      parameters:
+      - description: User status update payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.UserStatusUpdatePayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User status updated successfully
+          schema:
+            $ref: '#/definitions/response.UserStatusUpdatedResponse'
+      security:
+      - BearerAuth: []
+      summary: Update user status
+      tags:
+      - Users
+  /work-session/history:
+    get:
+      description: "Returns paginated history of work sessions between a start and
+        end date \U0001F512 Requires role: **admin or manager** to get history from
+        any users. If the user is employee, only their own history can be accessed."
+      parameters:
+      - description: UUID of the user (optional, defaults to authenticated user)
+        in: query
+        name: user_uuid
+        type: string
+      - description: Start date in ISO 8601 format (from 2 years ago up to now)
+        in: query
+        name: start_date
+        required: true
+        type: string
+      - description: End date in ISO 8601 format (can't be in the future)
+        in: query
+        name: end_date
+        required: true
+        type: string
+      - description: Number of results to return (default 50)
+        in: query
+        name: limit
+        type: integer
+      - description: Pagination offset (default 0)
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of work session history entries
+          schema:
+            items:
+              $ref: '#/definitions/model.WorkSessionReadHistory'
+            type: array
+      security:
+      - BearerAuth: []
+      summary: Get user work session history
+      tags:
+      - WorkSession
+  /work-session/status:
+    get:
+      description: "Returns whether the authenticated user is currently clocked in
+        \U0001F512 Requires role: **any**"
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Current work session status
+          schema:
+            $ref: '#/definitions/model.WorkSessionStatus'
+      security:
+      - BearerAuth: []
+      summary: Get current work session status
+      tags:
+      - WorkSession
+  /work-session/update-breaking:
+    post:
+      consumes:
+      - application/json
+      description: "Starts or ends a break for the current work session depending
+        on the value of `is_breaking`. \U0001F512 Requires role: **any**"
+      parameters:
+      - description: Break update payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.BreakUpdate'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Break updated successfully
+          schema:
+            $ref: '#/definitions/model.BreakUpdateResponse'
+      security:
+      - BearerAuth: []
+      summary: Update break status
+      tags:
+      - WorkSession
+  /work-session/update-clocking:
+    post:
+      consumes:
+      - application/json
+      description: "Starts or stops a work session for the authenticated user \U0001F512
+        Requires role: **any**"
+      parameters:
+      - description: Clocking payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.WorkSessionUpdate'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Work session updated successfully
+          schema:
+            $ref: '#/definitions/model.WorkSessionUpdateResponse'
+      security:
+      - BearerAuth: []
+      summary: Update work session clocking status
+      tags:
+      - WorkSession
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

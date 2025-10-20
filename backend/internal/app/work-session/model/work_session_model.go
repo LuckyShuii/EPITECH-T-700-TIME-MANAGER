@@ -50,6 +50,9 @@ type WorkSessionReadAll struct {
 	UpdatedAt time.Time      `json:"updated_at"`
 }
 
+// WorkSessionUpdate represents the payload to update a work session.
+//
+// swagger:model
 type WorkSessionUpdate struct {
 	UserUUID  string `json:"user_uuid"`
 	IsClocked *bool  `json:"is_clocked"`
@@ -61,6 +64,9 @@ type WorkSessionCreate struct {
 	Status string `json:"status"`
 }
 
+// WorkSessionUpdateResponse represents the response after updating a work session clocking status.
+//
+// swagger:model
 type WorkSessionUpdateResponse struct {
 	Success      bool    `json:"success"`
 	ClockInTime  string  `json:"clock_in_time"`
@@ -68,6 +74,9 @@ type WorkSessionUpdateResponse struct {
 	Status       string  `json:"status"`
 }
 
+// WorkSessionStatus represents the current work session status of a user.
+//
+// swagger:model
 type WorkSessionStatus struct {
 	WorkSessionUUID string  `json:"work_session_uuid"`
 	IsClocked       bool    `json:"is_clocked"`

@@ -3,7 +3,7 @@ package handler
 import (
 	"net/http"
 
-	BreakModel "app/internal/app/break/model"
+	"app/internal/app/break/model"
 	BreakService "app/internal/app/break/service"
 
 	"github.com/gin-gonic/gin"
@@ -19,8 +19,19 @@ func NewBreakHandler(service BreakService.BreakService) *BreakHandler {
 	return &BreakHandler{service: service}
 }
 
+// UpdateBreak updates the user's break status (start or end).
+//
+// @Summary      Update break status
+// @Description  Starts or ends a break for the current work session depending on the value of `is_breaking`. 🔒 Requires role: **any**
+// @Tags         WorkSession
+// @Security     BearerAuth
+// @Accept       json
+// @Produce      json
+// @Param        body  body      model.BreakUpdate  true  "Break update payload"
+// @Success      201   {object}  model.BreakUpdateResponse  "Break updated successfully"
+// @Router       /work-session/update-breaking [post]
 func (handler *BreakHandler) UpdateBreak(c *gin.Context) {
-	var req BreakModel.BreakUpdate
+	var req model.BreakUpdate
 
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": Config.ErrorMessages()["INVALID_REQUEST"]})
@@ -32,7 +43,7 @@ func (handler *BreakHandler) UpdateBreak(c *gin.Context) {
 		return
 	}
 
-	Response, registerErr := handler.service.UpdateBreakClocking(BreakModel.BreakUpdate{
+	Response, registerErr := handler.service.UpdateBreakClocking(model.BreakUpdate{
 		WorkSessionUUID: req.WorkSessionUUID,
 		IsBreaking:      req.IsBreaking,
 	})
