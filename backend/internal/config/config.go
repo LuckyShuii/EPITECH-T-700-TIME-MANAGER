@@ -18,6 +18,8 @@ type Config struct {
 	JWTExpirationHours string
 	ProjectStatus      string
 	FrontendURL        string
+	RedisHost          string
+	RedisPort          string
 }
 
 func LoadConfig() *Config {
@@ -32,6 +34,8 @@ func LoadConfig() *Config {
 		JWTExpirationHours: getEnv("JWT_EXPIRATION_HOURS", os.Getenv("JWT_EXPIRATION_HOURS")),
 		ProjectStatus:      getEnv("PROJECT_STATUS", os.Getenv("PROJECT_STATUS")),
 		FrontendURL:        getEnv("FRONTEND_URL", os.Getenv("FRONTEND_URL")),
+		RedisHost:          getEnv("REDIS_HOST", os.Getenv("REDIS_HOST")),
+		RedisPort:          getEnv("REDIS_PORT", os.Getenv("REDIS_PORT")),
 	}
 
 	return config
