@@ -3,9 +3,11 @@ import { reactive, ref } from 'vue';
 import type { UserLogin } from "@/types/userType";
 import { useAuthStore } from '@/store/AuthStore';
 import router from '@/router';
+import { useNotificationsStore } from '@/store/notificationsStore';
 
 const loading = ref<boolean>(false)
 const AuthStore = useAuthStore()
+const notificationsStore = useNotificationsStore()
 
 const form = reactive<UserLogin>({
   username: '',
@@ -23,21 +25,31 @@ const handleSubmit = async () => {
   loading.value = true
   try {
     await AuthStore.login(getPayload())
+    
+    // Notification de succès uniquement si login réussi
+    notificationsStore.addNotification({
+      status: 'success',
+      title: 'Connexion réussie',
+      description: 'Vous êtes maintenant connecté'
+    })
+    
     router.push('/dashboard')
   }
   catch (error) {
-    //envoie vers message d'erreur (toast)?
+    // Notification d'erreur uniquement si login échoué
+    notificationsStore.addNotification({
+      status: 'error',
+      title: 'Erreur de connexion',
+      description: 'Identifiants incorrects'
+    })
   }
   finally {
     loading.value = false
   }
 }
-
-
 </script>
 
 <template>
-
   <form @submit.prevent="handleSubmit">
     <label class="input validator w-full">
       <svg class="h-[1em] opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
@@ -54,7 +66,6 @@ const handleSubmit = async () => {
       <br />containing only letters, numbers or dash
     </p>
 
-    <!-- pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}"  -->
     <input v-model="form.password" type="password" class="input validator w-full" required placeholder="Password" minlength="8"
       title="Must be more than 8 characters, including number, lowercase letter, uppercase letter"
       :disabled="loading" />
@@ -70,5 +81,4 @@ const handleSubmit = async () => {
       <span v-else class="loading loading-spinner"></span>
     </button>
   </form>
-
 </template>
