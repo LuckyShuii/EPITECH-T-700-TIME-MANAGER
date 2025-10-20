@@ -2,6 +2,7 @@ package model
 
 import (
 	"database/sql/driver"
+	"fmt"
 	"strings"
 )
 
@@ -11,17 +12,30 @@ import (
 type StringArray []string
 
 // Scan converts the PostgreSQL text[] format ("{a,b,c}") into a Go []string.
-func (s *StringArray) Scan(value interface{}) error {
+// Scan converts the PostgreSQL text[] format ("{a,b,c}") into a Go []string.
+func (s *StringArray) Scan(value any) error {
 	if value == nil {
 		*s = []string{}
 		return nil
 	}
-	str := string(value.([]byte))
+
+	var str string
+
+	switch v := value.(type) {
+	case string:
+		str = v
+	case []byte:
+		str = string(v)
+	default:
+		return fmt.Errorf("unsupported type for StringArray: %T", value)
+	}
+
 	str = strings.Trim(str, "{}")
 	if str == "" {
 		*s = []string{}
 		return nil
 	}
+
 	*s = strings.Split(str, ",")
 	return nil
 }

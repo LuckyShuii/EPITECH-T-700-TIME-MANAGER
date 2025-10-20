@@ -40,6 +40,10 @@ services:
       - ./logs/database.log:/var/log/app.log
     ports:
       - "5432:5432"
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
     command: >
       sh -c "docker-entrypoint.sh postgres 2>&1 | tee -a /var/log/app.log"
     healthcheck:
@@ -89,7 +93,7 @@ services:
 
   sonarqube:
     image: sonarqube:latest
-    container_name: sonarqube
+    container_name: time-manager-sonarqube
     environment:
       - SONAR_ES_BOOTSTRAP_CHECKS_DISABLE=true
       - SONAR_WEB_CONTEXT=/sonarqube
