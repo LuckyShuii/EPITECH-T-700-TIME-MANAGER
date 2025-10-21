@@ -105,6 +105,34 @@ const docTemplate = `{
                 }
             }
         },
+        "/teams": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns a list of all registered teams \u0026 their members. 🔒 Requires role: **admin**",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Teams"
+                ],
+                "summary": "Get all teams",
+                "responses": {
+                    "200": {
+                        "description": "List of teams retrieved successfully",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/model.TeamReadAll"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/users": {
             "get": {
                 "security": [
@@ -493,6 +521,46 @@ const docTemplate = `{
                 },
                 "success": {
                     "type": "boolean"
+                }
+            }
+        },
+        "model.TeamMember": {
+            "type": "object",
+            "properties": {
+                "is_manager": {
+                    "type": "boolean"
+                },
+                "roles": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "status": {
+                    "type": "string"
+                },
+                "user_uuid": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.TeamReadAll": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "team_members": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.TeamMember"
+                    }
+                },
+                "uuid": {
+                    "type": "string"
                 }
             }
         },

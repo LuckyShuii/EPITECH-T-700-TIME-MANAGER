@@ -26,6 +26,32 @@ definitions:
       success:
         type: boolean
     type: object
+  model.TeamMember:
+    properties:
+      is_manager:
+        type: boolean
+      roles:
+        items:
+          type: string
+        type: array
+      status:
+        type: string
+      user_uuid:
+        type: string
+    type: object
+  model.TeamReadAll:
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+      team_members:
+        items:
+          $ref: '#/definitions/model.TeamMember'
+        type: array
+      uuid:
+        type: string
+    type: object
   model.UserCreate:
     properties:
       email:
@@ -269,6 +295,24 @@ paths:
       summary: Get current user info
       tags:
       - Auth
+  /teams:
+    get:
+      description: "Returns a list of all registered teams & their members. \U0001F512
+        Requires role: **admin**"
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of teams retrieved successfully
+          schema:
+            items:
+              $ref: '#/definitions/model.TeamReadAll'
+            type: array
+      security:
+      - BearerAuth: []
+      summary: Get all teams
+      tags:
+      - Teams
   /users:
     get:
       description: "Returns a list of all registered users. \U0001F512 Requires role:

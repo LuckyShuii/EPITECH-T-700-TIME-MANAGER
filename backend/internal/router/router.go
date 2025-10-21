@@ -18,6 +18,10 @@ import (
 	BreakR "app/internal/app/break/repository"
 	BreakS "app/internal/app/break/service"
 
+	TeamH "app/internal/app/team/handler"
+	TeamR "app/internal/app/team/repository"
+	TeamS "app/internal/app/team/service"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -51,6 +55,10 @@ func SetupRouter() *gin.Engine {
 	breakRepo := BreakR.NewBreakRepository(database)
 	breakService := BreakS.NewBreakService(breakRepo, workSessionRepo)
 	breakHandler := BreakH.NewBreakHandler(breakService)
+
+	teamRepo := TeamR.NewTeamRepository(database)
+	teamService := TeamS.NewTeamService(teamRepo)
+	teamHandler := TeamH.NewTeamHandler(teamService)
 
 	/**
 	* Public Routes
@@ -87,6 +95,11 @@ func SetupRouter() *gin.Engine {
 		protected.GET("/work-session/history", authMiddleware.RequireRoles("all"), workSessionHandler.GetWorkSessionHistory)
 
 		protected.GET("/work-session/status", authMiddleware.RequireRoles("all"), workSessionHandler.GetWorkSessionStatus)
+
+		/**
+		 * Teams Routes
+		 */
+		protected.GET("/teams", authMiddleware.RequireRoles("admin"), teamHandler.GetTeams)
 	}
 
 	return r
