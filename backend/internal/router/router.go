@@ -83,6 +83,7 @@ func SetupRouter() *gin.Engine {
 		protected.PUT("/users", authMiddleware.RequireRoles("admin"), userHandler.UpdateUser)
 
 		protected.GET("/users", authMiddleware.RequireRoles("admin"), userHandler.GetUsers)
+		protected.GET("/users/:uuid", authMiddleware.RequireRoles("all"), userHandler.GetUserByUUID)
 
 		protected.DELETE("/users/delete", authMiddleware.RequireRoles("admin"), userHandler.DeleteUser)
 

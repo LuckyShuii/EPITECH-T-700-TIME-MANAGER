@@ -266,6 +266,7 @@
                 "tags": [
                     "Teams"
                 ],
+                "summary": "Delete team by UUID",
                 "parameters": [
                     {
                         "type": "string",
@@ -459,6 +460,40 @@
                         "description": "User status updated successfully",
                         "schema": {
                             "$ref": "#/definitions/response.UserStatusUpdatedResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/users/{uuid}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns the details of a user identified by their UUID or not. If the UUID is not specificed it will return the current logged in users details. To query an other user data, must be manager or admin 🔒 Requires role: **all**",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Get user by UUID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User UUID",
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User details retrieved successfully",
+                        "schema": {
+                            "$ref": "#/definitions/model.UserReadAll"
                         }
                     }
                 }
@@ -866,6 +901,44 @@
                 }
             }
         },
+        "model.UserReadAll": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "phone_number": {
+                    "type": "string"
+                },
+                "roles": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "status": {
+                    "type": "string"
+                },
+                "teams": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.UserTeamMemberInfo"
+                    }
+                },
+                "username": {
+                    "type": "string"
+                },
+                "uuid": {
+                    "type": "string"
+                }
+            }
+        },
         "model.UserStatusUpdatePayload": {
             "type": "object",
             "properties": {
@@ -876,6 +949,27 @@
                 "user_uuid": {
                     "type": "string",
                     "example": "e1234abc-5678-90de-f123-4567890abcde"
+                }
+            }
+        },
+        "model.UserTeamMemberInfo": {
+            "type": "object",
+            "properties": {
+                "is_manager": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "team_description": {
+                    "type": "string",
+                    "example": "Équipe principale backend"
+                },
+                "team_name": {
+                    "type": "string",
+                    "example": "Développement"
+                },
+                "team_uuid": {
+                    "type": "string",
+                    "example": "4bc3df44-491c-4073-9e89-682bb0acfca0"
                 }
             }
         },

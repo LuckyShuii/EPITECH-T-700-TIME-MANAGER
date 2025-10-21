@@ -57,6 +57,7 @@ func (handler *TeamHandler) GetTeamByUUID(c *gin.Context) {
 	c.JSON(http.StatusOK, team)
 }
 
+// @Summary      Delete team by UUID
 // @Description  Deletes a team by the provided UUID. 🔒 Requires role: **admin**
 // @Tags         Teams
 // @Security     BearerAuth

@@ -19,6 +19,7 @@ type UserService interface {
 	UpdateUserStatus(userUUID string, status string) error
 	DeleteUser(userUUID string) error
 	UpdateUser(userID int, user model.UserUpdateEntry) error
+	GetUserByUUID(userUUID string) (*model.UserReadAll, error)
 }
 
 type userService struct {
@@ -72,4 +73,8 @@ func (service *userService) UpdateUser(userID int, user model.UserUpdateEntry) e
 	}
 
 	return service.repo.UpdateUser(userID, user)
+}
+
+func (service *userService) GetUserByUUID(userUUID string) (*model.UserReadAll, error) {
+	return service.repo.FindByUUID(userUUID)
 }

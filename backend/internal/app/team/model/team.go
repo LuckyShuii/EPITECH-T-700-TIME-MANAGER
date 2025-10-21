@@ -19,6 +19,13 @@ type TeamMember struct {
 	IsManager bool     `json:"is_manager"`
 }
 
+type TeamMemberInfo struct {
+	TeamUUID        string  `json:"team_uuid"`
+	TeamName        string  `json:"team_name"`
+	TeamDescription *string `json:"team_description,omitempty"`
+	IsManager       bool    `json:"is_manager"`
+}
+
 type TeamMembers []TeamMember
 
 func (tm *TeamMembers) Scan(value interface{}) error {

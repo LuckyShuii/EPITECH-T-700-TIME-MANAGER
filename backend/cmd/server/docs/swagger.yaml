@@ -153,6 +153,31 @@ definitions:
       uuid:
         type: string
     type: object
+  model.UserReadAll:
+    properties:
+      email:
+        type: string
+      first_name:
+        type: string
+      last_name:
+        type: string
+      phone_number:
+        type: string
+      roles:
+        items:
+          type: string
+        type: array
+      status:
+        type: string
+      teams:
+        items:
+          $ref: '#/definitions/model.UserTeamMemberInfo'
+        type: array
+      username:
+        type: string
+      uuid:
+        type: string
+    type: object
   model.UserStatusUpdatePayload:
     properties:
       status:
@@ -160,6 +185,21 @@ definitions:
         type: string
       user_uuid:
         example: e1234abc-5678-90de-f123-4567890abcde
+        type: string
+    type: object
+  model.UserTeamMemberInfo:
+    properties:
+      is_manager:
+        example: true
+        type: boolean
+      team_description:
+        example: Équipe principale backend
+        type: string
+      team_name:
+        example: Développement
+        type: string
+      team_uuid:
+        example: 4bc3df44-491c-4073-9e89-682bb0acfca0
         type: string
     type: object
   model.UserUUIDPayload:
@@ -385,6 +425,7 @@ paths:
           description: Team deleted successfully
       security:
       - BearerAuth: []
+      summary: Delete team by UUID
       tags:
       - Teams
     get:
@@ -493,6 +534,30 @@ paths:
       security:
       - BearerAuth: []
       summary: Update user details
+      tags:
+      - Users
+  /users/{uuid}:
+    get:
+      description: "Returns the details of a user identified by their UUID or not.
+        If the UUID is not specificed it will return the current logged in users details.
+        To query an other user data, must be manager or admin \U0001F512 Requires
+        role: **all**"
+      parameters:
+      - description: User UUID
+        in: path
+        name: uuid
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User details retrieved successfully
+          schema:
+            $ref: '#/definitions/model.UserReadAll'
+      security:
+      - BearerAuth: []
+      summary: Get user by UUID
       tags:
       - Users
   /users/delete:
