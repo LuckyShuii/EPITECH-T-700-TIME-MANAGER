@@ -139,3 +139,41 @@ func (handler *UserHandler) UpdateUserStatus(c *gin.Context) {
 		"new_status": req.Status,
 	})
 }
+
+// UpdateUser updates the details of an existing user.
+//
+// @Summary      Update user details
+// @Description  Updates user information such as username, email, name, and roles. Only the **UUID** is mandatory. The **username** will be auto generated with first letter of the first name + last name on every update. 🔒 Requires role: **admin**
+// @Tags         Users
+// @Security     BearerAuth
+// @Accept       json
+// @Produce      json
+// @Param        body  body      model.UserUpdateEntry  true  "User update payload"
+// @Success      200   {object}  response.UserUpdatedResponse  "User updated successfully"
+// @Router       /users [put]
+func (handler *UserHandler) UpdateUser(c *gin.Context) {
+	var req model.UserUpdateEntry
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": Config.ErrorMessages()["INVALID_REQUEST"]})
+		return
+	}
+
+	if req.UUID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "missing uuid field"})
+		return
+	}
+
+	userID, getErr := handler.service.GetIdByUuid(req.UUID)
+	if getErr != nil || userID == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
+		return
+	}
+
+	updateErr := handler.service.UpdateUser(userID, req)
+	if updateErr != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": updateErr.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "user updated successfully"})
+}

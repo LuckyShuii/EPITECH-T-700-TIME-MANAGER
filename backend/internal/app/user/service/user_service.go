@@ -3,6 +3,8 @@ package service
 import (
 	"app/internal/app/user/model"
 	"app/internal/app/user/repository"
+	"fmt"
+	"unicode"
 
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
@@ -15,6 +17,7 @@ type UserService interface {
 	GetIdByUuid(id string) (int, error)
 	UpdateUserStatus(userUUID string, status string) error
 	DeleteUser(userUUID string) error
+	UpdateUser(userID int, user model.UserUpdateEntry) error
 }
 
 type userService struct {
@@ -57,4 +60,15 @@ func (service *userService) DeleteUser(userUUID string) error {
 
 func (service *userService) UpdateUserStatus(userUUID string, status string) error {
 	return service.repo.UpdateUserStatus(userUUID, status)
+}
+
+func (service *userService) UpdateUser(userID int, user model.UserUpdateEntry) error {
+	// user.username should not be trusted.
+	// We create it with first letter of first name + last name in lowercase
+	if user.FirstName != nil && user.LastName != nil {
+		user.Username = new(string)
+		*user.Username = fmt.Sprintf("%c%s", unicode.ToLower(rune((*user.FirstName)[0])), *user.LastName)
+	}
+
+	return service.repo.UpdateUser(userID, user)
 }
