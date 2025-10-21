@@ -15,6 +15,17 @@ type UserBase struct {
 	Roles       model.StringArray `json:"roles" gorm:"type:text[];default:'{employee}'"`
 }
 
+type UserUpdateEntry struct {
+	UUID        string             `json:"uuid" gorm:"type:uuid;default:uuid_generate_v4();unique;not null"`
+	Username    *string            `json:"username,omitempty" gorm:"unique;not null"`
+	Email       *string            `json:"email,omitempty" gorm:"unique;not null"`
+	FirstName   *string            `json:"first_name,omitempty"`
+	LastName    *string            `json:"last_name,omitempty"`
+	PhoneNumber *string            `json:"phone_number,omitempty"`
+	Roles       *model.StringArray `json:"roles,omitempty" gorm:"type:text[];default:'{employee}'"`
+	Status      *string            `json:"status,omitempty"`
+}
+
 // StringArray is a custom type representing an array of strings.
 // swagger:model
 type UserMeJWT struct {

@@ -14,6 +14,7 @@ type UserRepository interface {
 	FindIdByUuid(id string) (userId int, err error)
 	UpdateUserStatus(userUUID string, status string) error
 	DeleteUser(userUUID string) error
+	UpdateUser(userID int, user model.UserUpdateEntry) error
 }
 
 type userRepository struct {
@@ -70,5 +71,38 @@ func (repo *userRepository) DeleteUser(userUUID string) error {
 
 func (repo *userRepository) UpdateUserStatus(userUUID string, status string) error {
 	err := repo.db.Exec("UPDATE users SET status = ? WHERE uuid = ?", status, userUUID).Error
+	return err
+}
+
+func (repo *userRepository) UpdateUser(userID int, user model.UserUpdateEntry) error {
+	updateData := make(map[string]any)
+
+	if user.Username != nil {
+		updateData["username"] = *user.Username
+	}
+	if user.Email != nil {
+		updateData["email"] = *user.Email
+	}
+	if user.FirstName != nil {
+		updateData["first_name"] = *user.FirstName
+	}
+	if user.LastName != nil {
+		updateData["last_name"] = *user.LastName
+	}
+	if user.PhoneNumber != nil {
+		updateData["phone_number"] = *user.PhoneNumber
+	}
+	if user.Roles != nil {
+		updateData["roles"] = *user.Roles
+	}
+	if user.Status != nil {
+		updateData["status"] = *user.Status
+	}
+
+	if len(updateData) == 0 {
+		return fmt.Errorf("no fields to update")
+	}
+
+	err := repo.db.Table("users").Where("id = ?", userID).Updates(updateData).Error
 	return err
 }

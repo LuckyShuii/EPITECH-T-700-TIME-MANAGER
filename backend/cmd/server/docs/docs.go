@@ -131,6 +131,43 @@ const docTemplate = `{
                         }
                     }
                 }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Updates user information such as username, email, name, and roles. Only the **UUID** is mandatory. The **username** will be auto generated with first letter of the first name + last name on every update. 🔒 Requires role: **admin**",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Update user details",
+                "parameters": [
+                    {
+                        "description": "User update payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.UserUpdateEntry"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User updated successfully",
+                        "schema": {
+                            "$ref": "#/definitions/response.UserUpdatedResponse"
+                        }
+                    }
+                }
             }
         },
         "/users/delete": {
@@ -581,6 +618,38 @@ const docTemplate = `{
                 }
             }
         },
+        "model.UserUpdateEntry": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "phone_number": {
+                    "type": "string"
+                },
+                "roles": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "status": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                },
+                "uuid": {
+                    "type": "string"
+                }
+            }
+        },
         "model.WorkSessionReadHistory": {
             "type": "object",
             "properties": {
@@ -690,6 +759,15 @@ const docTemplate = `{
                 "message": {
                     "type": "string",
                     "example": "user status updated successfully"
+                }
+            }
+        },
+        "response.UserUpdatedResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "user updated successfully"
                 }
             }
         }

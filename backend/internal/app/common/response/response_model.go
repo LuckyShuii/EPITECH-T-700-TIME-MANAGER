@@ -34,3 +34,10 @@ type UserDeletedResponse struct {
 type UserStatusUpdatedResponse struct {
 	Message string `json:"message" example:"user status updated successfully"`
 }
+
+// UserUpdatedResponse represents a response for user update.
+//
+// swagger:model
+type UserUpdatedResponse struct {
+	Message string `json:"message" example:"user updated successfully"`
+}
