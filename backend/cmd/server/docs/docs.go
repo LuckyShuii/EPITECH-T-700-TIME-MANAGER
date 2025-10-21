@@ -140,7 +140,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Returns a team and its members by the provided UUID. 🔒 Requires role: **admin**",
+                "description": "Returns a team and its members by the provided UUID. 🔒 Requires role: **any**",
                 "produces": [
                     "application/json"
                 ],
@@ -163,6 +163,31 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/model.TeamReadAll"
                         }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Deletes a team by the provided UUID. 🔒 Requires role: **admin**",
+                "tags": [
+                    "Teams"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Team UUID",
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Team deleted successfully"
                     }
                 }
             }

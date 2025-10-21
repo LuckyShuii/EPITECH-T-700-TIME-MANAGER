@@ -314,9 +314,25 @@ paths:
       tags:
       - Teams
   /teams/{uuid}:
+    delete:
+      description: "Deletes a team by the provided UUID. \U0001F512 Requires role:
+        **admin**"
+      parameters:
+      - description: Team UUID
+        in: path
+        name: uuid
+        required: true
+        type: string
+      responses:
+        "204":
+          description: Team deleted successfully
+      security:
+      - BearerAuth: []
+      tags:
+      - Teams
     get:
       description: "Returns a team and its members by the provided UUID. \U0001F512
-        Requires role: **admin**"
+        Requires role: **any**"
       parameters:
       - description: Team UUID
         in: path

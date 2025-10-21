@@ -10,6 +10,7 @@ type TeamRepository interface {
 	FindAll() ([]model.TeamReadAll, error)
 	FindIdByUuid(id string) (teamId int, err error)
 	FindByID(id int) (model.TeamReadAll, error)
+	DeleteByID(id int) error
 }
 
 type teamRepository struct {
@@ -76,4 +77,8 @@ func (repo *teamRepository) FindByID(id int) (model.TeamReadAll, error) {
 		GROUP BY t.id, t.uuid, t.name, t.description;
 	`, id).Scan(&team).Error
 	return team, err
+}
+
+func (repo *teamRepository) DeleteByID(id int) error {
+	return repo.db.Exec("DELETE FROM teams WHERE id = ?", id).Error
 }

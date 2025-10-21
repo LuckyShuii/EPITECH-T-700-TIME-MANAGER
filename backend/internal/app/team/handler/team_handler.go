@@ -37,7 +37,7 @@ func (handler *TeamHandler) GetTeams(c *gin.Context) {
 // GetTeamByUUID retrieves a team by its UUID.
 //
 // @Summary      Get team by UUID
-// @Description  Returns a team and its members by the provided UUID. 🔒 Requires role: **admin**
+// @Description  Returns a team and its members by the provided UUID. 🔒 Requires role: **any**
 // @Tags         Teams
 // @Security     BearerAuth
 // @Produce      json
@@ -52,4 +52,27 @@ func (handler *TeamHandler) GetTeamByUUID(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, team)
+}
+
+// @Description  Deletes a team by the provided UUID. 🔒 Requires role: **admin**
+// @Tags         Teams
+// @Security     BearerAuth
+// @Param        uuid   path      string  true  "Team UUID"
+// @Success      204    "Team deleted successfully"
+// @Router       /teams/{uuid} [delete]
+func (handler *TeamHandler) DeleteTeamByUUID(c *gin.Context) {
+	uuid := c.Param("uuid")
+	teamID, err := handler.service.GetIdByUuid(uuid)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	err = handler.service.DeleteTeamByID(teamID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.Status(http.StatusNoContent)
 }
