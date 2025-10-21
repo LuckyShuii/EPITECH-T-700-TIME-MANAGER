@@ -58,7 +58,7 @@ func SetupRouter() *gin.Engine {
 
 	teamRepo := TeamR.NewTeamRepository(database)
 	teamService := TeamS.NewTeamService(teamRepo)
-	teamHandler := TeamH.NewTeamHandler(teamService)
+	teamHandler := TeamH.NewTeamHandler(teamService, userService)
 
 	/**
 	* Public Routes
@@ -103,6 +103,7 @@ func SetupRouter() *gin.Engine {
 		protected.GET("/teams/:uuid", authMiddleware.RequireRoles("all"), teamHandler.GetTeamByUUID)
 
 		protected.DELETE("/teams/:uuid", authMiddleware.RequireRoles("admin"), teamHandler.DeleteTeamByUUID)
+		protected.DELETE("/teams/users/:team_uuid/:user_uuid", authMiddleware.RequireRoles("admin"), teamHandler.RemoveUserFromTeam)
 	}
 
 	return r

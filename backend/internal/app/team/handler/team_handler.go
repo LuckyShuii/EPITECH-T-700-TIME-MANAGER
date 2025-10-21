@@ -4,16 +4,18 @@ import (
 	"net/http"
 
 	"app/internal/app/team/service"
+	UserService "app/internal/app/user/service"
 
 	"github.com/gin-gonic/gin"
 )
 
 type TeamHandler struct {
-	service service.TeamService
+	service     service.TeamService
+	UserService UserService.UserService
 }
 
-func NewTeamHandler(service service.TeamService) *TeamHandler {
-	return &TeamHandler{service: service}
+func NewTeamHandler(service service.TeamService, userService UserService.UserService) *TeamHandler {
+	return &TeamHandler{service: service, UserService: userService}
 }
 
 // GetTeams retrieves all teams.
@@ -69,6 +71,38 @@ func (handler *TeamHandler) DeleteTeamByUUID(c *gin.Context) {
 	}
 
 	err = handler.service.DeleteTeamByID(teamID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.Status(http.StatusNoContent)
+}
+
+// @Description  Removes a user from a team by the provided team UUID and user UUID. 🔒 Requires role: **admin**
+// @Tags         Teams
+// @Security     BearerAuth
+// @Param        team_uuid   path      string  true  "Team UUID"
+// @Param        user_uuid   path      string  true  "User UUID"
+// @Success      204    "User removed from team successfully"
+// @Router       /teams/users/{team_uuid}/{user_uuid} [delete]
+func (handler *TeamHandler) RemoveUserFromTeam(c *gin.Context) {
+	teamUUID := c.Param("team_uuid")
+	userUUID := c.Param("user_uuid")
+
+	teamID, err := handler.service.GetIdByUuid(teamUUID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	userID, err := handler.UserService.GetIdByUuid(userUUID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	err = handler.service.RemoveUserFromTeam(teamID, userID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

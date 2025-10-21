@@ -133,6 +133,40 @@ const docTemplate = `{
                 }
             }
         },
+        "/teams/users/{team_uuid}/{user_uuid}": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Removes a user from a team by the provided team UUID and user UUID. 🔒 Requires role: **admin**",
+                "tags": [
+                    "Teams"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Team UUID",
+                        "name": "team_uuid",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "User UUID",
+                        "name": "user_uuid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "User removed from team successfully"
+                    }
+                }
+            }
+        },
         "/teams/{uuid}": {
             "get": {
                 "security": [

@@ -10,6 +10,7 @@ type TeamService interface {
 	GetIdByUuid(id string) (int, error)
 	GetTeamByUUID(uuid string) (model.TeamReadAll, error)
 	DeleteTeamByID(id int) error
+	RemoveUserFromTeam(teamID int, userID int) error
 }
 
 type teamService struct {
@@ -39,4 +40,8 @@ func (service *teamService) GetTeamByUUID(uuid string) (model.TeamReadAll, error
 
 func (service *teamService) DeleteTeamByID(id int) error {
 	return service.repo.DeleteByID(id)
+}
+
+func (service *teamService) RemoveUserFromTeam(teamID int, userID int) error {
+	return service.repo.DeleteUserFromTeam(teamID, userID)
 }

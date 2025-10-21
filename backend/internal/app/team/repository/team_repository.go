@@ -11,6 +11,7 @@ type TeamRepository interface {
 	FindIdByUuid(id string) (teamId int, err error)
 	FindByID(id int) (model.TeamReadAll, error)
 	DeleteByID(id int) error
+	DeleteUserFromTeam(teamID int, userID int) error
 }
 
 type teamRepository struct {
@@ -81,4 +82,8 @@ func (repo *teamRepository) FindByID(id int) (model.TeamReadAll, error) {
 
 func (repo *teamRepository) DeleteByID(id int) error {
 	return repo.db.Exec("DELETE FROM teams WHERE id = ?", id).Error
+}
+
+func (repo *teamRepository) DeleteUserFromTeam(teamID int, userID int) error {
+	return repo.db.Exec("DELETE FROM teams_members WHERE team_id = ? AND user_id = ?", teamID, userID).Error
 }
