@@ -15,6 +15,7 @@ type TeamService interface {
 	DeleteTeamByID(id int) error
 	RemoveUserFromTeam(teamID int, userID int) error
 	CreateTeam(newTeam model.TeamCreate) error
+	AddUsersToTeam(teamID int, members []model.TeamMemberCreate) error
 }
 
 type teamService struct {
@@ -84,4 +85,8 @@ func (service *teamService) CreateTeam(newTeam model.TeamCreate) error {
 	}
 
 	return nil
+}
+
+func (service *teamService) AddUsersToTeam(teamID int, members []model.TeamMemberCreate) error {
+	return service.repo.AddMembersToTeam(teamID, members)
 }

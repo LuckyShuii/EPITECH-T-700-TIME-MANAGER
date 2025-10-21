@@ -106,6 +106,7 @@ func SetupRouter() *gin.Engine {
 		protected.DELETE("/teams/users/:team_uuid/:user_uuid", authMiddleware.RequireRoles("admin"), teamHandler.RemoveUserFromTeam)
 
 		protected.POST("/teams", authMiddleware.RequireRoles("admin"), teamHandler.CreateTeam)
+		protected.POST("/teams/add-users", authMiddleware.RequireRoles("admin"), teamHandler.AddUsersToTeam)
 	}
 
 	return r

@@ -52,3 +52,8 @@ type TeamMemberCreate struct {
 	UserID    int  `json:"user_id"`
 	IsManager bool `json:"is_manager"`
 }
+
+type TeamAddUsers struct {
+	TeamUUID    string          `json:"team_uuid" binding:"required,uuid4"`
+	MemberUUIDs []NewTeamMember `json:"member_uuids" binding:"required,dive,required"`
+}

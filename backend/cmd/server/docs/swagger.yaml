@@ -35,6 +35,18 @@ definitions:
     required:
     - user_uuid
     type: object
+  model.TeamAddUsers:
+    properties:
+      member_uuids:
+        items:
+          $ref: '#/definitions/model.NewTeamMember'
+        type: array
+      team_uuid:
+        type: string
+    required:
+    - member_uuids
+    - team_uuid
+    type: object
   model.TeamCreate:
     properties:
       description:
@@ -394,6 +406,27 @@ paths:
       security:
       - BearerAuth: []
       summary: Get team by UUID
+      tags:
+      - Teams
+  /teams/add-users:
+    post:
+      consumes:
+      - application/json
+      description: "Adds users to an existing team by their UUIDs. \U0001F512 Requires
+        role: **admin**"
+      parameters:
+      - description: Team UUID and User UUIDs to add
+        in: body
+        name: team_users
+        required: true
+        schema:
+          $ref: '#/definitions/model.TeamAddUsers'
+      responses:
+        "204":
+          description: Users added to team successfully
+      security:
+      - BearerAuth: []
+      summary: Add users to a team
       tags:
       - Teams
   /teams/users/{team_uuid}/{user_uuid}:

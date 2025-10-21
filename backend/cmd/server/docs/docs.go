@@ -167,6 +167,39 @@ const docTemplate = `{
                 }
             }
         },
+        "/teams/add-users": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Adds users to an existing team by their UUIDs. 🔒 Requires role: **admin**",
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Teams"
+                ],
+                "summary": "Add users to a team",
+                "parameters": [
+                    {
+                        "description": "Team UUID and User UUIDs to add",
+                        "name": "team_users",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.TeamAddUsers"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Users added to team successfully"
+                    }
+                }
+            }
+        },
         "/teams/users/{team_uuid}/{user_uuid}": {
             "delete": {
                 "security": [
@@ -661,6 +694,24 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "user_uuid": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.TeamAddUsers": {
+            "type": "object",
+            "required": [
+                "member_uuids",
+                "team_uuid"
+            ],
+            "properties": {
+                "member_uuids": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.NewTeamMember"
+                    }
+                },
+                "team_uuid": {
                     "type": "string"
                 }
             }

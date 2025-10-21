@@ -142,3 +142,57 @@ func (handler *TeamHandler) CreateTeam(c *gin.Context) {
 
 	c.Status(http.StatusCreated)
 }
+
+// AddUsersToTeam adds users to an existing team.
+//
+// @Summary      Add users to a team
+// @Description  Adds users to an existing team by their UUIDs. 🔒 Requires role: **admin**
+// @Tags         Teams
+// @Security     BearerAuth
+// @Accept       json
+// @Param        team_users  body      model.TeamAddUsers  true  "Team UUID and User UUIDs to add"
+// @Success      204 "Users added to team successfully"
+// @Router       /teams/add-users [post]
+func (handler *TeamHandler) AddUsersToTeam(c *gin.Context) {
+	var req model.TeamAddUsers
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if req.TeamUUID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Team UUID is required"})
+		return
+	}
+
+	if len(req.MemberUUIDs) == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "At least one member UUID is required"})
+		return
+	}
+
+	teamID, err := handler.service.GetIdByUuid(req.TeamUUID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	var memberIDs []model.TeamMemberCreate
+	for _, member := range req.MemberUUIDs {
+		userID, err := handler.UserService.GetIdByUuid(member.UserUUID)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		memberIDs = append(memberIDs, model.TeamMemberCreate{
+			UserID:    userID,
+			IsManager: member.IsManager,
+		})
+	}
+
+	if err := handler.service.AddUsersToTeam(teamID, memberIDs); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.Status(http.StatusNoContent)
+}
