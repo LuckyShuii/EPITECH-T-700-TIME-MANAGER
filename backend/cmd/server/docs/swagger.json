@@ -120,6 +120,40 @@
                         }
                     }
                 }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Creates a new team with the provided details. You can add members or not. 🔒 Requires role: **admin**",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Teams"
+                ],
+                "summary": "Create a new team",
+                "parameters": [
+                    {
+                        "description": "Team to create",
+                        "name": "team",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.TeamCreate"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Team created successfully"
+                    }
+                }
             }
         },
         "/teams/users/{team_uuid}/{user_uuid}": {
@@ -603,6 +637,41 @@
                 },
                 "success": {
                     "type": "boolean"
+                }
+            }
+        },
+        "model.NewTeamMember": {
+            "type": "object",
+            "required": [
+                "user_uuid"
+            ],
+            "properties": {
+                "is_manager": {
+                    "type": "boolean"
+                },
+                "user_uuid": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.TeamCreate": {
+            "type": "object",
+            "required": [
+                "member_uuids",
+                "name"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "member_uuids": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.NewTeamMember"
+                    }
+                },
+                "name": {
+                    "type": "string"
                 }
             }
         },

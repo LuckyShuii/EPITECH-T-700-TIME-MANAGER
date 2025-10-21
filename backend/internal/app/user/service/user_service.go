@@ -4,6 +4,7 @@ import (
 	"app/internal/app/user/model"
 	"app/internal/app/user/repository"
 	"fmt"
+	"strings"
 	"unicode"
 
 	"github.com/google/uuid"
@@ -64,10 +65,10 @@ func (service *userService) UpdateUserStatus(userUUID string, status string) err
 
 func (service *userService) UpdateUser(userID int, user model.UserUpdateEntry) error {
 	// user.username should not be trusted.
-	// We create it with first letter of first name + last name in lowercase
 	if user.FirstName != nil && user.LastName != nil {
 		user.Username = new(string)
-		*user.Username = fmt.Sprintf("%c%s", unicode.ToLower(rune((*user.FirstName)[0])), *user.LastName)
+		*user.Username = fmt.Sprintf("%c%s", unicode.ToLower(rune((*user.FirstName)[0])), strings.ToLower(*user.LastName))
+
 	}
 
 	return service.repo.UpdateUser(userID, user)

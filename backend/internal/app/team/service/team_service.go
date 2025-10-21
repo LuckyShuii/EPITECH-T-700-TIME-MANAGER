@@ -3,6 +3,9 @@ package service
 import (
 	"app/internal/app/team/model"
 	"app/internal/app/team/repository"
+	UserService "app/internal/app/user/service"
+
+	"github.com/google/uuid"
 )
 
 type TeamService interface {
@@ -11,14 +14,16 @@ type TeamService interface {
 	GetTeamByUUID(uuid string) (model.TeamReadAll, error)
 	DeleteTeamByID(id int) error
 	RemoveUserFromTeam(teamID int, userID int) error
+	CreateTeam(newTeam model.TeamCreate) error
 }
 
 type teamService struct {
-	repo repository.TeamRepository
+	repo        repository.TeamRepository
+	UserService UserService.UserService
 }
 
-func NewTeamService(repo repository.TeamRepository) TeamService {
-	return &teamService{repo}
+func NewTeamService(repo repository.TeamRepository, userService UserService.UserService) TeamService {
+	return &teamService{repo, userService}
 }
 
 func (service *teamService) GetTeams() ([]model.TeamReadAll, error) {
@@ -44,4 +49,39 @@ func (service *teamService) DeleteTeamByID(id int) error {
 
 func (service *teamService) RemoveUserFromTeam(teamID int, userID int) error {
 	return service.repo.DeleteUserFromTeam(teamID, userID)
+}
+
+func (service *teamService) CreateTeam(newTeam model.TeamCreate) error {
+	teamUUID := uuid.New().String()
+
+	if err := service.repo.CreateTeam(teamUUID, newTeam.Name, newTeam.Description); err != nil {
+		return err
+	}
+
+	teamID, err := service.GetIdByUuid(teamUUID)
+	if err != nil {
+		return err
+	}
+
+	var members []model.TeamMemberCreate
+	if newTeam.MemberUUIDs != nil {
+		for _, member := range *newTeam.MemberUUIDs {
+			userID, err := service.UserService.GetIdByUuid(member.UserUUID)
+			if err != nil {
+				return err
+			}
+			members = append(members, model.TeamMemberCreate{
+				UserID:    userID,
+				IsManager: member.IsManager,
+			})
+		}
+	}
+
+	if len(members) > 0 {
+		if err := service.repo.AddMembersToTeam(teamID, members); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

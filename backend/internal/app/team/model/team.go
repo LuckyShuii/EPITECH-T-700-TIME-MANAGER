@@ -34,3 +34,21 @@ type TeamReadAll struct {
 	TeamBase
 	TeamMembers TeamMembers `json:"team_members" gorm:"column:team_members"`
 }
+
+// swagger:model NewTeamMember
+type NewTeamMember struct {
+	UserUUID  string `json:"user_uuid" binding:"required,uuid4"`
+	IsManager bool   `json:"is_manager"`
+}
+
+// swagger:model TeamCreate
+type TeamCreate struct {
+	Name        string           `json:"name" binding:"required"`
+	Description *string          `json:"description"`
+	MemberUUIDs *[]NewTeamMember `json:"member_uuids" binding:"required,dive,required"`
+}
+
+type TeamMemberCreate struct {
+	UserID    int  `json:"user_id"`
+	IsManager bool `json:"is_manager"`
+}

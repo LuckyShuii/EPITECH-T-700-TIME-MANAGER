@@ -3,6 +3,7 @@ package handler
 import (
 	"net/http"
 
+	"app/internal/app/team/model"
 	"app/internal/app/team/service"
 	UserService "app/internal/app/user/service"
 
@@ -109,4 +110,35 @@ func (handler *TeamHandler) RemoveUserFromTeam(c *gin.Context) {
 	}
 
 	c.Status(http.StatusNoContent)
+}
+
+// CreateTeam creates a new team.
+//
+// @Summary      Create a new team
+// @Description  Creates a new team with the provided details. You can add members or not. 🔒 Requires role: **admin**
+// @Tags         Teams
+// @Security     BearerAuth
+// @Accept       json
+// @Produce      json
+// @Param        team  body      model.TeamCreate  true  "Team to create"
+// @Success      201 "Team created successfully"
+// @Router       /teams [post]
+func (handler *TeamHandler) CreateTeam(c *gin.Context) {
+	var team model.TeamCreate
+	if err := c.ShouldBindJSON(&team); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if team.Name == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Team name is required"})
+		return
+	}
+
+	if err := handler.service.CreateTeam(team); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.Status(http.StatusCreated)
 }

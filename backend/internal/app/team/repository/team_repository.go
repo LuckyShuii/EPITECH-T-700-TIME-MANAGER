@@ -3,6 +3,7 @@ package repository
 import (
 	"app/internal/app/team/model"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -12,6 +13,8 @@ type TeamRepository interface {
 	FindByID(id int) (model.TeamReadAll, error)
 	DeleteByID(id int) error
 	DeleteUserFromTeam(teamID int, userID int) error
+	CreateTeam(teamUUID string, name string, description *string) error
+	AddMembersToTeam(teamID int, members []model.TeamMemberCreate) error
 }
 
 type teamRepository struct {
@@ -86,4 +89,33 @@ func (repo *teamRepository) DeleteByID(id int) error {
 
 func (repo *teamRepository) DeleteUserFromTeam(teamID int, userID int) error {
 	return repo.db.Exec("DELETE FROM teams_members WHERE team_id = ? AND user_id = ?", teamID, userID).Error
+}
+
+func (repo *teamRepository) CreateTeam(teamUUID string, name string, description *string) error {
+	var team model.TeamReadAll
+	err := repo.db.Raw(
+		"INSERT INTO teams (uuid, name, description) VALUES (?, ?, ?) RETURNING uuid, name, description",
+		teamUUID, name, description,
+	).Scan(&team).Error
+	return err
+}
+
+func (repo *teamRepository) AddMembersToTeam(teamID int, members []model.TeamMemberCreate) error {
+	if len(members) == 0 {
+		return nil
+	}
+
+	query := "INSERT INTO teams_members (uuid, team_id, user_id, is_manager) VALUES "
+	values := []interface{}{}
+
+	for i, m := range members {
+		uuid := uuid.New().String()
+		if i > 0 {
+			query += ", "
+		}
+		query += "(?, ?, ?, ?)"
+		values = append(values, uuid, teamID, m.UserID, m.IsManager)
+	}
+
+	return repo.db.Exec(query, values...).Error
 }

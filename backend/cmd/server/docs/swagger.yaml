@@ -26,6 +26,29 @@ definitions:
       success:
         type: boolean
     type: object
+  model.NewTeamMember:
+    properties:
+      is_manager:
+        type: boolean
+      user_uuid:
+        type: string
+    required:
+    - user_uuid
+    type: object
+  model.TeamCreate:
+    properties:
+      description:
+        type: string
+      member_uuids:
+        items:
+          $ref: '#/definitions/model.NewTeamMember'
+        type: array
+      name:
+        type: string
+    required:
+    - member_uuids
+    - name
+    type: object
   model.TeamMember:
     properties:
       is_manager:
@@ -311,6 +334,28 @@ paths:
       security:
       - BearerAuth: []
       summary: Get all teams
+      tags:
+      - Teams
+    post:
+      consumes:
+      - application/json
+      description: "Creates a new team with the provided details. You can add members
+        or not. \U0001F512 Requires role: **admin**"
+      parameters:
+      - description: Team to create
+        in: body
+        name: team
+        required: true
+        schema:
+          $ref: '#/definitions/model.TeamCreate'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Team created successfully
+      security:
+      - BearerAuth: []
+      summary: Create a new team
       tags:
       - Teams
   /teams/{uuid}:
