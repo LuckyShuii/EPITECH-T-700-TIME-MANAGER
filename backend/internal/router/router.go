@@ -72,6 +72,7 @@ func SetupRouter() *gin.Engine {
 		 */
 		protected.POST("/users/register", authMiddleware.RequireRoles("admin"), userHandler.RegisterUser)
 		protected.PUT("/users/update-status", authMiddleware.RequireRoles("admin"), userHandler.UpdateUserStatus)
+		protected.PUT("/users", authMiddleware.RequireRoles("admin"), userHandler.UpdateUser)
 
 		protected.GET("/users", authMiddleware.RequireRoles("admin"), userHandler.GetUsers)
 

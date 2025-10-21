@@ -107,6 +107,27 @@ definitions:
         example: e1234abc-5678-90de-f123-4567890abcde
         type: string
     type: object
+  model.UserUpdateEntry:
+    properties:
+      email:
+        type: string
+      first_name:
+        type: string
+      last_name:
+        type: string
+      phone_number:
+        type: string
+      roles:
+        items:
+          type: string
+        type: array
+      status:
+        type: string
+      username:
+        type: string
+      uuid:
+        type: string
+    type: object
   model.WorkSessionReadHistory:
     properties:
       breaks_duration_minutes:
@@ -179,6 +200,12 @@ definitions:
     properties:
       message:
         example: user status updated successfully
+        type: string
+    type: object
+  response.UserUpdatedResponse:
+    properties:
+      message:
+        example: user updated successfully
         type: string
     type: object
 info:
@@ -258,6 +285,32 @@ paths:
       security:
       - BearerAuth: []
       summary: Get all users
+      tags:
+      - Users
+    put:
+      consumes:
+      - application/json
+      description: "Updates user information such as username, email, name, and roles.
+        Only the **UUID** is mandatory. The **username** will be auto generated with
+        first letter of the first name + last name on every update. \U0001F512 Requires
+        role: **admin**"
+      parameters:
+      - description: User update payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.UserUpdateEntry'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User updated successfully
+          schema:
+            $ref: '#/definitions/response.UserUpdatedResponse'
+      security:
+      - BearerAuth: []
+      summary: Update user details
       tags:
       - Users
   /users/delete:
