@@ -122,6 +122,40 @@
                 }
             }
         },
+        "/teams/{uuid}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns a team and its members by the provided UUID. 🔒 Requires role: **admin**",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Teams"
+                ],
+                "summary": "Get team by UUID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Team UUID",
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Team retrieved successfully",
+                        "schema": {
+                            "$ref": "#/definitions/model.TeamReadAll"
+                        }
+                    }
+                }
+            }
+        },
         "/users": {
             "get": {
                 "security": [

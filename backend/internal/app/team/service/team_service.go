@@ -7,6 +7,8 @@ import (
 
 type TeamService interface {
 	GetTeams() ([]model.TeamReadAll, error)
+	GetIdByUuid(id string) (int, error)
+	GetTeamByUUID(uuid string) (model.TeamReadAll, error)
 }
 
 type teamService struct {
@@ -24,4 +26,12 @@ func (service *teamService) GetTeams() ([]model.TeamReadAll, error) {
 func (service *teamService) GetIdByUuid(id string) (int, error) {
 	teamID, err := service.repo.FindIdByUuid(id)
 	return teamID, err
+}
+
+func (service *teamService) GetTeamByUUID(uuid string) (model.TeamReadAll, error) {
+	teamID, err := service.GetIdByUuid(uuid)
+	if err != nil {
+		return model.TeamReadAll{}, err
+	}
+	return service.repo.FindByID(teamID)
 }

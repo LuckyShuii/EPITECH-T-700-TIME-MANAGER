@@ -33,3 +33,23 @@ func (handler *TeamHandler) GetTeams(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, teams)
 }
+
+// GetTeamByUUID retrieves a team by its UUID.
+//
+// @Summary      Get team by UUID
+// @Description  Returns a team and its members by the provided UUID. 🔒 Requires role: **admin**
+// @Tags         Teams
+// @Security     BearerAuth
+// @Produce      json
+// @Param        uuid   path      string  true  "Team UUID"
+// @Success      200    {object}  model.TeamReadAll  "Team retrieved successfully"
+// @Router       /teams/{uuid} [get]
+func (handler *TeamHandler) GetTeamByUUID(c *gin.Context) {
+	uuid := c.Param("uuid")
+	team, err := handler.service.GetTeamByUUID(uuid)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, team)
+}

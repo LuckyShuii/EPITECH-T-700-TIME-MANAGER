@@ -313,6 +313,28 @@ paths:
       summary: Get all teams
       tags:
       - Teams
+  /teams/{uuid}:
+    get:
+      description: "Returns a team and its members by the provided UUID. \U0001F512
+        Requires role: **admin**"
+      parameters:
+      - description: Team UUID
+        in: path
+        name: uuid
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Team retrieved successfully
+          schema:
+            $ref: '#/definitions/model.TeamReadAll'
+      security:
+      - BearerAuth: []
+      summary: Get team by UUID
+      tags:
+      - Teams
   /users:
     get:
       description: "Returns a list of all registered users. \U0001F512 Requires role:
