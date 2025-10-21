@@ -74,7 +74,7 @@ func SetupRouter() *gin.Engine {
 
 		protected.GET("/users", authMiddleware.RequireRoles("admin"), userHandler.GetUsers)
 
-		protected.DELETE("/users/delete", authMiddleware.RequireRoles("admin"), userHandler.DeleteUser)
+		protected.DELETE("/users/delete/:uuid", authMiddleware.RequireRoles("admin"), userHandler.DeleteUser)
 
 		/**
 		 * Work Sessions & Breaks Routes

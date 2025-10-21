@@ -77,26 +77,19 @@ func (handler *UserHandler) RegisterUser(c *gin.Context) {
 // @Security     BearerAuth
 // @Accept       json
 // @Produce      json
-// @Param        body  body      model.UserUUIDPayload  true  "User UUID payload"
+// @Param        uuid  path      string  true  "User UUID"
 // @Success      200   {object}  response.UserDeletedResponse  "User deleted successfully"
-// @Router       /users/delete [delete]
+// @Router       /users/{uuid} [delete]
 func (handler *UserHandler) DeleteUser(c *gin.Context) {
-	var req struct {
-		UserUUID string `json:"user_uuid"`
-	}
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": Config.ErrorMessages()["INVALID_REQUEST"]})
+	userUUID := c.Param("uuid")
+
+	if userUUID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "missing user UUID in URL"})
 		return
 	}
 
-	if req.UserUUID == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "missing user_uuid field"})
-		return
-	}
-
-	deleteErr := handler.service.DeleteUser(req.UserUUID)
-	if deleteErr != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": deleteErr.Error()})
+	if err := handler.service.DeleteUser(userUUID); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 

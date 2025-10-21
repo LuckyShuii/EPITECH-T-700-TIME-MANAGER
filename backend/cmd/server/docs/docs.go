@@ -133,45 +133,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/users/delete": {
-            "delete": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Deletes a user by their UUID. 🔒 Requires role: **admin**",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Users"
-                ],
-                "summary": "Delete a user",
-                "parameters": [
-                    {
-                        "description": "User UUID payload",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/model.UserUUIDPayload"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "User deleted successfully",
-                        "schema": {
-                            "$ref": "#/definitions/response.UserDeletedResponse"
-                        }
-                    }
-                }
-            }
-        },
         "/users/register": {
             "post": {
                 "security": [
@@ -245,6 +206,43 @@ const docTemplate = `{
                         "description": "User status updated successfully",
                         "schema": {
                             "$ref": "#/definitions/response.UserStatusUpdatedResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/users/{uuid}": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Deletes a user by their UUID. 🔒 Requires role: **admin**",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Delete a user",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User UUID",
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User deleted successfully",
+                        "schema": {
+                            "$ref": "#/definitions/response.UserDeletedResponse"
                         }
                     }
                 }
@@ -566,15 +564,6 @@ const docTemplate = `{
                     "type": "string",
                     "example": "active"
                 },
-                "user_uuid": {
-                    "type": "string",
-                    "example": "e1234abc-5678-90de-f123-4567890abcde"
-                }
-            }
-        },
-        "model.UserUUIDPayload": {
-            "type": "object",
-            "properties": {
                 "user_uuid": {
                     "type": "string",
                     "example": "e1234abc-5678-90de-f123-4567890abcde"
