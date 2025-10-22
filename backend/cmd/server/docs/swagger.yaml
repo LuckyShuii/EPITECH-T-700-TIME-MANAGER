@@ -63,8 +63,16 @@ definitions:
     type: object
   model.TeamMember:
     properties:
+      email:
+        type: string
+      first_name:
+        type: string
       is_manager:
         type: boolean
+      last_name:
+        type: string
+      phone_number:
+        type: string
       roles:
         items:
           type: string
@@ -72,6 +80,8 @@ definitions:
       status:
         type: string
       user_uuid:
+        type: string
+      username:
         type: string
     type: object
   model.TeamReadAll:
