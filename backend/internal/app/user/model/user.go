@@ -68,6 +68,7 @@ type UserAll struct {
 // swagger:model
 type UserRead struct {
 	UserBase
+	Status    *string   `json:"status"`
 	CreatedAt time.Time `json:"created_at" gorm:"autoCreateTime"`
 	UpdatedAt time.Time `json:"updated_at" gorm:"autoUpdateTime"`
 }
