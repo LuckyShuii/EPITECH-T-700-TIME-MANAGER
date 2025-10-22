@@ -793,6 +793,9 @@
                 },
                 "username": {
                     "type": "string"
+                },
+                "work_session_status": {
+                    "type": "string"
                 }
             }
         },
@@ -904,6 +907,9 @@
                     "items": {
                         "type": "string"
                     }
+                },
+                "status": {
+                    "type": "string"
                 },
                 "updated_at": {
                     "type": "string"

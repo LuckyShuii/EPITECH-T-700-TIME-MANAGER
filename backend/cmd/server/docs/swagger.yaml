@@ -83,6 +83,8 @@ definitions:
         type: string
       username:
         type: string
+      work_session_status:
+        type: string
     type: object
   model.TeamReadAll:
     properties:
@@ -156,6 +158,8 @@ definitions:
         items:
           type: string
         type: array
+      status:
+        type: string
       updated_at:
         type: string
       username:

@@ -13,27 +13,29 @@ type TeamBase struct {
 
 // swagger:model TeamMember
 type TeamMember struct {
-	UserUUID    string   `json:"user_uuid"`
-	Roles       []string `json:"roles"`
-	Status      string   `json:"status"`
-	IsManager   bool     `json:"is_manager"`
-	Username    string   `json:"username"`
-	Email       string   `json:"email"`
-	FirstName   string   `json:"first_name"`
-	LastName    string   `json:"last_name"`
-	PhoneNumber string   `json:"phone_number"`
+	UserUUID          string   `json:"user_uuid"`
+	Roles             []string `json:"roles"`
+	Status            string   `json:"status"`
+	IsManager         bool     `json:"is_manager"`
+	Username          string   `json:"username"`
+	Email             string   `json:"email"`
+	FirstName         string   `json:"first_name"`
+	LastName          string   `json:"last_name"`
+	PhoneNumber       string   `json:"phone_number"`
+	WorkSessionStatus *string  `json:"work_session_status,omitempty"`
 }
 
 type TeamMemberInfo struct {
-	TeamUUID        string  `json:"team_uuid"`
-	TeamName        string  `json:"team_name"`
-	TeamDescription *string `json:"team_description,omitempty"`
-	IsManager       bool    `json:"is_manager"`
-	Username        string  `json:"username"`
-	Email           string  `json:"email"`
-	FirstName       string  `json:"first_name"`
-	LastName        string  `json:"last_name"`
-	PhoneNumber     string  `json:"phone_number"`
+	TeamUUID          string  `json:"team_uuid"`
+	TeamName          string  `json:"team_name"`
+	TeamDescription   *string `json:"team_description,omitempty"`
+	IsManager         bool    `json:"is_manager"`
+	Username          string  `json:"username"`
+	Email             string  `json:"email"`
+	FirstName         string  `json:"first_name"`
+	LastName          string  `json:"last_name"`
+	PhoneNumber       string  `json:"phone_number"`
+	WorkSessionStatus *string `json:"work_session_status,omitempty"`
 }
 
 type TeamMembers []TeamMember

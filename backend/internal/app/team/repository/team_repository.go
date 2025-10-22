@@ -32,11 +32,12 @@ func (repo *teamRepository) FindAll() ([]model.TeamReadAll, error) {
 			t.uuid,
 			t.name,
 			t.description,
-			json_agg(
-				json_build_object(
+			JSON_AGG(
+				JSON_BUILD_OBJECT(
 					'user_uuid', u.uuid,
 					'roles', u.roles,
 					'status', u.status,
+					'work_session_status', COALESCE(ws.status, 'completed'),
 					'username', u.username,
 					'email', u.email,
 					'first_name', u.first_name,
@@ -48,9 +49,18 @@ func (repo *teamRepository) FindAll() ([]model.TeamReadAll, error) {
 		FROM teams t
 		JOIN teams_members tm ON tm.team_id = t.id
 		JOIN users u ON u.id = tm.user_id
-		LEFT JOIN work_session_active ws ON ws.user_id = u.id
-		GROUP BY t.id, t.uuid, t.name, t.description
-		ORDER BY t.name;
+		LEFT JOIN LATERAL (
+			SELECT 
+				wsa.status
+			FROM work_session_active wsa
+			WHERE wsa.user_id = u.id
+			ORDER BY wsa.created_at DESC
+			LIMIT 1
+		) ws ON TRUE
+		GROUP BY 
+			t.id, t.uuid, t.name, t.description
+		ORDER BY 
+			t.name;
 	`).Scan(&teams).Error
 	return teams, err
 }
@@ -70,26 +80,34 @@ func (repo *teamRepository) FindByID(id int) (model.TeamReadAll, error) {
 			t.uuid,
 			t.name,
 			t.description,
-			json_agg(
-				json_build_object(
+			JSON_AGG(
+				JSON_BUILD_OBJECT(
 					'user_uuid', u.uuid,
 					'roles', u.roles,
 					'status', u.status,
+					'work_session_status', COALESCE(ws.status, 'completed'),
 					'is_manager', tm.is_manager,
 					'username', u.username,
 					'email', u.email,
 					'first_name', u.first_name,
 					'last_name', u.last_name,
-					'phone_number', u.phone_number,
-					'is_manager', tm.is_manager
+					'phone_number', u.phone_number
 				)
 			) AS team_members
 		FROM teams t
 		JOIN teams_members tm ON tm.team_id = t.id
 		JOIN users u ON u.id = tm.user_id
-		LEFT JOIN work_session_active ws ON ws.user_id = u.id
+		LEFT JOIN LATERAL (
+			SELECT 
+				wsa.status
+			FROM work_session_active wsa
+			WHERE wsa.user_id = u.id
+			ORDER BY wsa.created_at DESC
+			LIMIT 1
+		) ws ON TRUE
 		WHERE t.id = ?
-		GROUP BY t.id, t.uuid, t.name, t.description;
+		GROUP BY 
+			t.id, t.uuid, t.name, t.description;
 	`, id).Scan(&team).Error
 	return team, err
 }
