@@ -37,6 +37,11 @@ func (repo *teamRepository) FindAll() ([]model.TeamReadAll, error) {
 					'user_uuid', u.uuid,
 					'roles', u.roles,
 					'status', u.status,
+					'username', u.username,
+					'email', u.email,
+					'first_name', u.first_name,
+					'last_name', u.last_name,
+					'phone_number', u.phone_number,
 					'is_manager', tm.is_manager
 				)
 			) AS team_members
@@ -70,6 +75,12 @@ func (repo *teamRepository) FindByID(id int) (model.TeamReadAll, error) {
 					'user_uuid', u.uuid,
 					'roles', u.roles,
 					'status', u.status,
+					'is_manager', tm.is_manager,
+					'username', u.username,
+					'email', u.email,
+					'first_name', u.first_name,
+					'last_name', u.last_name,
+					'phone_number', u.phone_number,
 					'is_manager', tm.is_manager
 				)
 			) AS team_members

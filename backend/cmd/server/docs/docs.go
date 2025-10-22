@@ -775,8 +775,20 @@ const docTemplate = `{
         "model.TeamMember": {
             "type": "object",
             "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
                 "is_manager": {
                     "type": "boolean"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "phone_number": {
+                    "type": "string"
                 },
                 "roles": {
                     "type": "array",
@@ -788,6 +800,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "user_uuid": {
+                    "type": "string"
+                },
+                "username": {
                     "type": "string"
                 }
             }
