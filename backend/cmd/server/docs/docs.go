@@ -105,6 +105,195 @@ const docTemplate = `{
                 }
             }
         },
+        "/teams": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns a list of all registered teams \u0026 their members. 🔒 Requires role: **admin**",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Teams"
+                ],
+                "summary": "Get all teams",
+                "responses": {
+                    "200": {
+                        "description": "List of teams retrieved successfully",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/model.TeamReadAll"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Creates a new team with the provided details. You can add members or not. 🔒 Requires role: **admin**",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Teams"
+                ],
+                "summary": "Create a new team",
+                "parameters": [
+                    {
+                        "description": "Team to create",
+                        "name": "team",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.TeamCreate"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Team created successfully"
+                    }
+                }
+            }
+        },
+        "/teams/add-users": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Adds users to an existing team by their UUIDs. 🔒 Requires role: **admin**",
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Teams"
+                ],
+                "summary": "Add users to a team",
+                "parameters": [
+                    {
+                        "description": "Team UUID and User UUIDs to add",
+                        "name": "team_users",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.TeamAddUsers"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Users added to team successfully"
+                    }
+                }
+            }
+        },
+        "/teams/users/{team_uuid}/{user_uuid}": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Removes a user from a team by the provided team UUID and user UUID. 🔒 Requires role: **admin**",
+                "tags": [
+                    "Teams"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Team UUID",
+                        "name": "team_uuid",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "User UUID",
+                        "name": "user_uuid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "User removed from team successfully"
+                    }
+                }
+            }
+        },
+        "/teams/{uuid}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns a team and its members by the provided UUID. 🔒 Requires role: **any**",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Teams"
+                ],
+                "summary": "Get team by UUID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Team UUID",
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Team retrieved successfully",
+                        "schema": {
+                            "$ref": "#/definitions/model.TeamReadAll"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Deletes a team by the provided UUID. 🔒 Requires role: **admin**",
+                "tags": [
+                    "Teams"
+                ],
+                "summary": "Delete team by UUID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Team UUID",
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Team deleted successfully"
+                    }
+                }
+            }
+        },
         "/users": {
             "get": {
                 "security": [
@@ -288,23 +477,20 @@ const docTemplate = `{
             }
         },
         "/users/{uuid}": {
-            "delete": {
+            "get": {
                 "security": [
                     {
                         "BearerAuth": []
                     }
                 ],
-                "description": "Deletes a user by their UUID. 🔒 Requires role: **admin**",
-                "consumes": [
-                    "application/json"
-                ],
+                "description": "Returns the details of a user identified by their UUID or not. If the UUID is not specificed it will return the current logged in users details. To query an other user data, must be manager or admin 🔒 Requires role: **all**",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "Users"
                 ],
-                "summary": "Delete a user",
+                "summary": "Get user by UUID",
                 "parameters": [
                     {
                         "type": "string",
@@ -316,9 +502,9 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "User deleted successfully",
+                        "description": "User details retrieved successfully",
                         "schema": {
-                            "$ref": "#/definitions/response.UserDeletedResponse"
+                            "$ref": "#/definitions/model.UserReadAll"
                         }
                     }
                 }
@@ -533,6 +719,99 @@ const docTemplate = `{
                 }
             }
         },
+        "model.NewTeamMember": {
+            "type": "object",
+            "required": [
+                "user_uuid"
+            ],
+            "properties": {
+                "is_manager": {
+                    "type": "boolean"
+                },
+                "user_uuid": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.TeamAddUsers": {
+            "type": "object",
+            "required": [
+                "member_uuids",
+                "team_uuid"
+            ],
+            "properties": {
+                "member_uuids": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.NewTeamMember"
+                    }
+                },
+                "team_uuid": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.TeamCreate": {
+            "type": "object",
+            "required": [
+                "member_uuids",
+                "name"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "member_uuids": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.NewTeamMember"
+                    }
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.TeamMember": {
+            "type": "object",
+            "properties": {
+                "is_manager": {
+                    "type": "boolean"
+                },
+                "roles": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "status": {
+                    "type": "string"
+                },
+                "user_uuid": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.TeamReadAll": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "team_members": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.TeamMember"
+                    }
+                },
+                "uuid": {
+                    "type": "string"
+                }
+            }
+        },
         "model.UserCreate": {
             "type": "object",
             "properties": {
@@ -633,6 +912,44 @@ const docTemplate = `{
                 }
             }
         },
+        "model.UserReadAll": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "phone_number": {
+                    "type": "string"
+                },
+                "roles": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "status": {
+                    "type": "string"
+                },
+                "teams": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.UserTeamMemberInfo"
+                    }
+                },
+                "username": {
+                    "type": "string"
+                },
+                "uuid": {
+                    "type": "string"
+                }
+            }
+        },
         "model.UserStatusUpdatePayload": {
             "type": "object",
             "properties": {
@@ -643,6 +960,27 @@ const docTemplate = `{
                 "user_uuid": {
                     "type": "string",
                     "example": "e1234abc-5678-90de-f123-4567890abcde"
+                }
+            }
+        },
+        "model.UserTeamMemberInfo": {
+            "type": "object",
+            "properties": {
+                "is_manager": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "team_description": {
+                    "type": "string",
+                    "example": "Équipe principale backend"
+                },
+                "team_name": {
+                    "type": "string",
+                    "example": "Développement"
+                },
+                "team_uuid": {
+                    "type": "string",
+                    "example": "4bc3df44-491c-4073-9e89-682bb0acfca0"
                 }
             }
         },

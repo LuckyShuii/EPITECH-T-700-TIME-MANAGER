@@ -15,6 +15,22 @@ type UserBase struct {
 	Roles       model.StringArray `json:"roles" gorm:"type:text[];default:'{employee}'"`
 }
 
+// swagger:model UserTeamMemberInfo
+type UserTeamMemberInfo struct {
+	TeamUUID        string  `json:"team_uuid" example:"4bc3df44-491c-4073-9e89-682bb0acfca0"`
+	TeamName        string  `json:"team_name" example:"Développement"`
+	TeamDescription *string `json:"team_description,omitempty" example:"Équipe principale backend"`
+	IsManager       bool    `json:"is_manager" example:"true"`
+}
+
+// swagger:model UserReadAll
+type UserReadAll struct {
+	UserBase
+	Status   string               `json:"status"`
+	TeamsRaw string               `json:"-" gorm:"column:teams"`
+	Teams    []UserTeamMemberInfo `json:"teams" gorm:"-"`
+}
+
 type UserUpdateEntry struct {
 	UUID        string             `json:"uuid" gorm:"type:uuid;default:uuid_generate_v4();unique;not null"`
 	Username    *string            `json:"username,omitempty" gorm:"unique;not null"`
@@ -27,6 +43,7 @@ type UserUpdateEntry struct {
 }
 
 // StringArray is a custom type representing an array of strings.
+//
 // swagger:model
 type UserMeJWT struct {
 	UserUUID    string            `json:"user_uuid"`

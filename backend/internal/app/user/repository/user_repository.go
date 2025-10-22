@@ -2,6 +2,7 @@ package repository
 
 import (
 	"app/internal/app/user/model"
+	"encoding/json"
 	"fmt"
 
 	"gorm.io/gorm"
@@ -15,6 +16,7 @@ type UserRepository interface {
 	UpdateUserStatus(userUUID string, status string) error
 	DeleteUser(userUUID string) error
 	UpdateUser(userID int, user model.UserUpdateEntry) error
+	FindByUUID(userUUID string) (*model.UserReadAll, error)
 }
 
 type userRepository struct {
@@ -105,4 +107,48 @@ func (repo *userRepository) UpdateUser(userID int, user model.UserUpdateEntry) e
 
 	err := repo.db.Table("users").Where("id = ?", userID).Updates(updateData).Error
 	return err
+}
+
+func (repo *userRepository) FindByUUID(userUUID string) (*model.UserReadAll, error) {
+	var user model.UserReadAll
+	err := repo.db.Raw(`
+		SELECT 
+			u.uuid,
+			u.username,
+			u.email,
+			u.first_name,
+			u.last_name,
+			u.phone_number,
+			u.roles,
+			u.status,
+			COALESCE(
+				JSON_AGG(
+					JSON_BUILD_OBJECT(
+						'team_name', t.name,
+						'team_description', t.description,
+						'team_uuid', t.uuid,
+						'is_manager', tm.is_manager
+					)
+				) FILTER (WHERE t.uuid IS NOT NULL),
+				'[]'
+			) AS teams
+		FROM users u
+		LEFT JOIN teams_members tm ON tm.user_id = u.id
+		LEFT JOIN teams t ON t.id = tm.team_id
+		WHERE u.uuid = ?
+		GROUP BY u.id;
+	`, userUUID).Scan(&user).Error
+	if err != nil {
+		return nil, err
+	}
+
+	if user.TeamsRaw != "" {
+		if err := json.Unmarshal([]byte(user.TeamsRaw), &user.Teams); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal teams JSON: %w", err)
+		}
+	} else {
+		user.Teams = []model.UserTeamMemberInfo{}
+	}
+
+	return &user, nil
 }

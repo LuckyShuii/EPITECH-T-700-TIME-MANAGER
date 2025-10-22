@@ -26,6 +26,67 @@ definitions:
       success:
         type: boolean
     type: object
+  model.NewTeamMember:
+    properties:
+      is_manager:
+        type: boolean
+      user_uuid:
+        type: string
+    required:
+    - user_uuid
+    type: object
+  model.TeamAddUsers:
+    properties:
+      member_uuids:
+        items:
+          $ref: '#/definitions/model.NewTeamMember'
+        type: array
+      team_uuid:
+        type: string
+    required:
+    - member_uuids
+    - team_uuid
+    type: object
+  model.TeamCreate:
+    properties:
+      description:
+        type: string
+      member_uuids:
+        items:
+          $ref: '#/definitions/model.NewTeamMember'
+        type: array
+      name:
+        type: string
+    required:
+    - member_uuids
+    - name
+    type: object
+  model.TeamMember:
+    properties:
+      is_manager:
+        type: boolean
+      roles:
+        items:
+          type: string
+        type: array
+      status:
+        type: string
+      user_uuid:
+        type: string
+    type: object
+  model.TeamReadAll:
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+      team_members:
+        items:
+          $ref: '#/definitions/model.TeamMember'
+        type: array
+      uuid:
+        type: string
+    type: object
   model.UserCreate:
     properties:
       email:
@@ -92,6 +153,31 @@ definitions:
       uuid:
         type: string
     type: object
+  model.UserReadAll:
+    properties:
+      email:
+        type: string
+      first_name:
+        type: string
+      last_name:
+        type: string
+      phone_number:
+        type: string
+      roles:
+        items:
+          type: string
+        type: array
+      status:
+        type: string
+      teams:
+        items:
+          $ref: '#/definitions/model.UserTeamMemberInfo'
+        type: array
+      username:
+        type: string
+      uuid:
+        type: string
+    type: object
   model.UserStatusUpdatePayload:
     properties:
       status:
@@ -99,6 +185,21 @@ definitions:
         type: string
       user_uuid:
         example: e1234abc-5678-90de-f123-4567890abcde
+        type: string
+    type: object
+  model.UserTeamMemberInfo:
+    properties:
+      is_manager:
+        example: true
+        type: boolean
+      team_description:
+        example: Équipe principale backend
+        type: string
+      team_name:
+        example: Développement
+        type: string
+      team_uuid:
+        example: 4bc3df44-491c-4073-9e89-682bb0acfca0
         type: string
     type: object
   model.UserUUIDPayload:
@@ -269,6 +370,128 @@ paths:
       summary: Get current user info
       tags:
       - Auth
+  /teams:
+    get:
+      description: "Returns a list of all registered teams & their members. \U0001F512
+        Requires role: **admin**"
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of teams retrieved successfully
+          schema:
+            items:
+              $ref: '#/definitions/model.TeamReadAll'
+            type: array
+      security:
+      - BearerAuth: []
+      summary: Get all teams
+      tags:
+      - Teams
+    post:
+      consumes:
+      - application/json
+      description: "Creates a new team with the provided details. You can add members
+        or not. \U0001F512 Requires role: **admin**"
+      parameters:
+      - description: Team to create
+        in: body
+        name: team
+        required: true
+        schema:
+          $ref: '#/definitions/model.TeamCreate'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Team created successfully
+      security:
+      - BearerAuth: []
+      summary: Create a new team
+      tags:
+      - Teams
+  /teams/{uuid}:
+    delete:
+      description: "Deletes a team by the provided UUID. \U0001F512 Requires role:
+        **admin**"
+      parameters:
+      - description: Team UUID
+        in: path
+        name: uuid
+        required: true
+        type: string
+      responses:
+        "204":
+          description: Team deleted successfully
+      security:
+      - BearerAuth: []
+      summary: Delete team by UUID
+      tags:
+      - Teams
+    get:
+      description: "Returns a team and its members by the provided UUID. \U0001F512
+        Requires role: **any**"
+      parameters:
+      - description: Team UUID
+        in: path
+        name: uuid
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Team retrieved successfully
+          schema:
+            $ref: '#/definitions/model.TeamReadAll'
+      security:
+      - BearerAuth: []
+      summary: Get team by UUID
+      tags:
+      - Teams
+  /teams/add-users:
+    post:
+      consumes:
+      - application/json
+      description: "Adds users to an existing team by their UUIDs. \U0001F512 Requires
+        role: **admin**"
+      parameters:
+      - description: Team UUID and User UUIDs to add
+        in: body
+        name: team_users
+        required: true
+        schema:
+          $ref: '#/definitions/model.TeamAddUsers'
+      responses:
+        "204":
+          description: Users added to team successfully
+      security:
+      - BearerAuth: []
+      summary: Add users to a team
+      tags:
+      - Teams
+  /teams/users/{team_uuid}/{user_uuid}:
+    delete:
+      description: "Removes a user from a team by the provided team UUID and user
+        UUID. \U0001F512 Requires role: **admin**"
+      parameters:
+      - description: Team UUID
+        in: path
+        name: team_uuid
+        required: true
+        type: string
+      - description: User UUID
+        in: path
+        name: user_uuid
+        required: true
+        type: string
+      responses:
+        "204":
+          description: User removed from team successfully
+      security:
+      - BearerAuth: []
+      tags:
+      - Teams
   /users:
     get:
       description: "Returns a list of all registered users. \U0001F512 Requires role:
@@ -311,6 +534,30 @@ paths:
       security:
       - BearerAuth: []
       summary: Update user details
+      tags:
+      - Users
+  /users/{uuid}:
+    get:
+      description: "Returns the details of a user identified by their UUID or not.
+        If the UUID is not specificed it will return the current logged in users details.
+        To query an other user data, must be manager or admin \U0001F512 Requires
+        role: **all**"
+      parameters:
+      - description: User UUID
+        in: path
+        name: uuid
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User details retrieved successfully
+          schema:
+            $ref: '#/definitions/model.UserReadAll'
+      security:
+      - BearerAuth: []
+      summary: Get user by UUID
       tags:
       - Users
   /users/delete:

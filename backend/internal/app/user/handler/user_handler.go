@@ -6,6 +6,7 @@ import (
 	"app/internal/app/user/model"
 	"app/internal/app/user/service"
 
+	AuthService "app/internal/app/auth/service"
 	Config "app/internal/config"
 
 	"github.com/gin-gonic/gin"
@@ -176,4 +177,55 @@ func (handler *UserHandler) UpdateUser(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "user updated successfully"})
+}
+
+// GetUserByUUID retrieves a user by their UUID.
+//
+// @Summary      Get user by UUID
+// @Description  Returns the details of a user identified by their UUID or not. If the UUID is not specificed it will return the current logged in users details. To query an other user data, must be manager or admin 🔒 Requires role: **all**
+// @Tags         Users
+// @Security     BearerAuth
+// @Produce      json
+// @Param        uuid   path      string  true  "User UUID"
+// @Success      200    {object}  model.UserReadAll  "User details retrieved successfully"
+// @Router       /users/{uuid} [get]
+func (handler *UserHandler) GetUserByUUID(c *gin.Context) {
+	UserUUID := c.Param("uuid")
+
+	// if admin or manager, can get any user details
+	// if normal user, can get only own details
+	claims, exists := c.Get("userClaims")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": Config.ErrorMessages()["NO_CLAIMS"]})
+		return
+	}
+
+	authClaims := claims.(*AuthService.Claims)
+	roles := authClaims.Roles
+	isAdminOrManager := false
+
+	for _, role := range roles {
+		if role == "admin" || role == "manager" {
+			isAdminOrManager = true
+			break
+		}
+	}
+
+	if UserUUID != "" && !isAdminOrManager && UserUUID != authClaims.UUID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "insufficient permissions to access other user details"})
+		return
+	}
+
+	user, err := handler.service.GetUserByUUID(UserUUID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	if user.UUID == "" {
+		c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, user)
 }
