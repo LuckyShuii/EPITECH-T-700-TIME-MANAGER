@@ -2,6 +2,7 @@ package repository
 
 import (
 	"app/internal/app/team/model"
+	"fmt"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -15,6 +16,8 @@ type TeamRepository interface {
 	DeleteUserFromTeam(teamID int, userID int) error
 	CreateTeam(teamUUID string, name string, description *string) error
 	AddMembersToTeam(teamID int, members []model.TeamMemberCreate) error
+	UpdateTeamByID(id int, updatedTeam model.TeamUpdate) error
+	UpdateTeamUserManagerStatus(teamID int, userID int, isManager bool) error
 }
 
 type teamRepository struct {
@@ -147,4 +150,26 @@ func (repo *teamRepository) AddMembersToTeam(teamID int, members []model.TeamMem
 	}
 
 	return repo.db.Exec(query, values...).Error
+}
+
+func (repo *teamRepository) UpdateTeamByID(id int, updatedTeam model.TeamUpdate) error {
+	updateData := make(map[string]any)
+
+	if updatedTeam.Name != nil {
+		updateData["name"] = *updatedTeam.Name
+	}
+	if updatedTeam.Description != nil {
+		updateData["description"] = *updatedTeam.Description
+	}
+
+	if len(updateData) == 0 {
+		return fmt.Errorf("no fields to update")
+	}
+
+	err := repo.db.Exec("UPDATE teams SET ? WHERE id = ?", updateData, id).Error
+	return err
+}
+
+func (repo *teamRepository) UpdateTeamUserManagerStatus(teamID int, userID int, isManager bool) error {
+	return repo.db.Exec("UPDATE teams_members SET is_manager = ? WHERE team_id = ? AND user_id = ?", isManager, teamID, userID).Error
 }

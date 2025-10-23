@@ -78,12 +78,13 @@ func (handler *TeamHandler) DeleteTeamByUUID(c *gin.Context) {
 		return
 	}
 
-	c.Status(http.StatusNoContent)
+	c.JSON(http.StatusNoContent, gin.H{"message": "Team deleted successfully"})
 }
 
 // @Description  Removes a user from a team by the provided team UUID and user UUID. 🔒 Requires role: **admin**
 // @Tags         Teams
 // @Security     BearerAuth
+// @Summary      Remove user from team
 // @Param        team_uuid   path      string  true  "Team UUID"
 // @Param        user_uuid   path      string  true  "User UUID"
 // @Success      204    "User removed from team successfully"
@@ -110,7 +111,7 @@ func (handler *TeamHandler) RemoveUserFromTeam(c *gin.Context) {
 		return
 	}
 
-	c.Status(http.StatusNoContent)
+	c.JSON(http.StatusNoContent, gin.H{"message": "User removed from team successfully"})
 }
 
 // CreateTeam creates a new team.
@@ -136,12 +137,17 @@ func (handler *TeamHandler) CreateTeam(c *gin.Context) {
 		return
 	}
 
+	if team.MemberUUIDs == nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "MemberUUIDs field is required. Cannot create an empty team"})
+		return
+	}
+
 	if err := handler.service.CreateTeam(team); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.Status(http.StatusCreated)
+	c.JSON(http.StatusCreated, gin.H{"message": "Team created successfully"})
 }
 
 // AddUsersToTeam adds users to an existing team.
@@ -195,5 +201,76 @@ func (handler *TeamHandler) AddUsersToTeam(c *gin.Context) {
 		return
 	}
 
-	c.Status(http.StatusNoContent)
+	c.JSON(http.StatusNoContent, gin.H{"message": "Users added to team successfully"})
+}
+
+// UpdateTeamByUUID updates an existing team by its UUID.
+//
+// @Summary      Update team by UUID
+// @Description  Updates an existing team's details by its UUID. 🔒 Requires role: **admin**
+// @Tags         Teams
+// @Security     BearerAuth
+// @Accept       json
+// @Param        uuid  path      string           true  "Team UUID"
+// @Param        team  body      model.TeamUpdate  true  "Updated team details"
+// @Success      200 "Team updated successfully"
+// @Router       /teams/{uuid} [put]
+func (handler *TeamHandler) UpdateTeamByUUID(c *gin.Context) {
+	uuid := c.Param("uuid")
+	var team model.TeamUpdate
+	if err := c.ShouldBindJSON(&team); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	teamID, err := handler.service.GetIdByUuid(uuid)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := handler.service.UpdateTeamByID(teamID, team); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Team updated successfully"})
+}
+
+// UpdateTeamUserManagerStatus updates a team member's manager status.
+//
+// @Summary      Update team member manager status
+// @Description  Updates a team member's manager status by team UUID and user UUID. 🔒 Requires role: **admin**
+// @Tags         Teams
+// @Security     BearerAuth
+// @Accept       json
+// @Param        team_uuid  path      string  true  "Team UUID"
+// @Param        user_uuid  path      string  true  "User UUID"
+// @Param        is_manager path      bool    true  "Is Manager Status (1 = true, 0 = false)"
+// @Success      200 "Status updated successfully"
+// @Router       /teams/{team_uuid}/users/{user_uuid}/edit-manager-status [put]
+func (handler *TeamHandler) UpdateTeamUserManagerStatus(c *gin.Context) {
+	teamUUID := c.Param("team_uuid")
+	userUUID := c.Param("user_uuid")
+	isManager := c.Param("is_manager")
+
+	// convert isManager to bool
+	var req struct {
+		IsManager bool `json:"is_manager"`
+	}
+	if isManager == "1" || isManager == "true" {
+		req.IsManager = true
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := handler.service.UpdateTeamUserManagerStatus(teamUUID, userUUID, req.IsManager); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Status updated successfully"})
 }
