@@ -29,7 +29,29 @@ func NewUserRepository(db *gorm.DB) UserRepository {
 
 func (repo *userRepository) FindAll() ([]model.UserRead, error) {
 	var users []model.UserRead
-	err := repo.db.Raw("SELECT uuid, username, email, first_name, last_name, phone_number, roles, created_at, updated_at FROM users").Scan(&users).Error
+	err := repo.db.Raw(`
+		SELECT
+			u.uuid,
+			u.username,
+			u.email,
+			u.first_name,
+			u.last_name,
+			u.phone_number,
+			u.roles,
+			u.created_at,
+			u.updated_at,
+			COALESCE(ws.status, 'completed') AS status
+		FROM users u
+		LEFT JOIN LATERAL (
+			SELECT
+				wsa.status
+			FROM work_session_active wsa
+			WHERE wsa.user_id = u.id
+			ORDER BY wsa.created_at DESC
+			LIMIT 1
+		) ws ON TRUE
+		ORDER BY u.created_at DESC
+	`).Scan(&users).Error
 	return users, err
 }
 
@@ -120,7 +142,7 @@ func (repo *userRepository) FindByUUID(userUUID string) (*model.UserReadAll, err
 			u.last_name,
 			u.phone_number,
 			u.roles,
-			u.status,
+			COALESCE(ws.status, 'completed') AS status,
 			COALESCE(
 				JSON_AGG(
 					JSON_BUILD_OBJECT(
@@ -135,8 +157,16 @@ func (repo *userRepository) FindByUUID(userUUID string) (*model.UserReadAll, err
 		FROM users u
 		LEFT JOIN teams_members tm ON tm.user_id = u.id
 		LEFT JOIN teams t ON t.id = tm.team_id
+		LEFT JOIN LATERAL (
+			SELECT 
+				wsa.status
+			FROM work_session_active wsa
+			WHERE wsa.user_id = u.id
+			ORDER BY wsa.created_at DESC
+			LIMIT 1
+		) ws ON TRUE
 		WHERE u.uuid = ?
-		GROUP BY u.id;
+		GROUP BY u.id, ws.status;
 	`, userUUID).Scan(&user).Error
 	if err != nil {
 		return nil, err

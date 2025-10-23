@@ -804,6 +804,9 @@ const docTemplate = `{
                 },
                 "username": {
                     "type": "string"
+                },
+                "work_session_status": {
+                    "type": "string"
                 }
             }
         },
@@ -915,6 +918,9 @@ const docTemplate = `{
                     "items": {
                         "type": "string"
                     }
+                },
+                "status": {
+                    "type": "string"
                 },
                 "updated_at": {
                     "type": "string"

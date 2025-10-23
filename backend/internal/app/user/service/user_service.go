@@ -27,7 +27,7 @@ type userService struct {
 }
 
 func NewUserService(repo repository.UserRepository) UserService {
-	return &userService{repo}
+	return &userService{repo: repo}
 }
 
 func (service *userService) GetUsers() ([]model.UserRead, error) {
