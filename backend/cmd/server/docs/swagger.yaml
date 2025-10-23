@@ -504,6 +504,28 @@ paths:
       summary: Get team by UUID
       tags:
       - Teams
+  /teams/add-users:
+    post:
+      consumes:
+      - application/json
+      description: "Adds users to an existing team by their UUIDs. \U0001F512 Requires
+        role: **admin**"
+      parameters:
+      - description: Team UUID and User UUIDs to add
+        in: body
+        name: team_users
+        required: true
+        schema:
+          $ref: '#/definitions/model.TeamAddUsers'
+      responses:
+        "204":
+          description: Users added to team successfully
+      security:
+      - BearerAuth: []
+      summary: Add users to a team
+      tags:
+      - Teams
+  /teams/edit/{uuid}:
     put:
       consumes:
       - application/json
@@ -527,27 +549,6 @@ paths:
       security:
       - BearerAuth: []
       summary: Update team by UUID
-      tags:
-      - Teams
-  /teams/add-users:
-    post:
-      consumes:
-      - application/json
-      description: "Adds users to an existing team by their UUIDs. \U0001F512 Requires
-        role: **admin**"
-      parameters:
-      - description: Team UUID and User UUIDs to add
-        in: body
-        name: team_users
-        required: true
-        schema:
-          $ref: '#/definitions/model.TeamAddUsers'
-      responses:
-        "204":
-          description: Users added to team successfully
-      security:
-      - BearerAuth: []
-      summary: Add users to a team
       tags:
       - Teams
   /teams/users/{team_uuid}/{user_uuid}:
