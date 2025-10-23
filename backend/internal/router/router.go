@@ -86,14 +86,20 @@ func SetupRouter() *gin.Engine {
 		/**
 		 * User Management Routes
 		 */
+		// TODO: on user creation add the weekly rate in the form to check
 		protected.POST("/users/register", authMiddleware.RequireRoles("admin"), userHandler.RegisterUser)
 
 		protected.PUT("/users/update-status", authMiddleware.RequireRoles("admin"), userHandler.UpdateUserStatus)
+		// TODO: on update a user add the weekly rate in the form to check
 		protected.PUT("/users", authMiddleware.RequireRoles("admin"), userHandler.UpdateUser)
 
 		protected.GET("/users", authMiddleware.RequireRoles("admin"), userHandler.GetUsers)
 		protected.GET("/users/:uuid", authMiddleware.RequireRoles("all"), userHandler.GetUserByUUID)
 		protected.GET("/users/weekly-rates", authMiddleware.RequireRoles("all"), weeklyRateHandler.GetAll)
+		protected.POST("/users/weekly-rates/create", authMiddleware.RequireRoles("admin"), weeklyRateHandler.Create)
+		// TODO: protected.PUT("/users/weekly-rates/:uuid/update
+		// TODO: protected.DELETE("/users/weekly-rates/:uuid/delete
+		// TODO: protected.POST("/users/weekly-rates/:weekly_rate_uuid/assign-to-user/:user_uuid
 
 		protected.DELETE("/users/delete", authMiddleware.RequireRoles("admin"), userHandler.DeleteUser)
 

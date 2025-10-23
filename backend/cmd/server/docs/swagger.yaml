@@ -26,6 +26,13 @@ definitions:
       success:
         type: boolean
     type: object
+  model.CreateWeeklyRate:
+    properties:
+      amount:
+        type: number
+      rate_name:
+        type: string
+    type: object
   model.NewTeamMember:
     properties:
       is_manager:
@@ -737,7 +744,7 @@ paths:
       summary: Update user status
       tags:
       - Users
-  /weekly-rates:
+  /users/weekly-rates:
     get:
       description: Retrieve a list of all weekly rates
       produces:
@@ -750,6 +757,28 @@ paths:
               $ref: '#/definitions/model.WeeklyRate'
             type: array
       summary: Get all weekly rates
+      tags:
+      - WeeklyRates
+  /users/weekly-rates/create:
+    post:
+      consumes:
+      - application/json
+      description: Create a new weekly rate with the provided details
+      parameters:
+      - description: Weekly Rate Data
+        in: body
+        name: weeklyRate
+        required: true
+        schema:
+          $ref: '#/definitions/model.CreateWeeklyRate'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/model.WeeklyRate'
+      summary: Create a new weekly rate
       tags:
       - WeeklyRates
   /work-session/history:

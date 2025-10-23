@@ -551,6 +551,63 @@
                 }
             }
         },
+        "/users/weekly-rates": {
+            "get": {
+                "description": "Retrieve a list of all weekly rates",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "WeeklyRates"
+                ],
+                "summary": "Get all weekly rates",
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/model.WeeklyRate"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/users/weekly-rates/create": {
+            "post": {
+                "description": "Create a new weekly rate with the provided details",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "WeeklyRates"
+                ],
+                "summary": "Create a new weekly rate",
+                "parameters": [
+                    {
+                        "description": "Weekly Rate Data",
+                        "name": "weeklyRate",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.CreateWeeklyRate"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/model.WeeklyRate"
+                        }
+                    }
+                }
+            }
+        },
         "/users/{uuid}": {
             "get": {
                 "security": [
@@ -580,29 +637,6 @@
                         "description": "User details retrieved successfully",
                         "schema": {
                             "$ref": "#/definitions/model.UserReadAll"
-                        }
-                    }
-                }
-            }
-        },
-        "/weekly-rates": {
-            "get": {
-                "description": "Retrieve a list of all weekly rates",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "WeeklyRates"
-                ],
-                "summary": "Get all weekly rates",
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/model.WeeklyRate"
-                            }
                         }
                     }
                 }
@@ -814,6 +848,17 @@
                 },
                 "success": {
                     "type": "boolean"
+                }
+            }
+        },
+        "model.CreateWeeklyRate": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "number"
+                },
+                "rate_name": {
+                    "type": "string"
                 }
             }
         },
