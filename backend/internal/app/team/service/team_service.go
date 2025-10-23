@@ -16,6 +16,8 @@ type TeamService interface {
 	RemoveUserFromTeam(teamID int, userID int) error
 	CreateTeam(newTeam model.TeamCreate) error
 	AddUsersToTeam(teamID int, members []model.TeamMemberCreate) error
+	UpdateTeamByID(id int, updatedTeam model.TeamUpdate) error
+	UpdateTeamUserManagerStatus(teamUUID string, userUUID string, isManager bool) error
 }
 
 type teamService struct {
@@ -89,4 +91,22 @@ func (service *teamService) CreateTeam(newTeam model.TeamCreate) error {
 
 func (service *teamService) AddUsersToTeam(teamID int, members []model.TeamMemberCreate) error {
 	return service.repo.AddMembersToTeam(teamID, members)
+}
+
+func (service *teamService) UpdateTeamByID(id int, updatedTeam model.TeamUpdate) error {
+	return service.repo.UpdateTeamByID(id, updatedTeam)
+}
+
+func (service *teamService) UpdateTeamUserManagerStatus(teamUUID string, userUUID string, isManager bool) error {
+	teamID, err := service.GetIdByUuid(teamUUID)
+	if err != nil {
+		return err
+	}
+
+	userID, err := service.UserService.GetIdByUuid(userUUID)
+	if err != nil {
+		return err
+	}
+
+	return service.repo.UpdateTeamUserManagerStatus(teamID, userID, isManager)
 }

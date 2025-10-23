@@ -74,3 +74,9 @@ type TeamAddUsers struct {
 	TeamUUID    string          `json:"team_uuid" binding:"required,uuid4"`
 	MemberUUIDs []NewTeamMember `json:"member_uuids" binding:"required,dive,required"`
 }
+
+// swagger:model TeamUpdate
+type TeamUpdate struct {
+	Name        *string `json:"name"`
+	Description *string `json:"description"`
+}
