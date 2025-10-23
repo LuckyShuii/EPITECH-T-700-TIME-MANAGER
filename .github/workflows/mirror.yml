@@ -15,14 +15,9 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: ⚙️ Setup SSH
+      - name: 🪞 Push to mirror repo (HTTPS + Token)
+        env:
+          MIRROR_TOKEN: ${{ secrets.MIRROR_TOKEN }}
         run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.MIRROR_SSH_KEY }}" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan github.com >> ~/.ssh/known_hosts
-
-      - name: 🪞 Push to mirror repo
-        run: |
-          git remote add mirror git@github.com:EpitechMscProPromo2027/T-DEV-700-project-PAR_19.git
+          git remote add mirror https://x-access-token:${MIRROR_TOKEN}@github.com/EpitechMscProPromo2027/T-DEV-700-project-PAR_19.git
           git push --mirror mirror
