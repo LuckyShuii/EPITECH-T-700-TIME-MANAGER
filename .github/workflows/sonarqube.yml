@@ -20,7 +20,7 @@ jobs:
         with:
           args: >
             -Dsonar.organization=luckyshuii
-            -Dsonar.projectKey=time_manager
+            -Dsonar.projectKey=LuckyShuii_EPITECH-T-700-TIME-MANAGER
             -Dsonar.host.url=https://sonarcloud.io
         env:
           SONAR_TOKEN: ${{ secrets.SONARQUBE_TOKEN }}
