@@ -16,6 +16,15 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Debug SSH Key
+        run: |
+          echo "🔍 Checking id_ed25519 file existence and permissions..."
+          ls -l ~/.ssh
+          echo "🔍 Testing key format:"
+          head -n 2 ~/.ssh/id_ed25519
+          echo "🔍 Checking if SSH can read the key..."
+          ssh -Tvvv git@github.com || true
+
       - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
