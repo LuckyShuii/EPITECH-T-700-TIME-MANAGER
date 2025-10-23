@@ -2,7 +2,6 @@ name: Mirror Repositor
 
 on:
   push:
-    # trigger on every branch
 
 jobs:
   mirror:
