@@ -166,8 +166,23 @@ func (repo *teamRepository) UpdateTeamByID(id int, updatedTeam model.TeamUpdate)
 		return fmt.Errorf("no fields to update")
 	}
 
-	err := repo.db.Exec("UPDATE teams SET ? WHERE id = ?", updateData, id).Error
-	return err
+	query := "UPDATE teams SET "
+	args := []interface{}{}
+	i := 0
+
+	for field, value := range updateData {
+		if i > 0 {
+			query += ", "
+		}
+		query += fmt.Sprintf("\"%s\" = ?", field)
+		args = append(args, value)
+		i++
+	}
+
+	query += " WHERE id = ?"
+	args = append(args, id)
+
+	return repo.db.Exec(query, args...).Error
 }
 
 func (repo *teamRepository) UpdateTeamUserManagerStatus(teamID int, userID int, isManager bool) error {

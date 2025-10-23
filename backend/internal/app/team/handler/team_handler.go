@@ -214,7 +214,7 @@ func (handler *TeamHandler) AddUsersToTeam(c *gin.Context) {
 // @Param        uuid  path      string           true  "Team UUID"
 // @Param        team  body      model.TeamUpdate  true  "Updated team details"
 // @Success      200 "Team updated successfully"
-// @Router       /teams/{uuid} [put]
+// @Router       /teams/edit/{uuid} [put]
 func (handler *TeamHandler) UpdateTeamByUUID(c *gin.Context) {
 	uuid := c.Param("uuid")
 	var team model.TeamUpdate

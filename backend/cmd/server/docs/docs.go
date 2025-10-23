@@ -200,6 +200,46 @@ const docTemplate = `{
                 }
             }
         },
+        "/teams/edit/{uuid}": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Updates an existing team's details by its UUID. 🔒 Requires role: **admin**",
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Teams"
+                ],
+                "summary": "Update team by UUID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Team UUID",
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Updated team details",
+                        "name": "team",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.TeamUpdate"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Team updated successfully"
+                    }
+                }
+            }
+        },
         "/teams/users/{team_uuid}/{user_uuid}": {
             "delete": {
                 "security": [
@@ -310,44 +350,6 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/model.TeamReadAll"
                         }
-                    }
-                }
-            },
-            "put": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Updates an existing team's details by its UUID. 🔒 Requires role: **admin**",
-                "consumes": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Teams"
-                ],
-                "summary": "Update team by UUID",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Team UUID",
-                        "name": "uuid",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Updated team details",
-                        "name": "team",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/model.TeamUpdate"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Team updated successfully"
                     }
                 }
             },
