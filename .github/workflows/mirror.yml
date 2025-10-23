@@ -1,4 +1,4 @@
-name: Mirror Repository
+name: 🔁 Mirror Repository
 
 on:
   push:
@@ -9,11 +9,26 @@ on:
 jobs:
   mirror:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout source repo
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Validate token access
+        env:
+          MIRROR_TOKEN: ${{ secrets.MIRROR_TOKEN }}
+        run: |
+          echo "🔍 Checking repository access..."
+          if git ls-remote https://x-access-token:${MIRROR_TOKEN}@github.com/EpitechMscProPromo2027/T-DEV-700-project-PAR_19.git > /dev/null 2>&1; then
+            echo "✅ Token has access to the target repository."
+          else
+            echo "❌ ERROR: The token does not have access to 'EpitechMscProPromo2027/T-DEV-700-project-PAR_19'."
+            echo "👉 Make sure you authorized SSO for this organization:"
+            echo "   https://github.com/settings/tokens"
+            exit 1
+          fi
 
       - name: Push to mirror repo (HTTPS + Token)
         env:
