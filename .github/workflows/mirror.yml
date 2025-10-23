@@ -2,9 +2,7 @@ name: Mirror Repositor
 
 on:
   push:
-    branches:
-      - main
-      - staging
+    # trigger on every branch
 
 jobs:
   mirror:
@@ -24,15 +22,6 @@ jobs:
           ssh-keyscan github.com >> ~/.ssh/known_hosts
           git config --global user.email "ci@github.com"
           git config --global user.name "Mirror CI"
-
-      - name: Debug SSH Key
-        run: |
-          echo "🔍 Checking id_ed25519 file existence and permissions..."
-          ls -l ~/.ssh
-          echo "🔍 Testing key format:"
-          head -n 2 ~/.ssh/id_ed25519
-          echo "🔍 Checking if SSH can read the key..."
-          ssh -Tvvv git@github.com || true
 
       - name: Push to Epitech repo via SSH
         run: |
