@@ -16,23 +16,16 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Validate token access
-        env:
-          MIRROR_TOKEN: ${{ secrets.MIRROR_TOKEN }}
+      - name: Setup SSH
         run: |
-          echo "🔍 Checking repository access..."
-          if git ls-remote https://x-access-token:${MIRROR_TOKEN}@github.com/EpitechMscProPromo2027/T-DEV-700-project-PAR_19.git > /dev/null 2>&1; then
-            echo "✅ Token has access to the target repository."
-          else
-            echo "❌ ERROR: The token does not have access to 'EpitechMscProPromo2027/T-DEV-700-project-PAR_19'."
-            echo "👉 Make sure you authorized SSO for this organization:"
-            echo "   https://github.com/settings/tokens"
-            exit 1
-          fi
+          mkdir -p ~/.ssh
+          echo "${{ secrets.MIRROR_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+          git config --global user.email "ci@github.com"
+          git config --global user.name "Mirror CI"
 
-      - name: Push to mirror repo (HTTPS + Token)
-        env:
-          MIRROR_TOKEN: ${{ secrets.MIRROR_TOKEN }}
+      - name: Push to Epitech repo via SSH
         run: |
-          git remote add mirror https://x-access-token:${MIRROR_TOKEN}@github.com/EpitechMscProPromo2027/T-DEV-700-project-PAR_19.git
+          git remote add mirror git@github.com:EpitechMscProPromo2027/T-DEV-700-project-PAR_19.git
           git push --mirror mirror
