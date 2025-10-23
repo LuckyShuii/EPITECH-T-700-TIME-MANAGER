@@ -1,4 +1,4 @@
-name: 🔁 Mirror Repository
+name: Mirror Repository
 
 on:
   push:
