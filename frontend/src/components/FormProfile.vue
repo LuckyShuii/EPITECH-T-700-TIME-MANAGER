@@ -3,7 +3,7 @@ import { reactive, ref } from 'vue';
 import type { UserLogin } from "@/types/userType";
 import { useAuthStore } from '@/store/AuthStore';
 import router from '@/router';
-import { useNotificationsStore } from '@/store/notificationsStore';
+import { useNotificationsStore } from '@/store/NotificationsStore';
 
 const loading = ref<boolean>(false)
 const AuthStore = useAuthStore()

@@ -4,7 +4,7 @@ import { onMounted, ref } from 'vue'
 import TopNavBar from './components/TopNavBar.vue'
 import ToastNotification from './components/ToastNotification.vue'
 import { useAuthStore } from './store/AuthStore'
-import { useNotificationsStore } from './store/notificationsStore'
+import { useNotificationsStore } from './store/NotificationsStore'
 
 
 const theme = ref('dark')

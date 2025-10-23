@@ -11,9 +11,12 @@ export interface Employee {
 }
 
 export interface EmployeeUpdateData {
+  first_name: string
+  last_name: string
   email: string
   phone_number: string
   roles: string[]
   weekly_hours: number
   status: 'active' | 'inactive'
 }
+

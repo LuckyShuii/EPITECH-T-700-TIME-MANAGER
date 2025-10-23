@@ -5,6 +5,7 @@ import CalendarWidget from '@/components/widget/CalendarWidget.vue'
 import BaseModal from '@/components/BaseModal.vue'
 import RegisterForm from '@/components/RegisterForm.vue'
 import StaffSettingsModal from '@/components/StaffSettingsModal.vue'
+import TeamManagementAdminModal from '@/components/TeamManagementAdminModal.vue'
 
 // Contrôle du modal d'ajout employé
 const isAddEmployeeModalOpen = ref(false)
@@ -31,6 +32,13 @@ const openStaffSettingsModal = () => {
 const closeStaffSettingsModal = () => {
   isStaffSettingsModalOpen.value = false
 }
+
+// Contrôle du modal gestion des équipes
+const isTeamManagementModalOpen = ref(false)
+
+const openTeamManagementModal = () => {
+  isTeamManagementModalOpen.value = true
+}
 </script>
 
 <template>
@@ -52,10 +60,14 @@ const closeStaffSettingsModal = () => {
       </button>
     </template>
 
+
+
     <template #kpi-monthly>
-      <div class="bg-blue-100 p-4 rounded h-full flex items-center justify-center">
-        <p class="text-sm font-medium">📊 KPI mensuel</p>
-      </div>
+      <button @click="openTeamManagementModal"
+        class="h-full w-full bg-gradient-to-br from-green-500 to-teal-600 hover:shadow-card-hover text-white rounded-3xl shadow-card transition-all duration-300 flex flex-col items-center justify-center gap-4 group cursor-pointer">
+        <div class="text-4xl group-hover:scale-110 transition-transform duration-300">👥</div>
+        <p class="font-bold text-base">Gestion des équipes</p>
+      </button>
     </template>
 
     <template #kpi-history>
@@ -99,4 +111,11 @@ const closeStaffSettingsModal = () => {
   </BaseModal>
   <!-- Modal paramétrage effectif -->
   <StaffSettingsModal v-model="isStaffSettingsModalOpen" />
+
+  <!-- Modal paramétrage effectif -->
+<StaffSettingsModal v-model="isStaffSettingsModalOpen" />
+
+<!-- Modal gestion des équipes -->
+<TeamManagementAdminModal v-model="isTeamManagementModalOpen" />
+
 </template>
