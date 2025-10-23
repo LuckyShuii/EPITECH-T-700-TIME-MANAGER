@@ -23,6 +23,8 @@ type TeamMember struct {
 	LastName          string   `json:"last_name"`
 	PhoneNumber       string   `json:"phone_number"`
 	WorkSessionStatus *string  `json:"work_session_status,omitempty"`
+	WeeklyRate        int      `json:"weekly_rate"`
+	WeeklyRateName    *string  `json:"weekly_rate_name,omitempty"`
 }
 
 type TeamMemberInfo struct {

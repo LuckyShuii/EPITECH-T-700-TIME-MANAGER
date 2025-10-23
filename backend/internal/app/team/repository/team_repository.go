@@ -46,12 +46,15 @@ func (repo *teamRepository) FindAll() ([]model.TeamReadAll, error) {
 					'first_name', u.first_name,
 					'last_name', u.last_name,
 					'phone_number', u.phone_number,
-					'is_manager', tm.is_manager
+					'is_manager', tm.is_manager,
+					'weekly_rate', COALESCE(wr.amount, 0),
+					'weekly_rate_name', wr.rate_name
 				)
 			) AS team_members
 		FROM teams t
 		JOIN teams_members tm ON tm.team_id = t.id
 		JOIN users u ON u.id = tm.user_id
+		LEFT JOIN weekly_rate wr ON wr.id = u.weekly_rate_id
 		LEFT JOIN LATERAL (
 			SELECT 
 				wsa.status
@@ -94,12 +97,15 @@ func (repo *teamRepository) FindByID(id int) (model.TeamReadAll, error) {
 					'email', u.email,
 					'first_name', u.first_name,
 					'last_name', u.last_name,
-					'phone_number', u.phone_number
+					'phone_number', u.phone_number,
+					'weekly_rate', COALESCE(wr.amount, 0),
+					'weekly_rate_name', wr.rate_name
 				)
 			) AS team_members
 		FROM teams t
 		JOIN teams_members tm ON tm.team_id = t.id
 		JOIN users u ON u.id = tm.user_id
+		LEFT JOIN weekly_rate wr ON wr.id = u.weekly_rate_id
 		LEFT JOIN LATERAL (
 			SELECT 
 				wsa.status

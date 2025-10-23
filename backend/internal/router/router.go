@@ -22,6 +22,10 @@ import (
 	TeamR "app/internal/app/team/repository"
 	TeamS "app/internal/app/team/service"
 
+	WeeklyRatesH "app/internal/app/weekly-rate/handler"
+	WeeklyRatesR "app/internal/app/weekly-rate/repository"
+	WeeklyRatesS "app/internal/app/weekly-rate/service"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -31,34 +35,33 @@ func SetupRouter() *gin.Engine {
 	database := db.ConnectPostgres()
 	db.ConnectRedis()
 
-	/**
-	 * User Module
-	 */
+	// 1) Repos
 	userRepo := repository.NewUserRepository(database)
-	userService := service.NewUserService(userRepo)
-	userHandler := handler.NewUserHandler(userService)
+	workSessionRepo := workSessionR.NewWorkSessionRepository(database)
+	breakRepo := BreakR.NewBreakRepository(database)
+	teamRepo := TeamR.NewTeamRepository(database)
+	weeklyRateRepo := WeeklyRatesR.NewWeeklyRateRepository(database)
 
-	/**
-	 * Auth Module
-	 */
+	// 2) Services
+	userService := service.NewUserService(userRepo)
+	weeklyRateService := WeeklyRatesS.NewWeeklyRateService(weeklyRateRepo, userService)
+
+	// Set the WeeklyRateService in UserService to avoid circular dependency
+	userService.SetWeeklyRateService(weeklyRateService)
+
+	workSessionService := workSessionS.NewWorkSessionService(workSessionRepo, userService, breakRepo)
+	breakService := BreakS.NewBreakService(breakRepo, workSessionRepo)
+	teamService := TeamS.NewTeamService(teamRepo, userService)
 	authService := authS.NewAuthService(userService)
+
+	// 3) Handlers
+	userHandler := handler.NewUserHandler(userService)
+	weeklyRateHandler := WeeklyRatesH.NewWeeklyRateHandler(weeklyRateService)
+	workSessionHandler := workSessionH.NewWorkSessionHandler(workSessionService)
+	breakHandler := BreakH.NewBreakHandler(breakService)
+	teamHandler := TeamH.NewTeamHandler(teamService, userService)
 	authHandler := authH.NewAuthHandler(authService)
 	authMiddleware := &authM.AuthHandler{Service: authService}
-
-	/**
-	* Work Sessions Routes
-	 */
-	workSessionRepo := workSessionR.NewWorkSessionRepository(database)
-	workSessionService := workSessionS.NewWorkSessionService(workSessionRepo, userService, BreakR.NewBreakRepository(database))
-	workSessionHandler := workSessionH.NewWorkSessionHandler(workSessionService)
-
-	breakRepo := BreakR.NewBreakRepository(database)
-	breakService := BreakS.NewBreakService(breakRepo, workSessionRepo)
-	breakHandler := BreakH.NewBreakHandler(breakService)
-
-	teamRepo := TeamR.NewTeamRepository(database)
-	teamService := TeamS.NewTeamService(teamRepo, userService)
-	teamHandler := TeamH.NewTeamHandler(teamService, userService)
 
 	/**
 	* Public Routes
@@ -78,12 +81,20 @@ func SetupRouter() *gin.Engine {
 		/**
 		 * User Management Routes
 		 */
+		// TODO: on user creation add the weekly rate in the form to check
 		protected.POST("/users/register", authMiddleware.RequireRoles("admin"), userHandler.RegisterUser)
+		protected.POST("/users/weekly-rates/create", authMiddleware.RequireRoles("admin"), weeklyRateHandler.Create)
+		protected.POST("/users/weekly-rates/:weekly_rate_uuid/assign-to-user/:user_uuid", authMiddleware.RequireRoles("admin"), weeklyRateHandler.AssignToUser)
+
 		protected.PUT("/users/update-status", authMiddleware.RequireRoles("admin"), userHandler.UpdateUserStatus)
 		protected.PUT("/users", authMiddleware.RequireRoles("admin"), userHandler.UpdateUser)
+		protected.PUT("/users/weekly-rates/:uuid/update", authMiddleware.RequireRoles("admin"), weeklyRateHandler.Update)
 
 		protected.GET("/users", authMiddleware.RequireRoles("admin"), userHandler.GetUsers)
 		protected.GET("/users/:uuid", authMiddleware.RequireRoles("all"), userHandler.GetUserByUUID)
+		protected.GET("/users/weekly-rates", authMiddleware.RequireRoles("all"), weeklyRateHandler.GetAll)
+
+		protected.DELETE("/users/weekly-rates/:uuid/delete", authMiddleware.RequireRoles("admin"), weeklyRateHandler.Delete)
 
 		protected.DELETE("/users/delete", authMiddleware.RequireRoles("admin"), userHandler.DeleteUser)
 

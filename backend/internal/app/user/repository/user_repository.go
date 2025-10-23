@@ -39,6 +39,8 @@ func (repo *userRepository) FindAll() ([]model.UserRead, error) {
 			u.phone_number,
 			u.roles,
 			u.status,
+			wr.rate_name AS weekly_rate_name,
+			COALESCE(wr.amount, 0) AS weekly_rate,
 			u.created_at,
 			u.updated_at,
 			COALESCE(ws.status, 'completed') AS work_session_status
@@ -51,6 +53,7 @@ func (repo *userRepository) FindAll() ([]model.UserRead, error) {
 			ORDER BY wsa.created_at DESC
 			LIMIT 1
 		) ws ON TRUE
+		LEFT JOIN weekly_rate wr ON wr.id = u.weekly_rate_id
 		ORDER BY u.created_at DESC
 	`).Scan(&users).Error
 	return users, err
@@ -83,8 +86,8 @@ func (repo *userRepository) FindByTypeAuth(typeOf string, data string) (*model.U
 
 func (repo *userRepository) RegisterUser(user model.UserCreate) error {
 	err := repo.db.Exec(
-		"INSERT INTO users (uuid, first_name, last_name, email, username, phone_number, roles, password_hash) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-		user.UUID, user.FirstName, user.LastName, user.Email, user.Username, user.PhoneNumber, user.Roles, user.PasswordHash,
+		"INSERT INTO users (uuid, first_name, last_name, email, username, phone_number, roles, password_hash, weekly_rate_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+		user.UUID, user.FirstName, user.LastName, user.Email, user.Username, user.PhoneNumber, user.Roles, user.PasswordHash, user.WeeklyRateID,
 	).Error
 	return err
 }
@@ -124,6 +127,10 @@ func (repo *userRepository) UpdateUser(userID int, user model.UserUpdateEntry) e
 		updateData["status"] = *user.Status
 	}
 
+	if user.WeeklyRateID != nil {
+		updateData["weekly_rate_id"] = *user.WeeklyRateID
+	}
+
 	if len(updateData) == 0 {
 		return fmt.Errorf("no fields to update")
 	}
@@ -144,6 +151,8 @@ func (repo *userRepository) FindByUUID(userUUID string) (*model.UserReadAll, err
 			u.phone_number,
 			u.roles,
 			u.status,
+			COALESCE(wr.amount, 0) AS weekly_rate,
+			wr.rate_name AS weekly_rate_name,
 			COALESCE(ws.status, 'completed') AS work_session_status,
 			COALESCE(
 				JSON_AGG(
@@ -159,6 +168,7 @@ func (repo *userRepository) FindByUUID(userUUID string) (*model.UserReadAll, err
 		FROM users u
 		LEFT JOIN teams_members tm ON tm.user_id = u.id
 		LEFT JOIN teams t ON t.id = tm.team_id
+		LEFT JOIN weekly_rate wr ON wr.id = u.weekly_rate_id
 		LEFT JOIN LATERAL (
 			SELECT 
 				wsa.status
@@ -168,7 +178,7 @@ func (repo *userRepository) FindByUUID(userUUID string) (*model.UserReadAll, err
 			LIMIT 1
 		) ws ON TRUE
 		WHERE u.uuid = ?
-		GROUP BY u.id, ws.status;
+		GROUP BY u.id, ws.status, wr.amount, wr.rate_name
 	`, userUUID).Scan(&user).Error
 	if err != nil {
 		return nil, err

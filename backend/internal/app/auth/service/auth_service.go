@@ -25,6 +25,7 @@ type Claims struct {
 	Email       string   `json:"email"`
 	Username    string   `json:"username"`
 	PhoneNumber *string  `json:"phone_number,omitempty"`
+	WeeklyRate  int      `json:"weekly_rate"`
 	jwt.RegisteredClaims
 }
 
