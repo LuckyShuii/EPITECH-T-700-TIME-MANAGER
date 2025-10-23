@@ -3,7 +3,7 @@ name: SonarCloud
 on:
   push:
     branches:
-      # the current sonar cloud plan only supports analysis on the main branch
+      # the current sonarcloud plan only supports analysis on the main branch
       - main
 
 jobs:
