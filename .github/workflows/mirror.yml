@@ -3,7 +3,7 @@ name: 🔁 Mirror Repository
 on:
   push:
     branches:
-      - main # ou master selon ta branche par défaut
+      - main
 
 jobs:
   mirror:
@@ -12,7 +12,7 @@ jobs:
       - name: 🔄 Checkout source repo
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # important pour mirroring complet
+          fetch-depth: 0
 
       - name: ⚙️ Setup SSH
         run: |
