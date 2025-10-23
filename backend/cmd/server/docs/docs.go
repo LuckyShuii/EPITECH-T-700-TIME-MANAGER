@@ -930,6 +930,9 @@ const docTemplate = `{
                 },
                 "uuid": {
                     "type": "string"
+                },
+                "work_session_status": {
+                    "type": "string"
                 }
             }
         },
@@ -967,6 +970,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "uuid": {
+                    "type": "string"
+                },
+                "work_session_status": {
                     "type": "string"
                 }
             }

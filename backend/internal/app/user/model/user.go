@@ -26,9 +26,10 @@ type UserTeamMemberInfo struct {
 // swagger:model UserReadAll
 type UserReadAll struct {
 	UserBase
-	Status   string               `json:"status"`
-	TeamsRaw string               `json:"-" gorm:"column:teams"`
-	Teams    []UserTeamMemberInfo `json:"teams" gorm:"-"`
+	Status            *string              `json:"status"`
+	WorkSessionStatus *string              `json:"work_session_status"`
+	TeamsRaw          string               `json:"-" gorm:"column:teams"`
+	Teams             []UserTeamMemberInfo `json:"teams" gorm:"-"`
 }
 
 type UserUpdateEntry struct {
@@ -68,9 +69,10 @@ type UserAll struct {
 // swagger:model
 type UserRead struct {
 	UserBase
-	Status    *string   `json:"status"`
-	CreatedAt time.Time `json:"created_at" gorm:"autoCreateTime"`
-	UpdatedAt time.Time `json:"updated_at" gorm:"autoUpdateTime"`
+	Status            *string   `json:"status"`
+	WorkSessionStatus *string   `json:"work_session_status"`
+	CreatedAt         time.Time `json:"created_at" gorm:"autoCreateTime"`
+	UpdatedAt         time.Time `json:"updated_at" gorm:"autoUpdateTime"`
 }
 
 type UserReadJWT struct {

@@ -919,6 +919,9 @@
                 },
                 "uuid": {
                     "type": "string"
+                },
+                "work_session_status": {
+                    "type": "string"
                 }
             }
         },
@@ -956,6 +959,9 @@
                     "type": "string"
                 },
                 "uuid": {
+                    "type": "string"
+                },
+                "work_session_status": {
                     "type": "string"
                 }
             }
