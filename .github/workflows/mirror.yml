@@ -1,0 +1,27 @@
+name: 🔁 Mirror Repository
+
+on:
+  push:
+    branches:
+      - main # ou master selon ta branche par défaut
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🔄 Checkout source repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # important pour mirroring complet
+
+      - name: ⚙️ Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.MIRROR_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+
+      - name: 🪞 Push to mirror repo
+        run: |
+          git remote add mirror git@github.com:EpitechMscProPromo2027/T-DEV-700-project-PAR_19.git
+          git push --mirror mirror

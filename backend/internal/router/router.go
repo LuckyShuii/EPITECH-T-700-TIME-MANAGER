@@ -108,6 +108,9 @@ func SetupRouter() *gin.Engine {
 
 		protected.POST("/teams", authMiddleware.RequireRoles("admin"), teamHandler.CreateTeam)
 		protected.POST("/teams/add-users", authMiddleware.RequireRoles("admin"), teamHandler.AddUsersToTeam)
+
+		protected.PUT("/teams/edit/:uuid", authMiddleware.RequireRoles("admin"), teamHandler.UpdateTeamByUUID)
+		protected.PUT("/teams/:team_uuid/users/:user_uuid/edit-manager-status/:is_manager", authMiddleware.RequireRoles("admin"), teamHandler.UpdateTeamUserManagerStatus)
 	}
 
 	return r

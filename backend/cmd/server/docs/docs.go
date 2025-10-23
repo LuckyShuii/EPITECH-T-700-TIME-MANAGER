@@ -211,6 +211,7 @@ const docTemplate = `{
                 "tags": [
                     "Teams"
                 ],
+                "summary": "Remove user from team",
                 "parameters": [
                     {
                         "type": "string",
@@ -230,6 +231,51 @@ const docTemplate = `{
                 "responses": {
                     "204": {
                         "description": "User removed from team successfully"
+                    }
+                }
+            }
+        },
+        "/teams/{team_uuid}/users/{user_uuid}/edit-manager-status": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Updates a team member's manager status by team UUID and user UUID. 🔒 Requires role: **admin**",
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Teams"
+                ],
+                "summary": "Update team member manager status",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Team UUID",
+                        "name": "team_uuid",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "User UUID",
+                        "name": "user_uuid",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Is Manager Status (1 = true, 0 = false)",
+                        "name": "is_manager",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Status updated successfully"
                     }
                 }
             }
@@ -264,6 +310,44 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/model.TeamReadAll"
                         }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Updates an existing team's details by its UUID. 🔒 Requires role: **admin**",
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Teams"
+                ],
+                "summary": "Update team by UUID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Team UUID",
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Updated team details",
+                        "name": "team",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.TeamUpdate"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Team updated successfully"
                     }
                 }
             },
@@ -830,6 +914,17 @@ const docTemplate = `{
                 }
             }
         },
+        "model.TeamUpdate": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "model.UserCreate": {
             "type": "object",
             "properties": {
@@ -930,6 +1025,9 @@ const docTemplate = `{
                 },
                 "uuid": {
                     "type": "string"
+                },
+                "work_session_status": {
+                    "type": "string"
                 }
             }
         },
@@ -967,6 +1065,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "uuid": {
+                    "type": "string"
+                },
+                "work_session_status": {
                     "type": "string"
                 }
             }

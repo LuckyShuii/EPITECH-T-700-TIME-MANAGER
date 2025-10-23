@@ -38,9 +38,10 @@ func (repo *userRepository) FindAll() ([]model.UserRead, error) {
 			u.last_name,
 			u.phone_number,
 			u.roles,
+			u.status,
 			u.created_at,
 			u.updated_at,
-			COALESCE(ws.status, 'completed') AS status
+			COALESCE(ws.status, 'completed') AS work_session_status
 		FROM users u
 		LEFT JOIN LATERAL (
 			SELECT
@@ -142,7 +143,8 @@ func (repo *userRepository) FindByUUID(userUUID string) (*model.UserReadAll, err
 			u.last_name,
 			u.phone_number,
 			u.roles,
-			COALESCE(ws.status, 'completed') AS status,
+			u.status,
+			COALESCE(ws.status, 'completed') AS work_session_status,
 			COALESCE(
 				JSON_AGG(
 					JSON_BUILD_OBJECT(
