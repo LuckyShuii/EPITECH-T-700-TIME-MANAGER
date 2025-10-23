@@ -10,8 +10,9 @@ import (
 
 type WeeklyRateRepository interface {
 	GetAll() ([]WeeklyRateModel.WeeklyRate, error)
-	GetIDByUUID(uuid string) (*WeeklyRateModel.WeeklyRate, error)
+	GetIDByUUID(uuid string) (int, error)
 	Create(input WeeklyRateModel.WeeklyRate) error
+	Update(id int, input WeeklyRateModel.UpdateWeeklyRate) error
 }
 
 type weeklyRateRepository struct {
@@ -34,17 +35,17 @@ func (repo *weeklyRateRepository) GetAll() ([]WeeklyRateModel.WeeklyRate, error)
 	return weeklyRates, nil
 }
 
-func (repo *weeklyRateRepository) GetIDByUUID(uuid string) (*WeeklyRateModel.WeeklyRate, error) {
-	var weeklyRateID WeeklyRateModel.WeeklyRate
+func (repo *weeklyRateRepository) GetIDByUUID(uuid string) (int, error) {
+	var weeklyRateID int
 	err := repo.db.Raw(`
 		SELECT id
 		FROM weekly_rate
 		WHERE uuid = ?
 	`, uuid).Scan(&weeklyRateID).Error
 	if err != nil {
-		return nil, fmt.Errorf("failed to find weekly rate ID by UUID: %w", err)
+		return 0, fmt.Errorf("failed to find weekly rate ID by UUID: %w", err)
 	}
-	return &weeklyRateID, nil
+	return weeklyRateID, nil
 }
 
 func (repo *weeklyRateRepository) Create(input WeeklyRateModel.WeeklyRate) error {
@@ -54,6 +55,23 @@ func (repo *weeklyRateRepository) Create(input WeeklyRateModel.WeeklyRate) error
 	`, input.UUID, input.RateName, input.Amount)
 	if result.Error != nil {
 		return fmt.Errorf("failed to create weekly rate: %w", result.Error)
+	}
+	return nil
+}
+
+func (repo *weeklyRateRepository) Update(id int, input WeeklyRateModel.UpdateWeeklyRate) error {
+	updateData := make(map[string]any)
+
+	if input.RateName != "" {
+		updateData["rate_name"] = input.RateName
+	}
+	if input.Amount != 0 {
+		updateData["amount"] = input.Amount
+	}
+
+	result := repo.db.Model(&WeeklyRateModel.WeeklyRate{}).Table("weekly_rate").Where("id = ?", id).Updates(updateData)
+	if result.Error != nil {
+		return fmt.Errorf("failed to update weekly rate: %w", result.Error)
 	}
 	return nil
 }

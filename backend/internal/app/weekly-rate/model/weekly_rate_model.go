@@ -12,3 +12,9 @@ type CreateWeeklyRate struct {
 	RateName string  `gorm:"not null" json:"rate_name"`
 	Amount   float64 `gorm:"not null" json:"amount"`
 }
+
+// swagger:model UpdateWeeklyRate
+type UpdateWeeklyRate struct {
+	RateName string  `gorm:"not null" json:"rate_name"`
+	Amount   float64 `gorm:"not null" json:"amount"`
+}

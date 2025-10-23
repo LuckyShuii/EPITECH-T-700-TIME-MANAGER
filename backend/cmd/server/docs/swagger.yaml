@@ -117,6 +117,13 @@ definitions:
       name:
         type: string
     type: object
+  model.UpdateWeeklyRate:
+    properties:
+      amount:
+        type: number
+      rate_name:
+        type: string
+    type: object
   model.UserCreate:
     properties:
       email:
@@ -759,6 +766,31 @@ paths:
       summary: Get all weekly rates
       tags:
       - WeeklyRates
+  /users/weekly-rates/{uuid}/update:
+    put:
+      consumes:
+      - application/json
+      description: Update the details of an existing weekly rate
+      parameters:
+      - description: Weekly Rate UUID
+        in: path
+        name: uuid
+        required: true
+        type: string
+      - description: Weekly Rate Data
+        in: body
+        name: weeklyRate
+        required: true
+        schema:
+          $ref: '#/definitions/model.UpdateWeeklyRate'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Weekly rate updated successfully
+      summary: Update an existing weekly rate
+      tags:
+      - WeeklyRates
   /users/weekly-rates/create:
     post:
       consumes:
@@ -775,9 +807,7 @@ paths:
       - application/json
       responses:
         "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/model.WeeklyRate'
+          description: Weekly rate created successfully
       summary: Create a new weekly rate
       tags:
       - WeeklyRates

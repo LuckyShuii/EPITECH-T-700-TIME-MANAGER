@@ -611,10 +611,45 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "201": {
-                        "description": "Created",
+                        "description": "Weekly rate created successfully"
+                    }
+                }
+            }
+        },
+        "/users/weekly-rates/{uuid}/update": {
+            "put": {
+                "description": "Update the details of an existing weekly rate",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "WeeklyRates"
+                ],
+                "summary": "Update an existing weekly rate",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Weekly Rate UUID",
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Weekly Rate Data",
+                        "name": "weeklyRate",
+                        "in": "body",
+                        "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.WeeklyRate"
+                            "$ref": "#/definitions/model.UpdateWeeklyRate"
                         }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Weekly rate updated successfully"
                     }
                 }
             }
@@ -997,6 +1032,17 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.UpdateWeeklyRate": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "number"
+                },
+                "rate_name": {
                     "type": "string"
                 }
             }
