@@ -6,12 +6,14 @@ import (
 	WeeklyRateModel "app/internal/app/weekly-rate/model"
 	WeeklyRateRepository "app/internal/app/weekly-rate/repository"
 
-	UserService "app/internal/app/user/service"
-
 	Config "app/internal/config"
 
 	"github.com/google/uuid"
 )
+
+type UserLookup interface {
+	GetIdByUuid(id string) (int, error)
+}
 
 type WeeklyRateService interface {
 	GetAll() ([]WeeklyRateModel.WeeklyRate, error)
@@ -19,15 +21,19 @@ type WeeklyRateService interface {
 	Update(uuid string, input WeeklyRateModel.UpdateWeeklyRate) error
 	Delete(uuid string) error
 	AssignToUser(weeklyRateUUID string, userUUID string) error
+	GetIdByUuid(id string) (int, error)
 }
 
 type weeklyRateService struct {
 	WeeklyRateRepo WeeklyRateRepository.WeeklyRateRepository
-	UserService    UserService.UserService
+	UserLookup     UserLookup
 }
 
-func NewWeeklyRateService(repo WeeklyRateRepository.WeeklyRateRepository, userService UserService.UserService) WeeklyRateService {
-	return &weeklyRateService{WeeklyRateRepo: repo, UserService: userService}
+func NewWeeklyRateService(repo WeeklyRateRepository.WeeklyRateRepository, userLookup UserLookup) WeeklyRateService {
+	return &weeklyRateService{
+		WeeklyRateRepo: repo,
+		UserLookup:     userLookup,
+	}
 }
 
 func (service *weeklyRateService) GetAll() ([]WeeklyRateModel.WeeklyRate, error) {
@@ -86,7 +92,7 @@ func (service *weeklyRateService) AssignToUser(weeklyRateUUID string, userUUID s
 		return fmt.Errorf(Config.ErrorMessages()["WEEKLY_RATE_NOT_FOUND"]+": %w", err)
 	}
 
-	userID, err := service.UserService.GetIdByUuid(userUUID)
+	userID, err := service.UserLookup.GetIdByUuid(userUUID)
 	if err != nil || userID == 0 {
 		return fmt.Errorf("failed to find user: %w", err)
 	}
@@ -96,4 +102,8 @@ func (service *weeklyRateService) AssignToUser(weeklyRateUUID string, userUUID s
 		return fmt.Errorf("failed to assign weekly rate to user: %w", err)
 	}
 	return nil
+}
+
+func (service *weeklyRateService) GetIdByUuid(id string) (int, error) {
+	return service.WeeklyRateRepo.GetIDByUUID(id)
 }

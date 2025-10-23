@@ -35,14 +35,16 @@ type UserReadAll struct {
 }
 
 type UserUpdateEntry struct {
-	UUID        string             `json:"uuid" gorm:"type:uuid;default:uuid_generate_v4();unique;not null"`
-	Username    *string            `json:"username,omitempty" gorm:"unique;not null"`
-	Email       *string            `json:"email,omitempty" gorm:"unique;not null"`
-	FirstName   *string            `json:"first_name,omitempty"`
-	LastName    *string            `json:"last_name,omitempty"`
-	PhoneNumber *string            `json:"phone_number,omitempty"`
-	Roles       *model.StringArray `json:"roles,omitempty" gorm:"type:text[];default:'{employee}'"`
-	Status      *string            `json:"status,omitempty"`
+	UUID           string             `json:"uuid" gorm:"type:uuid;default:uuid_generate_v4();unique;not null"`
+	Username       *string            `json:"username,omitempty" gorm:"unique;not null"`
+	Email          *string            `json:"email,omitempty" gorm:"unique;not null"`
+	FirstName      *string            `json:"first_name,omitempty"`
+	LastName       *string            `json:"last_name,omitempty"`
+	PhoneNumber    *string            `json:"phone_number,omitempty"`
+	Roles          *model.StringArray `json:"roles,omitempty" gorm:"type:text[];default:'{employee}'"`
+	Status         *string            `json:"status,omitempty"`
+	WeeklyRateUUID *string            `json:"weekly_rate_uuid,omitempty"`
+	WeeklyRateID   *int               `json:"weekly_rate_id,omitempty"`
 }
 
 // StringArray is a custom type representing an array of strings.
@@ -99,8 +101,10 @@ type UserDelete struct {
 // swagger:model
 type UserCreate struct {
 	UserBase
-	PasswordHash string `json:"password_hash" gorm:"not null"`
-	Password     string `json:"password" gorm:"-:all"` // Ignored by GORM, used only for input
+	WeeklyRateUUID *string `json:"weekly_rate_uuid,omitempty"`
+	WeeklyRateID   *int    `json:"weekly_rate_id,omitempty"`
+	PasswordHash   string  `json:"password_hash" gorm:"not null"`
+	Password       string  `json:"password" gorm:"-:all"` // Ignored by GORM, used only for input
 }
 
 type UserLogin struct {

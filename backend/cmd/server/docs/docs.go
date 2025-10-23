@@ -1133,6 +1133,12 @@ const docTemplate = `{
                 },
                 "uuid": {
                     "type": "string"
+                },
+                "weekly_rate_id": {
+                    "type": "integer"
+                },
+                "weekly_rate_uuid": {
+                    "type": "string"
                 }
             }
         },
@@ -1330,6 +1336,12 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "uuid": {
+                    "type": "string"
+                },
+                "weekly_rate_id": {
+                    "type": "integer"
+                },
+                "weekly_rate_uuid": {
                     "type": "string"
                 }
             }

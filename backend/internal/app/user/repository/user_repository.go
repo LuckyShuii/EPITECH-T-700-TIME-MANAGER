@@ -86,8 +86,8 @@ func (repo *userRepository) FindByTypeAuth(typeOf string, data string) (*model.U
 
 func (repo *userRepository) RegisterUser(user model.UserCreate) error {
 	err := repo.db.Exec(
-		"INSERT INTO users (uuid, first_name, last_name, email, username, phone_number, roles, password_hash) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-		user.UUID, user.FirstName, user.LastName, user.Email, user.Username, user.PhoneNumber, user.Roles, user.PasswordHash,
+		"INSERT INTO users (uuid, first_name, last_name, email, username, phone_number, roles, password_hash, weekly_rate_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+		user.UUID, user.FirstName, user.LastName, user.Email, user.Username, user.PhoneNumber, user.Roles, user.PasswordHash, user.WeeklyRateID,
 	).Error
 	return err
 }
@@ -125,6 +125,10 @@ func (repo *userRepository) UpdateUser(userID int, user model.UserUpdateEntry) e
 	}
 	if user.Status != nil {
 		updateData["status"] = *user.Status
+	}
+
+	if user.WeeklyRateID != nil {
+		updateData["weekly_rate_id"] = *user.WeeklyRateID
 	}
 
 	if len(updateData) == 0 {

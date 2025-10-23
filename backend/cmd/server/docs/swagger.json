@@ -1122,6 +1122,12 @@
                 },
                 "uuid": {
                     "type": "string"
+                },
+                "weekly_rate_id": {
+                    "type": "integer"
+                },
+                "weekly_rate_uuid": {
+                    "type": "string"
                 }
             }
         },
@@ -1319,6 +1325,12 @@
                     "type": "string"
                 },
                 "uuid": {
+                    "type": "string"
+                },
+                "weekly_rate_id": {
+                    "type": "integer"
+                },
+                "weekly_rate_uuid": {
                     "type": "string"
                 }
             }
