@@ -4,56 +4,53 @@ services:
       context: ./backend
       dockerfile: Dockerfile.dev
     container_name: time-manager-backend
-    environment:
-      FRONTEND_URL: ${FRONTEND_URL}
-      DB_DATABASE: ${DB_NAME}
-      DB_USER: ${DB_USER}
-      DB_PASSWORD: ${DB_PASSWORD}
-      DB_HOST: ${DB_HOST}
-      DB_PORT: ${DB_PORT}
-      PROJECT_STATUS: ${PROJECT_STATUS}
-      JWT_SECRET: ${JWT_SECRET}
-      JWT_EXPIRATION_HOURS: ${JWT_EXPIRATION_HOURS}
+    env_file:
+      - ./backend/.env
     volumes:
       - ./backend/cmd:/app/cmd
       - ./backend/internal:/app/internal
+      - ./logs/backend.log:/var/log/app.log
     depends_on:
-      database:
-        condition: service_healthy
+      - database
+    command: >
+      sh -c "go run cmd/server/main.go 2>&1 | tee -a /var/log/app.log"
 
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile.dev
     container_name: time-manager-frontend
-    environment:
-      VITE_PROJECT_STATUS: ${PROJECT_STATUS}
-      VITE_FRONTEND_URL: ${FRONTEND_URL}
+    env_file:
+      - ./frontend/.env
     volumes:
       - ./frontend/src:/app/src
+      - ./logs/frontend.log:/var/log/app.log
     ports:
       - "5173:5173"
       - "7002:7002"
-    command: ["npm", "run", "dev"]
+    command: >
+      sh -c "npm run dev 2>&1 | tee -a /var/log/app.log"
 
   database:
     image: postgres
     container_name: time-manager-database
-    environment:
-      POSTGRES_DB: ${DB_NAME}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_USER: ${DB_USER}
     volumes:
       - db_data:/var/lib/postgresql/data
       - ./database:/docker-entrypoint-initdb.d
-    expose:
-      - 5432
+      - ./logs/database.log:/var/log/app.log
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    command: >
+      sh -c "docker-entrypoint.sh postgres 2>&1 | tee -a /var/log/app.log"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
-      interval: 1s
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 2s
       timeout: 2s
       retries: 5
-      start_period: 2s
 
   redis:
     image: redis
@@ -70,12 +67,50 @@ services:
     container_name: time-manager-apigateway
     volumes:
       - ./nginx.dev.conf:/etc/nginx/nginx.conf
+      - ./logs/apigateway.log:/var/log/nginx/access.log
     ports:
       - "8081:80"
     depends_on:
       - database
       - backend
       - frontend
+    command: >
+      sh -c "nginx -g 'daemon off;' 2>&1 | tee -a /var/log/nginx/access.log"
 
+  migrator:
+    image: migrate/migrate:latest
+    container_name: time-manager-migrator
+    depends_on:
+      database:
+        condition: service_healthy
+    volumes:
+      - ./backend/migrations:/migrations
+    env_file:
+      - ./backend/.env
+    entrypoint: [""]
+    command: sh -c "migrate -path=/migrations -database postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@database:5432/${POSTGRES_DB}?sslmode=disable up"
+    restart: "no"
+
+  sonarqube:
+    image: sonarqube:latest
+    container_name: time-manager-sonarqube
+    environment:
+      - SONAR_ES_BOOTSTRAP_CHECKS_DISABLE=true
+      - SONAR_WEB_CONTEXT=/sonarqube
+      - SONAR_WEB_PORT=9000
+      - SONAR_SEARCH_PORT=9001
+      - SONAR_WEB_HOST=0.0.0.0
+      - SONAR_FORCEAUTHENTICATION=false
+      - SONAR_WEB_JAVAOPTS=-Dsonar.web.redirectToServerBaseUrl=true
+    expose:
+      - "9000"
+    volumes:
+      - sonarqube_data:/opt/sonarqube/data
+      - sonarqube_logs:/opt/sonarqube/logs
+      - sonarqube_extensions:/opt/sonarqube/extensions
+      
 volumes:
   db_data:
+  sonarqube_data:
+  sonarqube_logs:
+  sonarqube_extensions:

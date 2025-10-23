@@ -2,6 +2,7 @@ package repository
 
 import (
 	"app/internal/app/user/model"
+	"encoding/json"
 	"fmt"
 
 	"gorm.io/gorm"
@@ -12,6 +13,10 @@ type UserRepository interface {
 	FindByTypeAuth(typeOf string, data string) (*model.UserReadJWT, error)
 	RegisterUser(user model.UserCreate) error
 	FindIdByUuid(id string) (userId int, err error)
+	UpdateUserStatus(userUUID string, status string) error
+	DeleteUser(userUUID string) error
+	UpdateUser(userID int, user model.UserUpdateEntry) error
+	FindByUUID(userUUID string) (*model.UserReadAll, error)
 }
 
 type userRepository struct {
@@ -24,7 +29,30 @@ func NewUserRepository(db *gorm.DB) UserRepository {
 
 func (repo *userRepository) FindAll() ([]model.UserRead, error) {
 	var users []model.UserRead
-	err := repo.db.Raw("SELECT uuid, username, email, first_name, last_name, phone_number, roles, created_at, updated_at FROM users").Scan(&users).Error
+	err := repo.db.Raw(`
+		SELECT
+			u.uuid,
+			u.username,
+			u.email,
+			u.first_name,
+			u.last_name,
+			u.phone_number,
+			u.roles,
+			u.status,
+			u.created_at,
+			u.updated_at,
+			COALESCE(ws.status, 'completed') AS work_session_status
+		FROM users u
+		LEFT JOIN LATERAL (
+			SELECT
+				wsa.status
+			FROM work_session_active wsa
+			WHERE wsa.user_id = u.id
+			ORDER BY wsa.created_at DESC
+			LIMIT 1
+		) ws ON TRUE
+		ORDER BY u.created_at DESC
+	`).Scan(&users).Error
 	return users, err
 }
 
@@ -59,4 +87,100 @@ func (repo *userRepository) RegisterUser(user model.UserCreate) error {
 		user.UUID, user.FirstName, user.LastName, user.Email, user.Username, user.PhoneNumber, user.Roles, user.PasswordHash,
 	).Error
 	return err
+}
+
+func (repo *userRepository) DeleteUser(userUUID string) error {
+	err := repo.db.Exec("DELETE FROM users WHERE uuid = ?", userUUID).Error
+	return err
+}
+
+func (repo *userRepository) UpdateUserStatus(userUUID string, status string) error {
+	err := repo.db.Exec("UPDATE users SET status = ? WHERE uuid = ?", status, userUUID).Error
+	return err
+}
+
+func (repo *userRepository) UpdateUser(userID int, user model.UserUpdateEntry) error {
+	updateData := make(map[string]any)
+
+	if user.Username != nil {
+		updateData["username"] = *user.Username
+	}
+	if user.Email != nil {
+		updateData["email"] = *user.Email
+	}
+	if user.FirstName != nil {
+		updateData["first_name"] = *user.FirstName
+	}
+	if user.LastName != nil {
+		updateData["last_name"] = *user.LastName
+	}
+	if user.PhoneNumber != nil {
+		updateData["phone_number"] = *user.PhoneNumber
+	}
+	if user.Roles != nil {
+		updateData["roles"] = *user.Roles
+	}
+	if user.Status != nil {
+		updateData["status"] = *user.Status
+	}
+
+	if len(updateData) == 0 {
+		return fmt.Errorf("no fields to update")
+	}
+
+	err := repo.db.Table("users").Where("id = ?", userID).Updates(updateData).Error
+	return err
+}
+
+func (repo *userRepository) FindByUUID(userUUID string) (*model.UserReadAll, error) {
+	var user model.UserReadAll
+	err := repo.db.Raw(`
+		SELECT 
+			u.uuid,
+			u.username,
+			u.email,
+			u.first_name,
+			u.last_name,
+			u.phone_number,
+			u.roles,
+			u.status,
+			COALESCE(ws.status, 'completed') AS work_session_status,
+			COALESCE(
+				JSON_AGG(
+					JSON_BUILD_OBJECT(
+						'team_name', t.name,
+						'team_description', t.description,
+						'team_uuid', t.uuid,
+						'is_manager', tm.is_manager
+					)
+				) FILTER (WHERE t.uuid IS NOT NULL),
+				'[]'
+			) AS teams
+		FROM users u
+		LEFT JOIN teams_members tm ON tm.user_id = u.id
+		LEFT JOIN teams t ON t.id = tm.team_id
+		LEFT JOIN LATERAL (
+			SELECT 
+				wsa.status
+			FROM work_session_active wsa
+			WHERE wsa.user_id = u.id
+			ORDER BY wsa.created_at DESC
+			LIMIT 1
+		) ws ON TRUE
+		WHERE u.uuid = ?
+		GROUP BY u.id, ws.status;
+	`, userUUID).Scan(&user).Error
+	if err != nil {
+		return nil, err
+	}
+
+	if user.TeamsRaw != "" {
+		if err := json.Unmarshal([]byte(user.TeamsRaw), &user.Teams); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal teams JSON: %w", err)
+		}
+	} else {
+		user.Teams = []model.UserTeamMemberInfo{}
+	}
+
+	return &user, nil
 }

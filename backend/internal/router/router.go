@@ -14,6 +14,14 @@ import (
 	workSessionR "app/internal/app/work-session/repository"
 	workSessionS "app/internal/app/work-session/service"
 
+	BreakH "app/internal/app/break/handler"
+	BreakR "app/internal/app/break/repository"
+	BreakS "app/internal/app/break/service"
+
+	TeamH "app/internal/app/team/handler"
+	TeamR "app/internal/app/team/repository"
+	TeamS "app/internal/app/team/service"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -21,6 +29,7 @@ func SetupRouter() *gin.Engine {
 	r := gin.Default()
 
 	database := db.ConnectPostgres()
+	db.ConnectRedis()
 
 	/**
 	 * User Module
@@ -40,8 +49,16 @@ func SetupRouter() *gin.Engine {
 	* Work Sessions Routes
 	 */
 	workSessionRepo := workSessionR.NewWorkSessionRepository(database)
-	workSessionService := workSessionS.NewWorkSessionService(workSessionRepo, userService)
+	workSessionService := workSessionS.NewWorkSessionService(workSessionRepo, userService, BreakR.NewBreakRepository(database))
 	workSessionHandler := workSessionH.NewWorkSessionHandler(workSessionService)
+
+	breakRepo := BreakR.NewBreakRepository(database)
+	breakService := BreakS.NewBreakService(breakRepo, workSessionRepo)
+	breakHandler := BreakH.NewBreakHandler(breakService)
+
+	teamRepo := TeamR.NewTeamRepository(database)
+	teamService := TeamS.NewTeamService(teamRepo, userService)
+	teamHandler := TeamH.NewTeamHandler(teamService, userService)
 
 	/**
 	* Public Routes
@@ -54,20 +71,46 @@ func SetupRouter() *gin.Engine {
 	protected := r.Group("/api")
 	protected.Use(authMiddleware.AuthenticationMiddleware)
 	{
-		protected.GET("/auth/me", authHandler.MeHandler)
 		protected.POST("/auth/logout", authHandler.LogoutHandler)
+
+		protected.GET("/auth/me", authHandler.MeHandler)
 
 		/**
 		 * User Management Routes
 		 */
-		protected.GET("/users", authMiddleware.RequireRoles("user_manager"), userHandler.GetUsers)
-		protected.POST("/users/register", authMiddleware.RequireRoles("user_manager"), userHandler.RegisterUser)
+		protected.POST("/users/register", authMiddleware.RequireRoles("admin"), userHandler.RegisterUser)
+		protected.PUT("/users/update-status", authMiddleware.RequireRoles("admin"), userHandler.UpdateUserStatus)
+		protected.PUT("/users", authMiddleware.RequireRoles("admin"), userHandler.UpdateUser)
+
+		protected.GET("/users", authMiddleware.RequireRoles("admin"), userHandler.GetUsers)
+		protected.GET("/users/:uuid", authMiddleware.RequireRoles("all"), userHandler.GetUserByUUID)
+
+		protected.DELETE("/users/delete", authMiddleware.RequireRoles("admin"), userHandler.DeleteUser)
 
 		/**
-		 * Work Sessions Routes
+		 * Work Sessions & Breaks Routes
 		 */
-		// authMiddleware.RequireRoles("user")
-		protected.POST("/work-session/update-clocking", workSessionHandler.UpdateWorkSessionClocking)
+		protected.POST("/work-session/update-clocking", authMiddleware.RequireRoles("all"), workSessionHandler.UpdateWorkSessionClocking)
+		protected.POST("/work-session/update-breaking", authMiddleware.RequireRoles("all"), breakHandler.UpdateBreak)
+
+		protected.GET("/work-session/history", authMiddleware.RequireRoles("all"), workSessionHandler.GetWorkSessionHistory)
+
+		protected.GET("/work-session/status", authMiddleware.RequireRoles("all"), workSessionHandler.GetWorkSessionStatus)
+
+		/**
+		 * Teams Routes
+		 */
+		protected.GET("/teams", authMiddleware.RequireRoles("admin"), teamHandler.GetTeams)
+		protected.GET("/teams/:uuid", authMiddleware.RequireRoles("all"), teamHandler.GetTeamByUUID)
+
+		protected.DELETE("/teams/:uuid", authMiddleware.RequireRoles("admin"), teamHandler.DeleteTeamByUUID)
+		protected.DELETE("/teams/users/:team_uuid/:user_uuid", authMiddleware.RequireRoles("admin"), teamHandler.RemoveUserFromTeam)
+
+		protected.POST("/teams", authMiddleware.RequireRoles("admin"), teamHandler.CreateTeam)
+		protected.POST("/teams/add-users", authMiddleware.RequireRoles("admin"), teamHandler.AddUsersToTeam)
+
+		protected.PUT("/teams/edit/:uuid", authMiddleware.RequireRoles("admin"), teamHandler.UpdateTeamByUUID)
+		protected.PUT("/teams/:team_uuid/users/:user_uuid/edit-manager-status/:is_manager", authMiddleware.RequireRoles("admin"), teamHandler.UpdateTeamUserManagerStatus)
 	}
 
 	return r

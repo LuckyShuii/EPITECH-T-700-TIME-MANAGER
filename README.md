@@ -8,6 +8,10 @@
 - **Database:** PostgreSQL
 - **Tests:** Playwright + Vitest + (Go?)
 
+## Swagger
+
+URL: `http://localhost:8081/api/swagger/index.html`
+
 ## 💬 Justifications
 
 We took a **massive risk** by choosing the Go framework **Gin**, since none of us in the team had any prior experience with Go.  

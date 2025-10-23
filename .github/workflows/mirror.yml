@@ -1,0 +1,29 @@
+name: Mirror Repositor
+
+on:
+  push:
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.MIRROR_TOKEN }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+          git config --global user.email "ci@github.com"
+          git config --global user.name "Mirror CI"
+
+      - name: Push to Epitech repo via SSH
+        run: |
+          git remote add mirror git@github.com:EpitechMscProPromo2027/T-DEV-700-project-PAR_19.git
+          git push --all mirror
+          git push --tags mirror

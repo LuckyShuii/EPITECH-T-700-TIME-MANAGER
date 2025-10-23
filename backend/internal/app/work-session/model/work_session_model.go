@@ -9,17 +9,17 @@ import (
 )
 
 type WorkSessionBase struct {
-	UUID            string `json:"uuid"`
-	ClockIn         string `json:"clock_in"`
-	ClockOut        string `json:"clock_out"`
-	DurationMinutes int    `json:"duration_minutes"`
+	ClockIn               string `json:"clock_in"`
+	ClockOut              string `json:"clock_out"`
+	DurationMinutes       int    `json:"duration_minutes"`
+	BreaksDurationMinutes *int   `json:"breaks_duration_minutes"`
 	// status is either "active", "paused" or "completed"
 	Status string `json:"status"`
 }
 
 type WorkSessionRead struct {
 	WorkSessionBase
-
+	UUID            string `json:"uuid"`
 	WorkSessionUUID string `json:"work_session_uuid"`
 
 	// User fields
@@ -32,13 +32,27 @@ type WorkSessionRead struct {
 	Roles       pq.StringArray `json:"roles" gorm:"type:text[]"`
 }
 
+type WorkSessionReadHistory struct {
+	WorkSessionBase
+
+	WorkSessionUUID string `json:"work_session_uuid"`
+
+	// User fields
+	UserUUID string `json:"user_uuid"`
+	Username string `json:"username"`
+}
+
 type WorkSessionReadAll struct {
 	WorkSessionBase
+	UUID      string         `json:"uuid"`
 	User      model.UserBase `json:"user" gorm:"foreignKey:UserID"`
 	CreatedAt time.Time      `json:"created_at"`
 	UpdatedAt time.Time      `json:"updated_at"`
 }
 
+// WorkSessionUpdate represents the payload to update a work session.
+//
+// swagger:model
 type WorkSessionUpdate struct {
 	UserUUID  string `json:"user_uuid"`
 	IsClocked *bool  `json:"is_clocked"`
@@ -48,4 +62,24 @@ type WorkSessionCreate struct {
 	UserID int `json:"user_id"`
 	// status is either "active", "paused" or "completed"
 	Status string `json:"status"`
+}
+
+// WorkSessionUpdateResponse represents the response after updating a work session clocking status.
+//
+// swagger:model
+type WorkSessionUpdateResponse struct {
+	Success      bool    `json:"success"`
+	ClockInTime  string  `json:"clock_in_time"`
+	ClockOutTime *string `json:"clock_out_time"`
+	Status       string  `json:"status"`
+}
+
+// WorkSessionStatus represents the current work session status of a user.
+//
+// swagger:model
+type WorkSessionStatus struct {
+	WorkSessionUUID string  `json:"work_session_uuid"`
+	IsClocked       bool    `json:"is_clocked"`
+	ClockInTime     *string `json:"clock_in_time"`
+	Status          string  `json:"status"`
 }

@@ -6,6 +6,8 @@ import (
 
 	authService "app/internal/app/auth/service"
 
+	Config "app/internal/config"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -35,7 +37,7 @@ func (handler *AuthHandler) RequireRoles(roles ...string) gin.HandlerFunc {
 		// Retrieve claims from context
 		claims, exists := c.Get("userClaims")
 		if !exists {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Missing claims"})
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": Config.ErrorMessages()["NO_CLAIMS"]})
 			return
 		}
 
@@ -44,7 +46,7 @@ func (handler *AuthHandler) RequireRoles(roles ...string) gin.HandlerFunc {
 
 		// Check if user has at least one of the required roles
 		for _, requiredRole := range roles {
-			if slices.Contains(userRoles, requiredRole) {
+			if slices.Contains(userRoles, requiredRole) || slices.Contains(userRoles, "admin") || requiredRole == "all" {
 				c.Next()
 				return
 			}
