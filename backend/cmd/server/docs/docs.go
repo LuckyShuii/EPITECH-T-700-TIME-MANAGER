@@ -891,6 +891,12 @@ const docTemplate = `{
                 "username": {
                     "type": "string"
                 },
+                "weekly_rate": {
+                    "type": "integer"
+                },
+                "weekly_rate_name": {
+                    "type": "string"
+                },
                 "work_session_status": {
                     "type": "string"
                 }
@@ -1028,6 +1034,12 @@ const docTemplate = `{
                 "uuid": {
                     "type": "string"
                 },
+                "weekly_rate": {
+                    "type": "integer"
+                },
+                "weekly_rate_name": {
+                    "type": "string"
+                },
                 "work_session_status": {
                     "type": "string"
                 }
@@ -1067,6 +1079,12 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "uuid": {
+                    "type": "string"
+                },
+                "weekly_rate": {
+                    "type": "integer"
+                },
+                "weekly_rate_name": {
                     "type": "string"
                 },
                 "work_session_status": {

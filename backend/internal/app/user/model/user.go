@@ -30,6 +30,8 @@ type UserReadAll struct {
 	WorkSessionStatus *string              `json:"work_session_status"`
 	TeamsRaw          string               `json:"-" gorm:"column:teams"`
 	Teams             []UserTeamMemberInfo `json:"teams" gorm:"-"`
+	WeeklyRate        int                  `json:"weekly_rate"`
+	WeeklyRateName    *string              `json:"weekly_rate_name"`
 }
 
 type UserUpdateEntry struct {
@@ -71,6 +73,8 @@ type UserRead struct {
 	UserBase
 	Status            *string   `json:"status"`
 	WorkSessionStatus *string   `json:"work_session_status"`
+	WeeklyRate        int       `json:"weekly_rate"`
+	WeeklyRateName    *string   `json:"weekly_rate_name"`
 	CreatedAt         time.Time `json:"created_at" gorm:"autoCreateTime"`
 	UpdatedAt         time.Time `json:"updated_at" gorm:"autoUpdateTime"`
 }
