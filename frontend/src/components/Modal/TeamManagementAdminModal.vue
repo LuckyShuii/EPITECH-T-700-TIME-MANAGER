@@ -5,6 +5,7 @@ import type { Employee } from '@/types/Employee'
 import API from '@/services/API'
 import { useNotificationsStore } from '@/store/NotificationsStore'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
+import { PencilIcon, CheckIcon, XMarkIcon } from '@heroicons/vue/24/outline'
 
 interface Props {
     modelValue: boolean
@@ -38,6 +39,13 @@ const showRemoveMemberConfirm = ref(false)
 
 // État : membre à retirer
 const memberToRemove = ref<TeamMember | null>(null)
+
+// État : édition équipe
+const isEditingTeam = ref(false)
+const editTeamForm = ref({
+    name: '',
+    description: ''
+})
 
 // Formulaire de création d'équipe
 const createTeamForm = ref({
@@ -281,6 +289,69 @@ const availableEmployees = computed(() => {
     const memberUuids = selectedTeam.value.team_members.map(m => m.user_uuid)
     return allEmployees.value.filter(emp => emp.uuid && !memberUuids.includes(emp.uuid))
 })
+
+// Activer le mode édition
+const startEditingTeam = () => {
+    if (!selectedTeam.value) return
+
+    editTeamForm.value = {
+        name: selectedTeam.value.name,
+        description: selectedTeam.value.description
+    }
+    isEditingTeam.value = true
+}
+
+// Annuler l'édition
+const cancelEditingTeam = () => {
+    isEditingTeam.value = false
+    editTeamForm.value = { name: '', description: '' }
+}
+
+// Sauvegarder les modifications
+const saveTeamEdit = async () => {
+    if (!selectedTeam.value) return
+
+    if (!editTeamForm.value.name.trim()) {
+        notificationsStore.addNotification({
+            status: 'warning',
+            title: 'Champ requis',
+            description: 'Le nom de l\'équipe est obligatoire'
+        })
+        return
+    }
+    console.log('🔍 UUID de l\'équipe:', selectedTeam.value.uuid)
+  console.log('🔍 Payload:', {
+    name: editTeamForm.value.name,
+    description: editTeamForm.value.description
+  })
+  console.log('🔍 URL complète:', `http://localhost:8081/api/teams/${selectedTeam.value.uuid}`)
+  
+
+    try {
+        await API.teamAPI.updateTeam(selectedTeam.value.uuid, {
+            name: editTeamForm.value.name,
+            description: editTeamForm.value.description
+        })
+
+        notificationsStore.addNotification({
+            status: 'success',
+            title: 'Équipe modifiée',
+            description: 'Les informations ont été mises à jour'
+        })
+
+        isEditingTeam.value = false
+        await loadTeams()
+    } catch (error) {
+        console.error('Erreur lors de la modification:', error)
+        notificationsStore.addNotification({
+            status: 'error',
+            title: 'Erreur de modification',
+            description: 'Impossible de modifier l\'équipe'
+        })
+    }
+}
+
+
 </script>
 
 <template>
@@ -335,8 +406,38 @@ const availableEmployees = computed(() => {
                     <div v-if="selectedTeam" class="overflow-y-auto">
                         <!-- En-tête équipe -->
                         <div class="mb-6">
-                            <h4 class="font-semibold text-xl">{{ selectedTeam.name }}</h4>
-                            <p class="text-sm opacity-70 mt-1">{{ selectedTeam.description }}</p>
+                            <!-- Mode lecture -->
+                            <div v-if="!isEditingTeam" class="flex items-start gap-2">
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-2">
+                                        <h4 class="font-semibold text-xl">{{ selectedTeam.name }}</h4>
+                                        <button @click="startEditingTeam" class="btn btn-ghost btn-xs btn-circle"
+                                            title="Modifier">
+                                            <PencilIcon class="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                    <p class="text-sm opacity-70 mt-1">{{ selectedTeam.description || 'Aucune description' }}</p>
+                                </div>
+                            </div>
+
+                            <!-- Mode édition -->
+                            <div v-else class="space-y-3">
+                                <div class="flex items-center gap-2">
+                                    <input v-model="editTeamForm.name" type="text"
+                                        class="input input-bordered input-sm flex-1" placeholder="Nom de l'équipe" />
+                                    <button @click="saveTeamEdit" class="btn btn-success btn-sm btn-circle"
+                                        title="Sauvegarder">
+                                        <CheckIcon class="w-4 h-4" />
+                                    </button>
+                                    <button @click="cancelEditingTeam" class="btn btn-error btn-sm btn-circle"
+                                        title="Annuler">
+                                        <XMarkIcon class="w-4 h-4" />
+                                    </button>
+                                </div>
+                                <textarea v-model="editTeamForm.description"
+                                    class="textarea textarea-bordered textarea-sm w-full"
+                                    placeholder="Description de l'équipe" rows="2"></textarea>
+                            </div>
                         </div>
 
                         <!-- Liste des membres -->

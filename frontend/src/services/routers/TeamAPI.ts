@@ -57,5 +57,13 @@ export default {
    */
   removeMember(teamUuid: string, userUuid: string) {
     return APIHandler.delete(`${resource}/users/${teamUuid}/${userUuid}`)
+  },
+  /**
+ * Modifie une équipe (nom et description)
+ * PUT /teams/{uuid}
+ */
+  updateTeam(uuid: string, payload: { name: string; description: string }) {
+    return APIHandler.put(`${resource}/edit/${uuid}`, payload)
   }
+
 }

@@ -42,13 +42,8 @@ const TeamViewModal = () => {
     </template>
 
     <template #team-view>
-      <button 
-        @click="isTeamViewModalOpen = true"
-        class="h-full w-full bg-gradient-to-br from-primary-500 to-secondary-500 hover:shadow-card-hover text-white rounded-3xl shadow-card transition-all duration-300 flex flex-col items-center justify-center gap-4 group cursor-pointer"
-      >
-        <div class="text-4xl group-hover:scale-110 transition-transform duration-300">👥</div>
-        <p class="font-bold text-base">Voir mon équipe</p>
-      </button>
+      <div class="bg-orange-100 p-6 rounded h-full"></div>
+
     </template>
 
     <!-- Calendrier -->
@@ -59,9 +54,14 @@ const TeamViewModal = () => {
     </template>
 
     <!-- Présence équipe -->
-    <template #kpi-carousel>
-      <div class="bg-green-100 p-6 rounded h-full">
-      </div>
+    <template #modal-team>
+      <button 
+        @click="isTeamViewModalOpen = true"
+        class="h-full w-full bg-gradient-to-br from-primary-500 to-secondary-500 hover:shadow-card-hover text-white rounded-3xl shadow-card transition-all duration-300 flex flex-col items-center justify-center gap-4 group cursor-pointer"
+      >
+        <div class="text-4xl group-hover:scale-110 transition-transform duration-300">👥</div>
+        <p class="font-bold text-base">Voir mon équipe</p>
+      </button>
     </template>
 
     <!-- KPI Carousel -->
