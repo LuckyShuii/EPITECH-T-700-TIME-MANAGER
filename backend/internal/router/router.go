@@ -22,6 +22,10 @@ import (
 	TeamR "app/internal/app/team/repository"
 	TeamS "app/internal/app/team/service"
 
+	WeeklyRatesH "app/internal/app/weekly-rate/handler"
+	WeeklyRatesR "app/internal/app/weekly-rate/repository"
+	WeeklyRatesS "app/internal/app/weekly-rate/service"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -60,6 +64,10 @@ func SetupRouter() *gin.Engine {
 	teamService := TeamS.NewTeamService(teamRepo, userService)
 	teamHandler := TeamH.NewTeamHandler(teamService, userService)
 
+	weeklyRateRepo := WeeklyRatesR.NewWeeklyRateRepository(database)
+	weeklyRateService := WeeklyRatesS.NewWeeklyRateService(weeklyRateRepo)
+	weeklyRateHandler := WeeklyRatesH.NewWeeklyRateHandler(weeklyRateService)
+
 	/**
 	* Public Routes
 	 */
@@ -79,11 +87,13 @@ func SetupRouter() *gin.Engine {
 		 * User Management Routes
 		 */
 		protected.POST("/users/register", authMiddleware.RequireRoles("admin"), userHandler.RegisterUser)
+
 		protected.PUT("/users/update-status", authMiddleware.RequireRoles("admin"), userHandler.UpdateUserStatus)
 		protected.PUT("/users", authMiddleware.RequireRoles("admin"), userHandler.UpdateUser)
 
 		protected.GET("/users", authMiddleware.RequireRoles("admin"), userHandler.GetUsers)
 		protected.GET("/users/:uuid", authMiddleware.RequireRoles("all"), userHandler.GetUserByUUID)
+		protected.GET("/users/weekly-rates", authMiddleware.RequireRoles("all"), weeklyRateHandler.GetAll)
 
 		protected.DELETE("/users/delete", authMiddleware.RequireRoles("admin"), userHandler.DeleteUser)
 

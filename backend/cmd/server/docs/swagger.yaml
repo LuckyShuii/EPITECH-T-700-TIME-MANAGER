@@ -266,6 +266,15 @@ definitions:
       uuid:
         type: string
     type: object
+  model.WeeklyRate:
+    properties:
+      amount:
+        type: number
+      rate_name:
+        type: string
+      uuid:
+        type: string
+    type: object
   model.WorkSessionReadHistory:
     properties:
       breaks_duration_minutes:
@@ -728,6 +737,21 @@ paths:
       summary: Update user status
       tags:
       - Users
+  /weekly-rates:
+    get:
+      description: Retrieve a list of all weekly rates
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            items:
+              $ref: '#/definitions/model.WeeklyRate'
+            type: array
+      summary: Get all weekly rates
+      tags:
+      - WeeklyRates
   /work-session/history:
     get:
       description: "Returns paginated history of work sessions between a start and

@@ -596,6 +596,29 @@ const docTemplate = `{
                 }
             }
         },
+        "/weekly-rates": {
+            "get": {
+                "description": "Retrieve a list of all weekly rates",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "WeeklyRates"
+                ],
+                "summary": "Get all weekly rates",
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/model.WeeklyRate"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/work-session/history": {
             "get": {
                 "security": [
@@ -1160,6 +1183,20 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "username": {
+                    "type": "string"
+                },
+                "uuid": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.WeeklyRate": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "number"
+                },
+                "rate_name": {
                     "type": "string"
                 },
                 "uuid": {
