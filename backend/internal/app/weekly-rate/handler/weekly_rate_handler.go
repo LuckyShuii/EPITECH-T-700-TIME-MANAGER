@@ -90,3 +90,29 @@ func (handler *WeeklyRateHandler) Update(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "Weekly rate updated successfully"})
 }
+
+// Delete Weekly Rate
+//
+// @Summary      Delete a weekly rate
+// @Description  Delete a weekly rate by its UUID
+// @Tags         WeeklyRates
+// @Param        uuid  path      string  true  "Weekly Rate UUID"
+// @Success      200 		"Weekly rate deleted successfully"
+// @Router       /users/weekly-rates/{uuid}/delete [delete]
+func (handler *WeeklyRateHandler) Delete(c *gin.Context) {
+	uuid := c.Param("uuid")
+
+	if uuid == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "UUID is required"})
+		return
+	}
+
+	err := handler.service.Delete(uuid)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Weekly rate deleted successfully"})
+}

@@ -13,6 +13,7 @@ type WeeklyRateRepository interface {
 	GetIDByUUID(uuid string) (int, error)
 	Create(input WeeklyRateModel.WeeklyRate) error
 	Update(id int, input WeeklyRateModel.UpdateWeeklyRate) error
+	Delete(uuid string) error
 }
 
 type weeklyRateRepository struct {
@@ -72,6 +73,17 @@ func (repo *weeklyRateRepository) Update(id int, input WeeklyRateModel.UpdateWee
 	result := repo.db.Model(&WeeklyRateModel.WeeklyRate{}).Table("weekly_rate").Where("id = ?", id).Updates(updateData)
 	if result.Error != nil {
 		return fmt.Errorf("failed to update weekly rate: %w", result.Error)
+	}
+	return nil
+}
+
+func (repo *weeklyRateRepository) Delete(uuid string) error {
+	result := repo.db.Exec(`
+		DELETE FROM weekly_rate
+		WHERE uuid = ?
+	`, uuid)
+	if result.Error != nil {
+		return fmt.Errorf("failed to delete weekly rate: %w", result.Error)
 	}
 	return nil
 }

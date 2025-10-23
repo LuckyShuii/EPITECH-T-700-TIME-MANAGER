@@ -766,6 +766,21 @@ paths:
       summary: Get all weekly rates
       tags:
       - WeeklyRates
+  /users/weekly-rates/{uuid}/delete:
+    delete:
+      description: Delete a weekly rate by its UUID
+      parameters:
+      - description: Weekly Rate UUID
+        in: path
+        name: uuid
+        required: true
+        type: string
+      responses:
+        "200":
+          description: Weekly rate deleted successfully
+      summary: Delete a weekly rate
+      tags:
+      - WeeklyRates
   /users/weekly-rates/{uuid}/update:
     put:
       consumes:

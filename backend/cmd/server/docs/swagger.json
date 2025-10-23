@@ -605,6 +605,29 @@
                 }
             }
         },
+        "/users/weekly-rates/{uuid}/delete": {
+            "delete": {
+                "description": "Delete a weekly rate by its UUID",
+                "tags": [
+                    "WeeklyRates"
+                ],
+                "summary": "Delete a weekly rate",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Weekly Rate UUID",
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Weekly rate deleted successfully"
+                    }
+                }
+            }
+        },
         "/users/weekly-rates/{uuid}/update": {
             "put": {
                 "description": "Update the details of an existing weekly rate",

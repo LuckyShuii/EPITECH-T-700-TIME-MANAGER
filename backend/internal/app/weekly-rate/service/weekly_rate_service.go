@@ -13,6 +13,7 @@ type WeeklyRateService interface {
 	GetAll() ([]WeeklyRateModel.WeeklyRate, error)
 	Create(input WeeklyRateModel.CreateWeeklyRate) error
 	Update(uuid string, input WeeklyRateModel.UpdateWeeklyRate) error
+	Delete(uuid string) error
 }
 
 type weeklyRateService struct {
@@ -56,6 +57,19 @@ func (service *weeklyRateService) Update(uuid string, input WeeklyRateModel.Upda
 	err = service.WeeklyRateRepo.Update(weeklyRateID, input)
 	if err != nil {
 		return fmt.Errorf("failed to update weekly rate: %w", err)
+	}
+	return nil
+}
+
+func (service *weeklyRateService) Delete(uuid string) error {
+	weeklyRateID, err := service.WeeklyRateRepo.GetIDByUUID(uuid)
+	if err != nil || weeklyRateID == 0 {
+		return fmt.Errorf("failed to find weekly rate")
+	}
+
+	err = service.WeeklyRateRepo.Delete(uuid)
+	if err != nil {
+		return fmt.Errorf("failed to delete weekly rate: %w", err)
 	}
 	return nil
 }
