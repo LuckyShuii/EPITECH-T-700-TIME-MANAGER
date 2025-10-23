@@ -2,12 +2,17 @@
 import { onMounted, computed } from 'vue';
 import { useAuthStore } from '@/store/AuthStore';
 import { storeToRefs } from 'pinia';
+import { useNotificationsStore } from '@/store/NotificationsStore'
 
 const authStore = useAuthStore();
 const { isClockedIn, sessionStatus } = storeToRefs(authStore)
 
 // Computed pour savoir si on est en pause (basé sur le store maintenant)
 const isPaused = computed(() => sessionStatus.value === 'paused')
+
+
+const notificationsStore = useNotificationsStore()
+
 
 // Computed pour savoir quel état afficher
 const currentState = computed(() => {
@@ -20,16 +25,28 @@ const currentState = computed(() => {
 const toggleClock = async () => {
   try {
     const newState = !isClockedIn.value;
-    await pipiCaca(newState)
+    await updating(newState)
 
     if (newState) {
-      alert('Clock In effectué !');
+      notificationsStore.addNotification({
+            status: 'success',
+            title: 'Début de journée',
+            description: 'Vous commencez votre journée'
+        })
     } else {
-      alert('Clock Out effectué !');
+      notificationsStore.addNotification({
+            status: 'success',
+            title: 'Fin de journée',
+            description: 'Vous avez fini votre journée'
+        })
     }
   }
   catch (error) {
-    alert('Erreur lors du pointage');
+    notificationsStore.addNotification({
+            status: 'error',
+            title: 'Erreur pointage',
+            description: 'Oopsie'
+        })
   }
 };
 
@@ -42,25 +59,29 @@ const togglePause = async () => {
     await authStore.updateBreaking(isBreaking)
 
     if (isBreaking) {
-      alert('Pause démarrée')
+      notificationsStore.addNotification({
+            status: 'success',
+            title: 'Pause démarrée',
+            description: 'Vous êtes en pause'
+        })
     } else {
-      alert('Pause terminée')
+      notificationsStore.addNotification({
+            status: 'success',
+            title: 'Pause terminée',
+            description: 'Votre pause est finie'
+        })
     }
   } catch (error) {
-    alert('Erreur lors de la pause')
+    notificationsStore.addNotification({
+            status: 'error',
+            title: 'Echec de la mise en pause',
+            description: 'Oopsie'
+        })
   }
 }
 
-const stopShift = async () => {
-  try {
-    await pipiCaca(false)
-    alert('Service terminé')
-  } catch (error) {
-    alert('Erreur lors de l\'arrêt')
-  }
-}
 
-const pipiCaca = async (clockingStatus: boolean) => {
+const updating = async (clockingStatus: boolean) => {
   await authStore.updateClocking(clockingStatus)
   await authStore.fetchWorkSessionStatus()
 }

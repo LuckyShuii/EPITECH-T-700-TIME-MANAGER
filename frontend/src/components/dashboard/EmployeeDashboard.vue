@@ -4,9 +4,12 @@ import EmployeeLayout from '../layout/EmployeeLayout.vue'
 import ClockWidget from '@/components/widget/ClockWidget.vue'
 import CalendarWidget from '@/components/widget/CalendarWidget.vue'
 import ClockButton from '@/components/ClockButton.vue'
-import TeamManagementModal from '@/components/TeamManagementModal.vue'
+import TeamManagementModal from '@/components/Modal/TeamManagementModal.vue'
 import { useAuthStore } from '@/store/AuthStore'
 import { storeToRefs } from 'pinia'
+
+import TeamPresenceWidget from '@/components/widget/TeamPresenceWidget.vue'
+
 
 const authStore = useAuthStore()
 const { clockInTime, sessionStatus } = storeToRefs(authStore)
@@ -18,7 +21,7 @@ const isTeamViewModalOpen = ref(false)
   <EmployeeLayout>
     <!-- Position 1 : Haut gauche -->
     <template #widget-1>
-      <div class="bg-red-100 p-6 rounded h-full">Widget 1</div>
+      <TeamPresenceWidget />
     </template>
 
     <!-- Position 3 : Clock (bas gauche) -->
@@ -58,6 +61,8 @@ const isTeamViewModalOpen = ref(false)
       <div class="bg-orange-100 p-6 rounded h-full">Widget 5</div>
     </template>
   </EmployeeLayout>
+
+  
 
   <!-- Modal en dehors du layout -->
   <TeamManagementModal v-model="isTeamViewModalOpen" />

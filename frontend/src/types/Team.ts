@@ -13,6 +13,7 @@ export interface TeamMember {
   roles: string[]
   status: 'active' | 'inactive' | 'pending'
   is_manager: boolean
+  work_session_status: 'active' | 'paused' | 'no_active_session'  // ← Type plus strict
 }
 
 /**

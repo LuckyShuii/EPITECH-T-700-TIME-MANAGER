@@ -6,7 +6,9 @@ import CalendarWidget from '@/components/widget/CalendarWidget.vue'
 import ClockButton from '@/components/ClockButton.vue'
 import { useAuthStore } from '@/store/AuthStore'
 import { storeToRefs } from 'pinia'
-import TeamManagementModal from '@/components/TeamManagementModal.vue'
+import TeamManagementModal from '@/components/Modal/TeamManagementModal.vue'
+
+import TeamPresenceWidget from '@/components/widget/TeamPresenceWidget.vue'
 
 const authStore = useAuthStore()
 const { clockInTime, sessionStatus } = storeToRefs(authStore)
@@ -18,8 +20,6 @@ const isTeamViewModalOpen = ref(false)
 const TeamViewModal = () => {
   isTeamViewModalOpen.value = true
 }
-
-
 
 </script>
 
@@ -59,14 +59,14 @@ const TeamViewModal = () => {
     </template>
 
     <!-- Présence équipe -->
-    <template #team-presence>
+    <template #kpi-carousel>
       <div class="bg-green-100 p-6 rounded h-full">
       </div>
     </template>
 
     <!-- KPI Carousel -->
-    <template #kpi-carousel>
-      <div class="bg-yellow-100 p-6 rounded h-full">KPI Carousel</div>
+    <template #team-presence>
+      <TeamPresenceWidget />
     </template>
 
     <!-- Bouton rapport -->

@@ -2,10 +2,10 @@
 import { ref } from 'vue'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 import CalendarWidget from '@/components/widget/CalendarWidget.vue'
-import BaseModal from '@/components/BaseModal.vue'
+import BaseModal from '@/components/Modal/BaseModal.vue'
 import RegisterForm from '@/components/RegisterForm.vue'
-import StaffSettingsModal from '@/components/StaffSettingsModal.vue'
-import TeamManagementAdminModal from '@/components/TeamManagementAdminModal.vue'
+import StaffSettingsModal from '@/components/Modal/StaffSettingsModal.vue'
+import TeamManagementAdminModal from '@/components/Modal/TeamManagementAdminModal.vue'
 
 // Contrôle du modal d'ajout employé
 const isAddEmployeeModalOpen = ref(false)
@@ -29,9 +29,6 @@ const openStaffSettingsModal = () => {
   isStaffSettingsModalOpen.value = true
 }
 
-const closeStaffSettingsModal = () => {
-  isStaffSettingsModalOpen.value = false
-}
 
 // Contrôle du modal gestion des équipes
 const isTeamManagementModalOpen = ref(false)
@@ -59,7 +56,6 @@ const openTeamManagementModal = () => {
         <p class="font-bold text-base">Paramétrage effectifs</p>
       </button>
     </template>
-
 
 
     <template #kpi-monthly>

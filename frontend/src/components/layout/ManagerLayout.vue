@@ -24,12 +24,12 @@
 
     <!-- Position 4 : Présence équipe (col 2-3, rows 3-4) -->
    <div className="row-span-3 col-start-4 row-start-1">
-      <slot name="kpi-carousel"></slot>
+      <slot name="team-presence"></slot>
     </div>
 
     <!-- Position 5 : KPI Carousel (col 4, rows 1-3) -->
     <div className="col-start-4 row-start-4">
-      <slot name="team-presence"></slot>
+      <slot name="kpi-carousel"></slot>
     </div>
 
     <!-- Position 6 : Bouton rapport (col 4, row 4) -->
