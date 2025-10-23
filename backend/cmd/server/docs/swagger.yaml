@@ -806,6 +806,26 @@ paths:
       summary: Update an existing weekly rate
       tags:
       - WeeklyRates
+  /users/weekly-rates/{weekly_rate_uuid}/assign-to-user/{user_uuid}:
+    post:
+      description: Assign a specific weekly rate to a user by their UUIDs
+      parameters:
+      - description: Weekly Rate UUID
+        in: path
+        name: weekly_rate_uuid
+        required: true
+        type: string
+      - description: User UUID
+        in: path
+        name: user_uuid
+        required: true
+        type: string
+      responses:
+        "200":
+          description: Weekly rate assigned to user successfully
+      summary: Assign a weekly rate to a user
+      tags:
+      - WeeklyRates
   /users/weekly-rates/create:
     post:
       consumes:

@@ -116,3 +116,31 @@ func (handler *WeeklyRateHandler) Delete(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "Weekly rate deleted successfully"})
 }
+
+// AssignToUser Weekly Rate
+//
+// @Summary      Assign a weekly rate to a user
+// @Description  Assign a specific weekly rate to a user by their UUIDs
+// @Tags         WeeklyRates
+// @Param        weekly_rate_uuid  path      string  true  "Weekly Rate UUID"
+// @Param        user_uuid         path      string  true  "User UUID"
+// @Success      200 		"Weekly rate assigned to user successfully"
+// @Router       /users/weekly-rates/{weekly_rate_uuid}/assign-to-user/{user_uuid} [post]
+func (handler *WeeklyRateHandler) AssignToUser(c *gin.Context) {
+	weeklyRateUUID := c.Param("weekly_rate_uuid")
+	userUUID := c.Param("user_uuid")
+
+	if weeklyRateUUID == "" || userUUID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Both weekly_rate_uuid and user_uuid parameters are required"})
+		return
+	}
+
+	err := handler.service.AssignToUser(weeklyRateUUID, userUUID)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Weekly rate assigned to user successfully"})
+}

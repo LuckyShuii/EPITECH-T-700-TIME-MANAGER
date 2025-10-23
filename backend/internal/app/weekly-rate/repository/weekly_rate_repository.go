@@ -14,6 +14,7 @@ type WeeklyRateRepository interface {
 	Create(input WeeklyRateModel.WeeklyRate) error
 	Update(id int, input WeeklyRateModel.UpdateWeeklyRate) error
 	Delete(uuid string) error
+	AssignToUser(weeklyRateID int, userID int) error
 }
 
 type weeklyRateRepository struct {
@@ -84,6 +85,18 @@ func (repo *weeklyRateRepository) Delete(uuid string) error {
 	`, uuid)
 	if result.Error != nil {
 		return fmt.Errorf("failed to delete weekly rate: %w", result.Error)
+	}
+	return nil
+}
+
+func (repo *weeklyRateRepository) AssignToUser(weeklyRateID int, userID int) error {
+	result := repo.db.Exec(`
+		UPDATE users
+		SET weekly_rate_id = ?
+		WHERE id = ?
+	`, weeklyRateID, userID)
+	if result.Error != nil {
+		return fmt.Errorf("failed to assign weekly rate to user: %w", result.Error)
 	}
 	return nil
 }

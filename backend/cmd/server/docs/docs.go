@@ -677,6 +677,36 @@ const docTemplate = `{
                 }
             }
         },
+        "/users/weekly-rates/{weekly_rate_uuid}/assign-to-user/{user_uuid}": {
+            "post": {
+                "description": "Assign a specific weekly rate to a user by their UUIDs",
+                "tags": [
+                    "WeeklyRates"
+                ],
+                "summary": "Assign a weekly rate to a user",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Weekly Rate UUID",
+                        "name": "weekly_rate_uuid",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "User UUID",
+                        "name": "user_uuid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Weekly rate assigned to user successfully"
+                    }
+                }
+            }
+        },
         "/users/{uuid}": {
             "get": {
                 "security": [

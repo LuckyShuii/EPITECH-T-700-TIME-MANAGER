@@ -6,6 +6,10 @@ import (
 	WeeklyRateModel "app/internal/app/weekly-rate/model"
 	WeeklyRateRepository "app/internal/app/weekly-rate/repository"
 
+	UserService "app/internal/app/user/service"
+
+	Config "app/internal/config"
+
 	"github.com/google/uuid"
 )
 
@@ -14,14 +18,16 @@ type WeeklyRateService interface {
 	Create(input WeeklyRateModel.CreateWeeklyRate) error
 	Update(uuid string, input WeeklyRateModel.UpdateWeeklyRate) error
 	Delete(uuid string) error
+	AssignToUser(weeklyRateUUID string, userUUID string) error
 }
 
 type weeklyRateService struct {
 	WeeklyRateRepo WeeklyRateRepository.WeeklyRateRepository
+	UserService    UserService.UserService
 }
 
-func NewWeeklyRateService(repo WeeklyRateRepository.WeeklyRateRepository) WeeklyRateService {
-	return &weeklyRateService{WeeklyRateRepo: repo}
+func NewWeeklyRateService(repo WeeklyRateRepository.WeeklyRateRepository, userService UserService.UserService) WeeklyRateService {
+	return &weeklyRateService{WeeklyRateRepo: repo, UserService: userService}
 }
 
 func (service *weeklyRateService) GetAll() ([]WeeklyRateModel.WeeklyRate, error) {
@@ -51,7 +57,7 @@ func (service *weeklyRateService) Create(input WeeklyRateModel.CreateWeeklyRate)
 func (service *weeklyRateService) Update(uuid string, input WeeklyRateModel.UpdateWeeklyRate) error {
 	weeklyRateID, err := service.WeeklyRateRepo.GetIDByUUID(uuid)
 	if err != nil {
-		return fmt.Errorf("failed to find weekly rate")
+		return fmt.Errorf(Config.ErrorMessages()["WEEKLY_RATE_NOT_FOUND"]+": %w", err)
 	}
 
 	err = service.WeeklyRateRepo.Update(weeklyRateID, input)
@@ -64,12 +70,30 @@ func (service *weeklyRateService) Update(uuid string, input WeeklyRateModel.Upda
 func (service *weeklyRateService) Delete(uuid string) error {
 	weeklyRateID, err := service.WeeklyRateRepo.GetIDByUUID(uuid)
 	if err != nil || weeklyRateID == 0 {
-		return fmt.Errorf("failed to find weekly rate")
+		return fmt.Errorf(Config.ErrorMessages()["WEEKLY_RATE_NOT_FOUND"]+": %w", err)
 	}
 
 	err = service.WeeklyRateRepo.Delete(uuid)
 	if err != nil {
 		return fmt.Errorf("failed to delete weekly rate: %w", err)
+	}
+	return nil
+}
+
+func (service *weeklyRateService) AssignToUser(weeklyRateUUID string, userUUID string) error {
+	weeklyRateID, err := service.WeeklyRateRepo.GetIDByUUID(weeklyRateUUID)
+	if err != nil || weeklyRateID == 0 {
+		return fmt.Errorf(Config.ErrorMessages()["WEEKLY_RATE_NOT_FOUND"]+": %w", err)
+	}
+
+	userID, err := service.UserService.GetIdByUuid(userUUID)
+	if err != nil || userID == 0 {
+		return fmt.Errorf("failed to find user: %w", err)
+	}
+
+	err = service.WeeklyRateRepo.AssignToUser(weeklyRateID, userID)
+	if err != nil {
+		return fmt.Errorf("failed to assign weekly rate to user: %w", err)
 	}
 	return nil
 }

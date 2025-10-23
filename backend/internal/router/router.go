@@ -65,7 +65,7 @@ func SetupRouter() *gin.Engine {
 	teamHandler := TeamH.NewTeamHandler(teamService, userService)
 
 	weeklyRateRepo := WeeklyRatesR.NewWeeklyRateRepository(database)
-	weeklyRateService := WeeklyRatesS.NewWeeklyRateService(weeklyRateRepo)
+	weeklyRateService := WeeklyRatesS.NewWeeklyRateService(weeklyRateRepo, userService)
 	weeklyRateHandler := WeeklyRatesH.NewWeeklyRateHandler(weeklyRateService)
 
 	/**
@@ -99,7 +99,7 @@ func SetupRouter() *gin.Engine {
 		protected.POST("/users/weekly-rates/create", authMiddleware.RequireRoles("admin"), weeklyRateHandler.Create)
 		protected.PUT("/users/weekly-rates/:uuid/update", authMiddleware.RequireRoles("admin"), weeklyRateHandler.Update)
 		protected.DELETE("/users/weekly-rates/:uuid/delete", authMiddleware.RequireRoles("admin"), weeklyRateHandler.Delete)
-		// TODO: protected.POST("/users/weekly-rates/:weekly_rate_uuid/assign-to-user/:user_uuid
+		protected.POST("/users/weekly-rates/:weekly_rate_uuid/assign-to-user/:user_uuid", authMiddleware.RequireRoles("admin"), weeklyRateHandler.AssignToUser)
 
 		protected.DELETE("/users/delete", authMiddleware.RequireRoles("admin"), userHandler.DeleteUser)
 
