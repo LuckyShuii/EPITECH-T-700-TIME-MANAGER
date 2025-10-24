@@ -440,8 +440,8 @@ paths:
       - Auth
   /teams:
     get:
-      description: "Returns a list of all registered teams & their members. \U0001F512
-        Requires role: **admin**"
+      description: "[Cache: 5sec] Returns a list of all registered teams & their members.
+        \U0001F512 Requires role: **admin**"
       produces:
       - application/json
       responses:
@@ -619,8 +619,8 @@ paths:
       - Teams
   /users:
     get:
-      description: "Returns a list of all registered users. \U0001F512 Requires role:
-        **admin**"
+      description: "[Cache: 5sec] Returns a list of all registered users. \U0001F512
+        Requires role: **admin**"
       produces:
       - application/json
       responses:
@@ -663,10 +663,10 @@ paths:
       - Users
   /users/{uuid}:
     get:
-      description: "Returns the details of a user identified by their UUID or not.
-        If the UUID is not specificed it will return the current logged in users details.
-        To query an other user data, must be manager or admin \U0001F512 Requires
-        role: **all**"
+      description: "[Cache: 5sec] Returns the details of a user identified by their
+        UUID or not. If the UUID is not specificed it will return the current logged
+        in users details. To query an other user data, must be manager or admin \U0001F512
+        Requires role: **all**"
       parameters:
       - description: User UUID
         in: path

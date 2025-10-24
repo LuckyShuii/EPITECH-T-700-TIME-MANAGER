@@ -112,7 +112,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Returns a list of all registered teams \u0026 their members. 🔒 Requires role: **admin**",
+                "description": "[Cache: 5sec] Returns a list of all registered teams \u0026 their members. 🔒 Requires role: **admin**",
                 "produces": [
                     "application/json"
                 ],
@@ -387,7 +387,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Returns a list of all registered users. 🔒 Requires role: **admin**",
+                "description": "[Cache: 5sec] Returns a list of all registered users. 🔒 Requires role: **admin**",
                 "produces": [
                     "application/json"
                 ],
@@ -714,7 +714,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Returns the details of a user identified by their UUID or not. If the UUID is not specificed it will return the current logged in users details. To query an other user data, must be manager or admin 🔒 Requires role: **all**",
+                "description": "[Cache: 5sec] Returns the details of a user identified by their UUID or not. If the UUID is not specificed it will return the current logged in users details. To query an other user data, must be manager or admin 🔒 Requires role: **all**",
                 "produces": [
                     "application/json"
                 ],

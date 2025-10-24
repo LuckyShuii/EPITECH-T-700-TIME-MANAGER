@@ -81,7 +81,6 @@ func SetupRouter() *gin.Engine {
 		/**
 		 * User Management Routes
 		 */
-		// TODO: on user creation add the weekly rate in the form to check
 		protected.POST("/users/register", authMiddleware.RequireRoles("admin"), userHandler.RegisterUser)
 		protected.POST("/users/weekly-rates/create", authMiddleware.RequireRoles("admin"), weeklyRateHandler.Create)
 		protected.POST("/users/weekly-rates/:weekly_rate_uuid/assign-to-user/:user_uuid", authMiddleware.RequireRoles("admin"), weeklyRateHandler.AssignToUser)

@@ -1,0 +1,23 @@
+services:
+  sonarqube:
+    image: sonarqube:latest
+    container_name: time-manager-sonarqube
+    environment:
+      - SONAR_ES_BOOTSTRAP_CHECKS_DISABLE=true
+      - SONAR_WEB_CONTEXT=/sonarqube
+      - SONAR_WEB_PORT=9000
+      - SONAR_SEARCH_PORT=9001
+      - SONAR_WEB_HOST=0.0.0.0
+      - SONAR_FORCEAUTHENTICATION=false
+      - SONAR_WEB_JAVAOPTS=-Dsonar.web.redirectToServerBaseUrl=true
+    expose:
+      - "9000"
+    volumes:
+      - sonarqube_data:/opt/sonarqube/data
+      - sonarqube_logs:/opt/sonarqube/logs
+      - sonarqube_extensions:/opt/sonarqube/extensions
+      
+volumes:
+  sonarqube_data:
+  sonarqube_logs:
+  sonarqube_extensions:
