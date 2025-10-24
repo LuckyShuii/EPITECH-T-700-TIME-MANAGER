@@ -35,13 +35,24 @@ jobs:
         working-directory: ./backend
         run: |
           echo "Running Go tests..."
-          go test ./... -v -coverprofile=coverage.out -covermode=atomic || echo "⚠️ Tests failed or none found"
-          ls -la || echo "⚠️ No coverage file created"
+          go test ./... -v -coverprofile=coverage.out -covermode=atomic
+
+          # Vérifier que le fichier existe
           if [ -f coverage.out ]; then
-            cp coverage.out ../coverage.out
-            echo "✅ coverage.out copied to project root"
+            echo "✅ Coverage file generated"
+            
+            # IMPORTANT: Corriger les chemins dans coverage.out
+            # Remplacer les chemins relatifs par des chemins depuis la racine du projet
+            sed -i 's|^app/|backend/|g' coverage.out
+            
+            # Afficher un échantillon pour debug
+            echo "📊 Sample of coverage.out:"
+            head -n 5 coverage.out
+            
+            ls -lh coverage.out
           else
-            echo "❌ coverage.out missing"
+            echo "❌ coverage.out not generated"
+            exit 1
           fi
 
       # ─────────────────────────────
@@ -56,10 +67,16 @@ jobs:
         working-directory: ./frontend
         run: npm install
 
-      - name: 🧪 Run frontend tests (optional)
+      - name: 🧪 Run frontend tests with coverage
         working-directory: ./frontend
         run: |
-          npm run test:unit --if-present || echo "⚠️ No frontend tests found"
+          npm run test:unit -- --coverage --coverage-reporter=lcov || echo "⚠️ No frontend tests found"
+
+          # Vérifier si le fichier de couverture existe
+          if [ -f coverage/lcov.info ]; then
+            echo "✅ Frontend coverage generated"
+            ls -lh coverage/lcov.info
+          fi
 
       # ─────────────────────────────
       # 🔍 SONARCLOUD SCAN
@@ -70,11 +87,13 @@ jobs:
           args: >
             -Dsonar.organization=luckyshuii
             -Dsonar.projectKey=LuckyShuii_EPITECH-T-700-TIME-MANAGER
-            -Dsonar.projectName="Time Manager"
+            -Dsonar.projectName=Time Manager
             -Dsonar.projectVersion=1.0
             -Dsonar.sources=backend,frontend
-            -Dsonar.exclusions=**/node_modules/**,**/vendor/**,**/tests/**,**/__pycache__/**
-            -Dsonar.go.coverage.reportPaths=coverage.out
+            -Dsonar.exclusions=**/node_modules/**,**/vendor/**,**/tests/**,**/__pycache__/**,**/docs/**
+            -Dsonar.go.coverage.reportPaths=backend/coverage.out
+            -Dsonar.javascript.lcov.reportPaths=frontend/coverage/lcov.info
+            -Dsonar.verbose=true
         env:
           SONAR_TOKEN: ${{ secrets.SONARQUBE_TOKEN }}
           SONAR_HOST_URL: https://sonarcloud.io
