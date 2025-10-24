@@ -47,7 +47,7 @@ jobs:
 
       - name: 📦 Install frontend deps
         working-directory: ./frontend
-        run: npm ci
+        run: npm install
 
       - name: 🧪 Run frontend tests (if any)
         working-directory: ./frontend
