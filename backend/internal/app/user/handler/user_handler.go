@@ -1,7 +1,12 @@
 package handler
 
 import (
+	"app/internal/db"
+	"context"
+	"encoding/json"
+	"log"
 	"net/http"
+	"time"
 
 	"app/internal/app/user/model"
 	"app/internal/app/user/service"
@@ -23,18 +28,40 @@ func NewUserHandler(service service.UserService) *UserHandler {
 // GetUsers retrieves all registered users.
 //
 // @Summary      Get all users
-// @Description  Returns a list of all registered users. 🔒 Requires role: **admin**
+// @Description  [Cache: 5sec] Returns a list of all registered users. 🔒 Requires role: **admin**
 // @Tags         Users
 // @Security     BearerAuth
 // @Produce      json
 // @Success      200  {array}   model.UserRead  "List of users retrieved successfully"
 // @Router       /users [get]
 func (handler *UserHandler) GetUsers(c *gin.Context) {
+	// ⚠️ implement pagination - technical debt ⚠️
+	ctx := c.Request.Context()
+
+	cacheKey := "users_list"
+
+	// Try to get users list from cache
+	cachedUsers, err := db.RedisClient.Get(ctx, cacheKey).Result()
+	if err == nil && cachedUsers != "" {
+		var users []model.UserRead
+		if jsonErr := json.Unmarshal([]byte(cachedUsers), &users); jsonErr == nil {
+			c.JSON(http.StatusOK, users)
+			return
+		}
+	}
+
 	users, err := handler.service.GetUsers()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+
+	// Cache the users list
+	usersJSON, _ := json.Marshal(users)
+	if setErr := db.RedisClient.Set(ctx, cacheKey, usersJSON, 5*time.Second).Err(); setErr != nil {
+		log.Printf("⚠️ Error setting cache for %s : %v", cacheKey, setErr)
+	}
+
 	c.JSON(http.StatusOK, users)
 }
 
@@ -189,7 +216,7 @@ func (handler *UserHandler) UpdateUser(c *gin.Context) {
 // GetUserByUUID retrieves a user by their UUID.
 //
 // @Summary      Get user by UUID
-// @Description  Returns the details of a user identified by their UUID or not. If the UUID is not specificed it will return the current logged in users details. To query an other user data, must be manager or admin 🔒 Requires role: **all**
+// @Description  [Cache: 5sec] Returns the details of a user identified by their UUID or not. If the UUID is not specificed it will return the current logged in users details. To query an other user data, must be manager or admin 🔒 Requires role: **all**
 // @Tags         Users
 // @Security     BearerAuth
 // @Produce      json
@@ -223,6 +250,20 @@ func (handler *UserHandler) GetUserByUUID(c *gin.Context) {
 		return
 	}
 
+	ctx := context.Background()
+
+	cacheKey := "user:details:" + UserUUID
+
+	// Try to get user details from cache
+	cachedUser, err := db.RedisClient.Get(ctx, cacheKey).Result()
+	if err == nil && cachedUser != "" {
+		var user model.UserReadAll
+		if jsonErr := json.Unmarshal([]byte(cachedUser), &user); jsonErr == nil {
+			c.JSON(http.StatusOK, user)
+			return
+		}
+	}
+
 	user, err := handler.service.GetUserByUUID(UserUUID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -232,6 +273,12 @@ func (handler *UserHandler) GetUserByUUID(c *gin.Context) {
 	if user.UUID == "" {
 		c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
 		return
+	}
+
+	// Cache the user details
+	userJSON, _ := json.Marshal(user)
+	if setErr := db.RedisClient.Set(ctx, cacheKey, userJSON, 5*time.Second).Err(); setErr != nil {
+		log.Printf("⚠️ Error setting cache for %s : %v", cacheKey, setErr)
 	}
 
 	c.JSON(http.StatusOK, user)
