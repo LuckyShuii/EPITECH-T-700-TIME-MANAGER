@@ -83,17 +83,6 @@ jobs:
       # ─────────────────────────────
       - name: 🔎 Run SonarCloud Scan
         uses: sonarsource/sonarqube-scan-action@v6
-        with:
-          args: >
-            -Dsonar.organization=luckyshuii
-            -Dsonar.projectKey=LuckyShuii_EPITECH-T-700-TIME-MANAGER
-            -Dsonar.projectName=Time Manager
-            -Dsonar.projectVersion=1.0
-            -Dsonar.sources=backend,frontend
-            -Dsonar.exclusions=**/node_modules/**,**/vendor/**,**/tests/**,**/__pycache__/**,**/docs/**
-            -Dsonar.go.coverage.reportPaths=backend/coverage.out
-            -Dsonar.javascript.lcov.reportPaths=frontend/coverage/lcov.info
-            -Dsonar.verbose=true
         env:
           SONAR_TOKEN: ${{ secrets.SONARQUBE_TOKEN }}
           SONAR_HOST_URL: https://sonarcloud.io
