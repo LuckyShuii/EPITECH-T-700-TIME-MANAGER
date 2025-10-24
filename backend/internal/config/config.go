@@ -50,7 +50,8 @@ func getEnv(key, defaultValue string) string {
 
 func ErrorMessages() map[string]string {
 	return map[string]string{
-		"NO_CLAIMS":       "missing claims",
-		"INVALID_REQUEST": "invalid request",
+		"NO_CLAIMS":             "missing claims",
+		"INVALID_REQUEST":       "invalid request",
+		"WEEKLY_RATE_NOT_FOUND": "failed to find weekly rate",
 	}
 }

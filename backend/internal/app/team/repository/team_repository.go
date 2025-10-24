@@ -46,12 +46,15 @@ func (repo *teamRepository) FindAll() ([]model.TeamReadAll, error) {
 					'first_name', u.first_name,
 					'last_name', u.last_name,
 					'phone_number', u.phone_number,
-					'is_manager', tm.is_manager
+					'is_manager', tm.is_manager,
+					'weekly_rate', COALESCE(wr.amount, 0),
+					'weekly_rate_name', wr.rate_name
 				)
 			) AS team_members
 		FROM teams t
 		JOIN teams_members tm ON tm.team_id = t.id
 		JOIN users u ON u.id = tm.user_id
+		LEFT JOIN weekly_rate wr ON wr.id = u.weekly_rate_id
 		LEFT JOIN LATERAL (
 			SELECT 
 				wsa.status
@@ -94,12 +97,15 @@ func (repo *teamRepository) FindByID(id int) (model.TeamReadAll, error) {
 					'email', u.email,
 					'first_name', u.first_name,
 					'last_name', u.last_name,
-					'phone_number', u.phone_number
+					'phone_number', u.phone_number,
+					'weekly_rate', COALESCE(wr.amount, 0),
+					'weekly_rate_name', wr.rate_name
 				)
 			) AS team_members
 		FROM teams t
 		JOIN teams_members tm ON tm.team_id = t.id
 		JOIN users u ON u.id = tm.user_id
+		LEFT JOIN weekly_rate wr ON wr.id = u.weekly_rate_id
 		LEFT JOIN LATERAL (
 			SELECT 
 				wsa.status
@@ -166,8 +172,23 @@ func (repo *teamRepository) UpdateTeamByID(id int, updatedTeam model.TeamUpdate)
 		return fmt.Errorf("no fields to update")
 	}
 
-	err := repo.db.Exec("UPDATE teams SET ? WHERE id = ?", updateData, id).Error
-	return err
+	query := "UPDATE teams SET "
+	args := []interface{}{}
+	i := 0
+
+	for field, value := range updateData {
+		if i > 0 {
+			query += ", "
+		}
+		query += fmt.Sprintf("\"%s\" = ?", field)
+		args = append(args, value)
+		i++
+	}
+
+	query += " WHERE id = ?"
+	args = append(args, id)
+
+	return repo.db.Exec(query, args...).Error
 }
 
 func (repo *teamRepository) UpdateTeamUserManagerStatus(teamID int, userID int, isManager bool) error {

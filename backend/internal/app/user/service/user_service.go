@@ -4,11 +4,14 @@ import (
 	"app/internal/app/user/model"
 	"app/internal/app/user/repository"
 	"fmt"
+	"log"
 	"strings"
 	"unicode"
 
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
+
+	WeeklyRateService "app/internal/app/weekly-rate/service"
 )
 
 type UserService interface {
@@ -20,14 +23,20 @@ type UserService interface {
 	DeleteUser(userUUID string) error
 	UpdateUser(userID int, user model.UserUpdateEntry) error
 	GetUserByUUID(userUUID string) (*model.UserReadAll, error)
+	SetWeeklyRateService(w WeeklyRateService.WeeklyRateService)
 }
 
 type userService struct {
-	repo repository.UserRepository
+	repo              repository.UserRepository
+	WeeklyRateService WeeklyRateService.WeeklyRateService
 }
 
 func NewUserService(repo repository.UserRepository) UserService {
 	return &userService{repo: repo}
+}
+
+func (s *userService) SetWeeklyRateService(w WeeklyRateService.WeeklyRateService) {
+	s.WeeklyRateService = w
 }
 
 func (service *userService) GetUsers() ([]model.UserRead, error) {
@@ -53,6 +62,17 @@ func (service *userService) RegisterUser(user model.UserCreate) error {
 	user.PasswordHash = string(hashedPassword)
 	user.UUID = uuid.New().String()
 
+	if user.WeeklyRateUUID != nil {
+		weeklyRateID, err := service.WeeklyRateService.GetIdByUuid(*user.WeeklyRateUUID)
+		log.Printf("Fetched weekly rate ID: %d", weeklyRateID)
+		if err != nil {
+			return fmt.Errorf("failed to fetch weekly rates: %w", err)
+		}
+
+		user.WeeklyRateUUID = nil // Clear the UUID
+		user.WeeklyRateID = &weeklyRateID
+	}
+
 	return service.repo.RegisterUser(user)
 }
 
@@ -69,7 +89,17 @@ func (service *userService) UpdateUser(userID int, user model.UserUpdateEntry) e
 	if user.FirstName != nil && user.LastName != nil {
 		user.Username = new(string)
 		*user.Username = fmt.Sprintf("%c%s", unicode.ToLower(rune((*user.FirstName)[0])), strings.ToLower(*user.LastName))
+	}
 
+	if user.WeeklyRateUUID != nil {
+		// Check if the weekly rate exists
+		weeklyRateID, err := service.WeeklyRateService.GetIdByUuid(*user.WeeklyRateUUID)
+		if err != nil {
+			return fmt.Errorf("failed to fetch weekly rates: %w", err)
+		}
+
+		user.WeeklyRateUUID = nil // Clear the UUID
+		user.WeeklyRateID = &weeklyRateID
 	}
 
 	return service.repo.UpdateUser(userID, user)

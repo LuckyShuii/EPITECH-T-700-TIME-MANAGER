@@ -1,10 +1,10 @@
-name: Sonarqube
+name: SonarCloud
 
 on:
   push:
     branches:
+      # the current sonarcloud plan only supports analysis on the main branch
       - main
-      - staging
 
 jobs:
   sonarcloud:
@@ -16,10 +16,11 @@ jobs:
         uses: actions/checkout@v4
 
       - name: SonarCloud Scan
-        uses: sonarsource/sonarcloud-github-action@master
+        uses: sonarsource/sonarqube-scan-action@v6
         with:
           args: >
             -Dsonar.organization=luckyshuii
-            -Dsonar.projectKey=time_manager
+            -Dsonar.projectKey=LuckyShuii_EPITECH-T-700-TIME-MANAGER
+            -Dsonar.host.url=https://sonarcloud.io
         env:
           SONAR_TOKEN: ${{ secrets.SONARQUBE_TOKEN }}

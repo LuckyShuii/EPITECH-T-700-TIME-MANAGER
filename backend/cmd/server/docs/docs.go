@@ -200,6 +200,46 @@ const docTemplate = `{
                 }
             }
         },
+        "/teams/edit/{uuid}": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Updates an existing team's details by its UUID. 🔒 Requires role: **admin**",
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Teams"
+                ],
+                "summary": "Update team by UUID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Team UUID",
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Updated team details",
+                        "name": "team",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.TeamUpdate"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Team updated successfully"
+                    }
+                }
+            }
+        },
         "/teams/users/{team_uuid}/{user_uuid}": {
             "delete": {
                 "security": [
@@ -310,44 +350,6 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/model.TeamReadAll"
                         }
-                    }
-                }
-            },
-            "put": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Updates an existing team's details by its UUID. 🔒 Requires role: **admin**",
-                "consumes": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Teams"
-                ],
-                "summary": "Update team by UUID",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Team UUID",
-                        "name": "uuid",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Updated team details",
-                        "name": "team",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/model.TeamUpdate"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Team updated successfully"
                     }
                 }
             },
@@ -556,6 +558,151 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/response.UserStatusUpdatedResponse"
                         }
+                    }
+                }
+            }
+        },
+        "/users/weekly-rates": {
+            "get": {
+                "description": "Retrieve a list of all weekly rates",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "WeeklyRates"
+                ],
+                "summary": "Get all weekly rates",
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/model.WeeklyRate"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/users/weekly-rates/create": {
+            "post": {
+                "description": "Create a new weekly rate with the provided details",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "WeeklyRates"
+                ],
+                "summary": "Create a new weekly rate",
+                "parameters": [
+                    {
+                        "description": "Weekly Rate Data",
+                        "name": "weeklyRate",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.CreateWeeklyRate"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Weekly rate created successfully"
+                    }
+                }
+            }
+        },
+        "/users/weekly-rates/{uuid}/delete": {
+            "delete": {
+                "description": "Delete a weekly rate by its UUID",
+                "tags": [
+                    "WeeklyRates"
+                ],
+                "summary": "Delete a weekly rate",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Weekly Rate UUID",
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Weekly rate deleted successfully"
+                    }
+                }
+            }
+        },
+        "/users/weekly-rates/{uuid}/update": {
+            "put": {
+                "description": "Update the details of an existing weekly rate",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "WeeklyRates"
+                ],
+                "summary": "Update an existing weekly rate",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Weekly Rate UUID",
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Weekly Rate Data",
+                        "name": "weeklyRate",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.UpdateWeeklyRate"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Weekly rate updated successfully"
+                    }
+                }
+            }
+        },
+        "/users/weekly-rates/{weekly_rate_uuid}/assign-to-user/{user_uuid}": {
+            "post": {
+                "description": "Assign a specific weekly rate to a user by their UUIDs",
+                "tags": [
+                    "WeeklyRates"
+                ],
+                "summary": "Assign a weekly rate to a user",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Weekly Rate UUID",
+                        "name": "weekly_rate_uuid",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "User UUID",
+                        "name": "user_uuid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Weekly rate assigned to user successfully"
                     }
                 }
             }
@@ -803,6 +950,17 @@ const docTemplate = `{
                 }
             }
         },
+        "model.CreateWeeklyRate": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "number"
+                },
+                "rate_name": {
+                    "type": "string"
+                }
+            }
+        },
         "model.NewTeamMember": {
             "type": "object",
             "required": [
@@ -889,6 +1047,12 @@ const docTemplate = `{
                 "username": {
                     "type": "string"
                 },
+                "weekly_rate": {
+                    "type": "integer"
+                },
+                "weekly_rate_name": {
+                    "type": "string"
+                },
                 "work_session_status": {
                     "type": "string"
                 }
@@ -925,6 +1089,17 @@ const docTemplate = `{
                 }
             }
         },
+        "model.UpdateWeeklyRate": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "number"
+                },
+                "rate_name": {
+                    "type": "string"
+                }
+            }
+        },
         "model.UserCreate": {
             "type": "object",
             "properties": {
@@ -957,6 +1132,12 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "uuid": {
+                    "type": "string"
+                },
+                "weekly_rate_id": {
+                    "type": "integer"
+                },
+                "weekly_rate_uuid": {
                     "type": "string"
                 }
             }
@@ -1026,6 +1207,12 @@ const docTemplate = `{
                 "uuid": {
                     "type": "string"
                 },
+                "weekly_rate": {
+                    "type": "integer"
+                },
+                "weekly_rate_name": {
+                    "type": "string"
+                },
                 "work_session_status": {
                     "type": "string"
                 }
@@ -1065,6 +1252,12 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "uuid": {
+                    "type": "string"
+                },
+                "weekly_rate": {
+                    "type": "integer"
+                },
+                "weekly_rate_name": {
                     "type": "string"
                 },
                 "work_session_status": {
@@ -1140,6 +1333,26 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "username": {
+                    "type": "string"
+                },
+                "uuid": {
+                    "type": "string"
+                },
+                "weekly_rate_id": {
+                    "type": "integer"
+                },
+                "weekly_rate_uuid": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.WeeklyRate": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "number"
+                },
+                "rate_name": {
                     "type": "string"
                 },
                 "uuid": {

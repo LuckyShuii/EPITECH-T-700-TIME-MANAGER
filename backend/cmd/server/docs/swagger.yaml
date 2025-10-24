@@ -26,6 +26,13 @@ definitions:
       success:
         type: boolean
     type: object
+  model.CreateWeeklyRate:
+    properties:
+      amount:
+        type: number
+      rate_name:
+        type: string
+    type: object
   model.NewTeamMember:
     properties:
       is_manager:
@@ -83,6 +90,10 @@ definitions:
         type: string
       username:
         type: string
+      weekly_rate:
+        type: integer
+      weekly_rate_name:
+        type: string
       work_session_status:
         type: string
     type: object
@@ -104,6 +115,13 @@ definitions:
       description:
         type: string
       name:
+        type: string
+    type: object
+  model.UpdateWeeklyRate:
+    properties:
+      amount:
+        type: number
+      rate_name:
         type: string
     type: object
   model.UserCreate:
@@ -128,6 +146,10 @@ definitions:
       username:
         type: string
       uuid:
+        type: string
+      weekly_rate_id:
+        type: integer
+      weekly_rate_uuid:
         type: string
     type: object
   model.UserMeJWT:
@@ -173,6 +195,10 @@ definitions:
         type: string
       uuid:
         type: string
+      weekly_rate:
+        type: integer
+      weekly_rate_name:
+        type: string
       work_session_status:
         type: string
     type: object
@@ -199,6 +225,10 @@ definitions:
       username:
         type: string
       uuid:
+        type: string
+      weekly_rate:
+        type: integer
+      weekly_rate_name:
         type: string
       work_session_status:
         type: string
@@ -250,6 +280,19 @@ definitions:
       status:
         type: string
       username:
+        type: string
+      uuid:
+        type: string
+      weekly_rate_id:
+        type: integer
+      weekly_rate_uuid:
+        type: string
+    type: object
+  model.WeeklyRate:
+    properties:
+      amount:
+        type: number
+      rate_name:
         type: string
       uuid:
         type: string
@@ -504,6 +547,28 @@ paths:
       summary: Get team by UUID
       tags:
       - Teams
+  /teams/add-users:
+    post:
+      consumes:
+      - application/json
+      description: "Adds users to an existing team by their UUIDs. \U0001F512 Requires
+        role: **admin**"
+      parameters:
+      - description: Team UUID and User UUIDs to add
+        in: body
+        name: team_users
+        required: true
+        schema:
+          $ref: '#/definitions/model.TeamAddUsers'
+      responses:
+        "204":
+          description: Users added to team successfully
+      security:
+      - BearerAuth: []
+      summary: Add users to a team
+      tags:
+      - Teams
+  /teams/edit/{uuid}:
     put:
       consumes:
       - application/json
@@ -527,27 +592,6 @@ paths:
       security:
       - BearerAuth: []
       summary: Update team by UUID
-      tags:
-      - Teams
-  /teams/add-users:
-    post:
-      consumes:
-      - application/json
-      description: "Adds users to an existing team by their UUIDs. \U0001F512 Requires
-        role: **admin**"
-      parameters:
-      - description: Team UUID and User UUIDs to add
-        in: body
-        name: team_users
-        required: true
-        schema:
-          $ref: '#/definitions/model.TeamAddUsers'
-      responses:
-        "204":
-          description: Users added to team successfully
-      security:
-      - BearerAuth: []
-      summary: Add users to a team
       tags:
       - Teams
   /teams/users/{team_uuid}/{user_uuid}:
@@ -714,6 +758,101 @@ paths:
       summary: Update user status
       tags:
       - Users
+  /users/weekly-rates:
+    get:
+      description: Retrieve a list of all weekly rates
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            items:
+              $ref: '#/definitions/model.WeeklyRate'
+            type: array
+      summary: Get all weekly rates
+      tags:
+      - WeeklyRates
+  /users/weekly-rates/{uuid}/delete:
+    delete:
+      description: Delete a weekly rate by its UUID
+      parameters:
+      - description: Weekly Rate UUID
+        in: path
+        name: uuid
+        required: true
+        type: string
+      responses:
+        "200":
+          description: Weekly rate deleted successfully
+      summary: Delete a weekly rate
+      tags:
+      - WeeklyRates
+  /users/weekly-rates/{uuid}/update:
+    put:
+      consumes:
+      - application/json
+      description: Update the details of an existing weekly rate
+      parameters:
+      - description: Weekly Rate UUID
+        in: path
+        name: uuid
+        required: true
+        type: string
+      - description: Weekly Rate Data
+        in: body
+        name: weeklyRate
+        required: true
+        schema:
+          $ref: '#/definitions/model.UpdateWeeklyRate'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Weekly rate updated successfully
+      summary: Update an existing weekly rate
+      tags:
+      - WeeklyRates
+  /users/weekly-rates/{weekly_rate_uuid}/assign-to-user/{user_uuid}:
+    post:
+      description: Assign a specific weekly rate to a user by their UUIDs
+      parameters:
+      - description: Weekly Rate UUID
+        in: path
+        name: weekly_rate_uuid
+        required: true
+        type: string
+      - description: User UUID
+        in: path
+        name: user_uuid
+        required: true
+        type: string
+      responses:
+        "200":
+          description: Weekly rate assigned to user successfully
+      summary: Assign a weekly rate to a user
+      tags:
+      - WeeklyRates
+  /users/weekly-rates/create:
+    post:
+      consumes:
+      - application/json
+      description: Create a new weekly rate with the provided details
+      parameters:
+      - description: Weekly Rate Data
+        in: body
+        name: weeklyRate
+        required: true
+        schema:
+          $ref: '#/definitions/model.CreateWeeklyRate'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Weekly rate created successfully
+      summary: Create a new weekly rate
+      tags:
+      - WeeklyRates
   /work-session/history:
     get:
       description: "Returns paginated history of work sessions between a start and

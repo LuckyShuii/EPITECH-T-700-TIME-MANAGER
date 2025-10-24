@@ -1,0 +1,5 @@
+ALTER TABLE users
+DROP CONSTRAINT IF EXISTS fk_weekly_rate,
+DROP COLUMN IF EXISTS weekly_rate_id;
+
+DROP TABLE IF EXISTS weekly_rate;
