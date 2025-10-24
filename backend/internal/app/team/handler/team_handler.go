@@ -76,7 +76,8 @@ func (handler *TeamHandler) GetTeams(c *gin.Context) {
 func (handler *TeamHandler) GetTeamByUUID(c *gin.Context) {
 	ctx := c.Request.Context()
 
-	cacheKey := "team_" + c.Param("uuid")
+	uuid := c.Param("uuid")
+	cacheKey := "team_" + uuid
 
 	// Try to get team from cache
 	cachedTeam, err := db.RedisClient.Get(ctx, cacheKey).Result()
@@ -88,7 +89,6 @@ func (handler *TeamHandler) GetTeamByUUID(c *gin.Context) {
 		}
 	}
 
-	uuid := c.Param("uuid")
 	team, err := handler.service.GetTeamByUUID(uuid)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
