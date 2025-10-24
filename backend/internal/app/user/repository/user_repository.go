@@ -14,9 +14,12 @@ type UserRepository interface {
 	RegisterUser(user model.UserCreate) error
 	FindIdByUuid(id string) (userId int, err error)
 	UpdateUserStatus(userUUID string, status string) error
+	UpdateUserLayout(userUUID string, layout model.UserDashboardLayoutUpdate) error
 	DeleteUser(userUUID string) error
+	DeleteUserLayout(userUUID string) error
 	UpdateUser(userID int, user model.UserUpdateEntry) error
 	FindByUUID(userUUID string) (*model.UserReadAll, error)
+	FindDashboardLayoutByUUID(userUUID string) (*model.UserDashboardLayout, error)
 }
 
 type userRepository struct {
@@ -193,4 +196,28 @@ func (repo *userRepository) FindByUUID(userUUID string) (*model.UserReadAll, err
 	}
 
 	return &user, nil
+}
+
+func (repo *userRepository) FindDashboardLayoutByUUID(userUUID string) (*model.UserDashboardLayout, error) {
+	var layout model.UserDashboardLayout
+	err := repo.db.Raw("SELECT dashboard_layout FROM users WHERE uuid = ?", userUUID).Scan(&layout).Error
+	if err != nil {
+		return nil, err
+	}
+	return &layout, nil
+}
+
+func (repo *userRepository) DeleteUserLayout(userUUID string) error {
+	err := repo.db.Exec("UPDATE users SET dashboard_layout = NULL WHERE uuid = ?", userUUID).Error
+	return err
+}
+
+func (repo *userRepository) UpdateUserLayout(userUUID string, layout model.UserDashboardLayoutUpdate) error {
+	layoutJSON, err := json.Marshal(layout.Layout)
+	if err != nil {
+		return fmt.Errorf("failed to marshal layout to JSON: %w", err)
+	}
+
+	err = repo.db.Exec("UPDATE users SET dashboard_layout = ? WHERE uuid = ?", layoutJSON, userUUID).Error
+	return err
 }

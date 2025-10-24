@@ -21,9 +21,12 @@ type UserService interface {
 	GetIdByUuid(id string) (int, error)
 	UpdateUserStatus(userUUID string, status string) error
 	DeleteUser(userUUID string) error
+	DeleteUserDashboardLayout(userUUID string) error
 	UpdateUser(userID int, user model.UserUpdateEntry) error
 	GetUserByUUID(userUUID string) (*model.UserReadAll, error)
 	SetWeeklyRateService(w WeeklyRateService.WeeklyRateService)
+	GetUserDashboardLayout(userUUID string) (*model.UserDashboardLayout, error)
+	UpdateUserDashboardLayout(userUUID string, layout model.UserDashboardLayoutUpdate) error
 }
 
 type userService struct {
@@ -107,4 +110,16 @@ func (service *userService) UpdateUser(userID int, user model.UserUpdateEntry) e
 
 func (service *userService) GetUserByUUID(userUUID string) (*model.UserReadAll, error) {
 	return service.repo.FindByUUID(userUUID)
+}
+
+func (service *userService) GetUserDashboardLayout(userUUID string) (*model.UserDashboardLayout, error) {
+	return service.repo.FindDashboardLayoutByUUID(userUUID)
+}
+
+func (service *userService) DeleteUserDashboardLayout(userUUID string) error {
+	return service.repo.DeleteUserLayout(userUUID)
+}
+
+func (service *userService) UpdateUserDashboardLayout(userUUID string, layout model.UserDashboardLayoutUpdate) error {
+	return service.repo.UpdateUserLayout(userUUID, layout)
 }

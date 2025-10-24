@@ -33,6 +33,32 @@ definitions:
       rate_name:
         type: string
     type: object
+  model.DashboardLayout:
+    properties:
+      h:
+        type: integer
+      i:
+        type: string
+      minH:
+        type: integer
+      minW:
+        type: integer
+      static:
+        type: boolean
+      w:
+        type: integer
+      x:
+        type: integer
+      "y":
+        type: integer
+    type: object
+  model.DashboardLayoutResponse:
+    properties:
+      layout:
+        items:
+          $ref: '#/definitions/model.DashboardLayout'
+        type: array
+    type: object
   model.NewTeamMember:
     properties:
       is_manager:
@@ -151,6 +177,13 @@ definitions:
         type: integer
       weekly_rate_uuid:
         type: string
+    type: object
+  model.UserDashboardLayoutUpdate:
+    properties:
+      layout:
+        items:
+          $ref: '#/definitions/model.DashboardLayout'
+        type: array
     type: object
   model.UserMeJWT:
     properties:
@@ -683,6 +716,53 @@ paths:
       security:
       - BearerAuth: []
       summary: Get user by UUID
+      tags:
+      - Users
+  /users/current-user-dashboard-layout:
+    get:
+      description: "Retrieve the dashboard layout configuration for the currently
+        authenticated user. \U0001F512 Requires role: **all**"
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.DashboardLayoutResponse'
+      summary: Get current user's dashboard layout
+      tags:
+      - Users
+  /users/current-user-dashboard-layout/delete:
+    delete:
+      description: "Delete the dashboard layout configuration for the currently authenticated
+        user. \U0001F512 Requires role: **all**"
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: dashboard layout deleted successfully
+      summary: Delete current user's dashboard layout
+      tags:
+      - Users
+  /users/current-user-dashboard-layout/edit:
+    put:
+      consumes:
+      - application/json
+      description: "Update the dashboard layout configuration for the currently authenticated
+        user. \U0001F512 Requires role: **all**"
+      parameters:
+      - description: Dashboard layout payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.UserDashboardLayoutUpdate'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Dashboard layout updated successfully
+      summary: Update current user's dashboard layout
       tags:
       - Users
   /users/delete:
