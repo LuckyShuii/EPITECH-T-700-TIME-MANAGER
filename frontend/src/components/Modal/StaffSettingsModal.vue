@@ -145,6 +145,40 @@ const closeModal = () => {
 
 // Options pour le dropdown horaires
 const weeklyHoursOptions = [24, 28, 35, 39]
+
+// Changer le statut (active/inactive)
+const toggleStatus = async () => {
+  if (!selectedEmployee.value || !editForm.value) return
+
+  const newStatus = editForm.value.status === 'active' ? 'inactive' : 'active'
+
+  try {
+    await userAPI.updateStatus(selectedEmployee.value.uuid, newStatus)
+
+    // Mettre à jour localement
+    editForm.value.status = newStatus
+    if (selectedEmployee.value) {
+      selectedEmployee.value.status = newStatus
+    }
+
+    notificationsStore.addNotification({
+      status: 'success',
+      title: 'Statut modifié',
+      description: `L'employé est maintenant ${newStatus === 'active' ? 'actif' : 'inactif'}`
+    })
+
+    await loadEmployees()
+  } catch (error) {
+    console.error('Erreur lors du changement de statut:', error)
+    notificationsStore.addNotification({
+      status: 'error',
+      title: 'Erreur de modification',
+      description: 'Impossible de changer le statut'
+    })
+  }
+}
+
+
 </script>
 
 <template>
@@ -226,11 +260,17 @@ const weeklyHoursOptions = [24, 28, 35, 39]
               <div class="divider"></div>
 
               <!-- Champs modifiables -->
-              <div class="grid grid-cols-[150px_1fr] gap-2 items-start">
-                <label class="label pt-3">
-                  <span class="label-text">Email</span>
+              <div class="grid grid-cols-[150px_1fr] gap-2 items-center">
+                <label class="label">
+                  <span class="label-text">Statut</span>
                 </label>
-                <input v-model="editForm.email" type="email" class="input input-bordered w-full" />
+                <div class="flex items-center gap-3">
+                  <input type="checkbox" class="toggle toggle-success" :checked="editForm.status === 'active'"
+                    @change="toggleStatus" />
+                  <span class="text-sm font-medium">
+                    {{ editForm.status === 'active' ? 'Actif' : 'Inactif' }}
+                  </span>
+                </div>
               </div>
 
               <div class="grid grid-cols-[150px_1fr] gap-2 items-start">
