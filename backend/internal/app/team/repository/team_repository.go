@@ -46,6 +46,7 @@ func (repo *teamRepository) FindAll() ([]model.TeamReadAll, error) {
 					'first_name', u.first_name,
 					'last_name', u.last_name,
 					'phone_number', u.phone_number,
+					'first_day_of_week', u.first_day_of_week,
 					'is_manager', tm.is_manager,
 					'weekly_rate', COALESCE(wr.amount, 0),
 					'weekly_rate_name', wr.rate_name
@@ -97,6 +98,7 @@ func (repo *teamRepository) FindByID(id int) (model.TeamReadAll, error) {
 					'email', u.email,
 					'first_name', u.first_name,
 					'last_name', u.last_name,
+					'first_day_of_week', u.first_day_of_week,
 					'phone_number', u.phone_number,
 					'weekly_rate', COALESCE(wr.amount, 0),
 					'weekly_rate_name', wr.rate_name

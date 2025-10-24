@@ -98,6 +98,8 @@ definitions:
     properties:
       email:
         type: string
+      first_day_of_week:
+        type: integer
       first_name:
         type: string
       is_manager:
@@ -154,6 +156,8 @@ definitions:
     properties:
       email:
         type: string
+      first_day_of_week:
+        type: integer
       first_name:
         type: string
       last_name:
@@ -210,6 +214,8 @@ definitions:
         type: string
       email:
         type: string
+      first_day_of_week:
+        type: integer
       first_name:
         type: string
       last_name:
@@ -239,6 +245,8 @@ definitions:
     properties:
       email:
         type: string
+      first_day_of_week:
+        type: integer
       first_name:
         type: string
       last_name:
@@ -294,6 +302,8 @@ definitions:
     properties:
       email:
         type: string
+      first_day_of_week:
+        type: integer
       first_name:
         type: string
       last_name:

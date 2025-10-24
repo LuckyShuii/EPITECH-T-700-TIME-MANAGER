@@ -25,6 +25,7 @@ type TeamMember struct {
 	WorkSessionStatus *string  `json:"work_session_status,omitempty"`
 	WeeklyRate        int      `json:"weekly_rate"`
 	WeeklyRateName    *string  `json:"weekly_rate_name,omitempty"`
+	FirstDayOfWeek    *int     `json:"first_day_of_week,omitempty"`
 }
 
 type TeamMemberInfo struct {
@@ -38,6 +39,7 @@ type TeamMemberInfo struct {
 	LastName          string  `json:"last_name"`
 	PhoneNumber       string  `json:"phone_number"`
 	WorkSessionStatus *string `json:"work_session_status,omitempty"`
+	FirstDayOfWeek    *int    `json:"first_day_of_week,omitempty"`
 }
 
 type TeamMembers []TeamMember
