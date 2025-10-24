@@ -1,59 +1,90 @@
 <script setup lang="ts">
+import { onMounted, onUnmounted, ref } from 'vue'
+import { useEditModeStore } from '@/store/EditModeStore'  
 import EmployeeLayout from '../layout/EmployeeLayout.vue'
 import ClockWidget from '@/components/widget/ClockWidget.vue'
 import CalendarWidget from '@/components/widget/CalendarWidget.vue'
 import ClockButton from '@/components/ClockButton.vue'
+import TeamManagementModal from '@/components/Modal/TeamManagementModal.vue'
+import { useAuthStore } from '@/store/AuthStore'
+import { storeToRefs } from 'pinia'
+import TeamPresenceWidget from '@/components/widget/TeamPresenceWidget.vue'
 
-// Mock data pour le ClockWidget
-const mockClockData = {
-  clockInTime: new Date(new Date().setHours(8, 30, 0, 0)).toISOString(),
-  clockOutTime: null,
-  status: 'CLOCKED_IN' as const
-}
+const authStore = useAuthStore()
+const { clockInTime, sessionStatus } = storeToRefs(authStore)
+const isTeamViewModalOpen = ref(false)
+
+const editModeStore = useEditModeStore()
+
+// Enregistre que ce dashboard est actif
+onMounted(() => {
+  editModeStore.setCurrentDashboard('employee')
+  console.log('✅ Dashboard enregistré:', editModeStore.currentDashboard)  // ← AJOUTE
+})
+
+// Nettoie quand on quitte le dashboard
+onUnmounted(() => {
+  editModeStore.reset()
+})
+
+
 </script>
 
 <template>
+  <!-- RETIRE le ref="layoutRef" ici ↓ -->
   <EmployeeLayout>
-    <!-- Position 1 : Haut gauche -->
-    <template #widget-1>
-      <div class="bg-red-100 p-6 rounded h-full">Widget 1</div>
+    <!-- Widget presence -->
+    <template #team-presence>
+      <TeamPresenceWidget />
     </template>
-
-    <!-- Position 3 : Clock (bas gauche) -->
+    
+    <!-- Clock -->
     <template #clock>
-      <ClockWidget 
-        :clockInTime="mockClockData.clockInTime" 
-        :clockOutTime="mockClockData.clockOutTime"
-        :status="mockClockData.status" 
-      />
-      <ClockButton/>
+      <ClockWidget :clockInTime="clockInTime" :status="sessionStatus" />
+      <ClockButton />
     </template>
-
-    <!-- Position 4 : Calendar (haut centre - 2 colonnes) -->
+    
+    <!-- Calendar -->
     <template #calendar>
       <div class="bg-blue-100 p-6 rounded h-full">
         <CalendarWidget />
       </div>
     </template>
-
-    <!-- Position 5 : Widget 2 (bas centre gauche) -->
+    
+    <!-- Widget 2 -->
     <template #widget-2>
       <div class="bg-green-100 p-6 rounded h-full">Widget 2</div>
     </template>
-
-    <!-- Position 6 : Widget 3 (bas centre droite) -->
+    
+    <!-- Widget 3 -->
     <template #widget-3>
       <div class="bg-yellow-100 p-6 rounded h-full">Widget 3</div>
     </template>
-
-    <!-- Position 7 : Widget 4 (haut droite) -->
+    
+    <!-- Widget 4 - Bouton équipe -->
     <template #widget-4>
-      <div class="bg-purple-100 p-6 rounded h-full">Widget 4</div>
+      <button @click="isTeamViewModalOpen = true"
+        class="h-full w-full bg-gradient-to-br from-primary-500 to-secondary-500 hover:shadow-card-hover text-white rounded-3xl shadow-card transition-all duration-300 flex flex-col items-center justify-center gap-4 group cursor-pointer">
+        <div class="text-4xl group-hover:scale-110 transition-transform duration-300">👥</div>
+        <p class="font-bold text-base">Voir mon équipe</p>
+      </button>
     </template>
-
-    <!-- Position 8 : Widget 5 (bas droite) -->
+    
+    <!-- Extra widget -->
+    <template #extra-widget>
+      <div class="bg-purple-100 p-6 rounded h-full">Extra Widget</div>
+    </template>
+    
+    <!-- Widget 5 -->
     <template #widget-5>
       <div class="bg-orange-100 p-6 rounded h-full">Widget 5</div>
     </template>
+    
+    <!-- Widget 6 -->
+    <template #widget-6>
+      <div class="bg-green-100 p-6 rounded h-full">Widget 2</div>
+    </template>
   </EmployeeLayout>
+  
+  <TeamManagementModal v-model="isTeamViewModalOpen" />
 </template>

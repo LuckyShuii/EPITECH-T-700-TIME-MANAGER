@@ -1,6 +1,10 @@
 export interface ClockHistoryEntry {
-  clockInTime: string
-  clockOutTime: string | null
-  totalHours: number
-  status: 'active' | 'completed' | 'paused'
+  clock_in: string,
+  clock_out: string | null,
+  duration_minutes: number,
+  breaks_duration_minutes: number,
+  status: 'completed' | 'active' | 'paused',
+  work_session_uuid: string,
+  user_uuid: string,
+  username: string
 }
