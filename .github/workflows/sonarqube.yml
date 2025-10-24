@@ -1,4 +1,4 @@
-name: SonarCloud
+name: SonarCloud Analysis
 
 on:
   push:
@@ -14,20 +14,20 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: 🧩 Checkout code
+      - name: 🧩 Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      # ───────────────────────────────
-      # 🐹 BACKEND (Go)
-      # ───────────────────────────────
+      # ─────────────────────────────
+      # 🐹 GO BACKEND
+      # ─────────────────────────────
       - name: 🧰 Setup Go
         uses: actions/setup-go@v5
         with:
           go-version: "1.25"
 
-      - name: 📦 Install Go deps
+      - name: 📦 Install Go dependencies
         working-directory: ./backend
         run: go mod tidy
 
@@ -35,35 +35,44 @@ jobs:
         working-directory: ./backend
         run: |
           go test ./... -coverprofile=coverage.out -covermode=atomic
-          mv coverage.out ../../coverage-go.out
+          cp coverage.out ../../coverage.out
 
-      # ───────────────────────────────
+      - name: 🔍 Check coverage file
+        run: |
+          echo "Coverage file preview:"
+          head -n 10 coverage.out || echo "⚠️ No coverage.out found!"
+
+      # ─────────────────────────────
       # 🎨 FRONTEND (Vue.js)
-      # ───────────────────────────────
-      - name: 🧰 Setup Node
+      # ─────────────────────────────
+      - name: 🧰 Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "20"
 
-      - name: 📦 Install frontend deps
+      - name: 📦 Install frontend dependencies
         working-directory: ./frontend
-        run: npm install
+        run: npm ci
 
-      - name: 🧪 Run frontend tests (if any)
+      - name: 🧪 Run frontend tests (optional)
         working-directory: ./frontend
         run: |
           npm run test:unit --if-present || echo "⚠️ No frontend tests found"
 
-      # ───────────────────────────────
+      # ─────────────────────────────
       # 🔍 SONARCLOUD SCAN
-      # ───────────────────────────────
-      - name: 🔎 SonarCloud Scan
+      # ─────────────────────────────
+      - name: 🔎 Run SonarCloud Scan
         uses: sonarsource/sonarqube-scan-action@v6
         with:
           args: >
             -Dsonar.organization=luckyshuii
             -Dsonar.projectKey=LuckyShuii_EPITECH-T-700-TIME-MANAGER
-            -Dsonar.host.url=https://sonarcloud.io
-            -Dsonar.go.coverage.reportPaths=coverage-go.out
+            -Dsonar.projectName="Time Manager"
+            -Dsonar.projectVersion=1.0
+            -Dsonar.sources=backend,frontend
+            -Dsonar.exclusions=**/node_modules/**,**/vendor/**,**/tests/**,**/__pycache__/**
+            -Dsonar.go.coverage.reportPaths=coverage.out
         env:
           SONAR_TOKEN: ${{ secrets.SONARQUBE_TOKEN }}
+          SONAR_HOST_URL: https://sonarcloud.io
