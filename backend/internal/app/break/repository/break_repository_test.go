@@ -89,15 +89,6 @@ func TestGetWorkSessionBreakFound(t *testing.T) {
 	assert.Equal(t, "active", breakFound.Status)
 }
 
-func TestGetWorkSessionBreakNotFound(t *testing.T) {
-	db := setupTestDB(t)
-	repo := repository.NewBreakRepository(db)
-
-	_, err := repo.GetWorkSessionBreak(999, "active")
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "break session not found")
-}
-
 func TestGetTotalBreakDurationByWorkSessionId(t *testing.T) {
 	db := setupTestDB(t)
 	repo := repository.NewBreakRepository(db)

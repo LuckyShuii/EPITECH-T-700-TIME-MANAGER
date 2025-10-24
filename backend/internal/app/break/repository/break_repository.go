@@ -38,10 +38,6 @@ func (repo *breakRepository) GetWorkSessionBreak(workSessionId int, status strin
 		return BreakModel.BreakRead{}, result.Error
 	}
 
-	if breakSessionFound.BreakUUID == "" {
-		return BreakModel.BreakRead{}, fmt.Errorf("break session not found")
-	}
-
 	return breakSessionFound, nil
 }
 
