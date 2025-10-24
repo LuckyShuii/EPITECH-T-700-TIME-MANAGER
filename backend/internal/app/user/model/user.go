@@ -2,6 +2,9 @@ package model
 
 import (
 	"app/internal/app/common/model"
+	"database/sql/driver"
+	"encoding/json"
+	"fmt"
 	"time"
 )
 
@@ -13,6 +16,54 @@ type UserBase struct {
 	LastName    string            `json:"last_name"`
 	PhoneNumber *string           `json:"phone_number,omitempty"`
 	Roles       model.StringArray `json:"roles" gorm:"type:text[];default:'{employee}'"`
+}
+
+type JSONLayout []map[string]any
+
+func (j *JSONLayout) Scan(value interface{}) error {
+	if value == nil {
+		*j = nil
+		return nil
+	}
+
+	bytes, ok := value.([]byte)
+	if !ok {
+		return fmt.Errorf("type assertion to []byte failed")
+	}
+	return json.Unmarshal(bytes, j)
+}
+
+func (j JSONLayout) Value() (driver.Value, error) {
+	if j == nil {
+		return nil, nil
+	}
+	return json.Marshal(j)
+}
+
+type DashboardLayout struct {
+	I      string `json:"i"`
+	X      int    `json:"x"`
+	Y      int    `json:"y"`
+	W      int    `json:"w"`
+	H      int    `json:"h"`
+	MinW   int    `json:"minW"`
+	MinH   int    `json:"minH"`
+	Static bool   `json:"static"`
+}
+
+// swagger:model UserDashboardLayout
+type UserDashboardLayout struct {
+	DashboardLayout JSONLayout `json:"dashboard_layout" gorm:"type:jsonb;default:'[]'"`
+}
+
+// swagger:model DashboardLayoutResponse
+type DashboardLayoutResponse struct {
+	Layout []DashboardLayout `json:"layout"`
+}
+
+// swagger:model UserDashboardLayoutUpdate
+type UserDashboardLayoutUpdate struct {
+	Layout []DashboardLayout `json:"layout"`
 }
 
 // swagger:model UserTeamMemberInfo

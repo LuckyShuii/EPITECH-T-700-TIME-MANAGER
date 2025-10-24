@@ -4,9 +4,9 @@
 
 - **Frontend:** Vue.js + DaisyUI
 - **Backend:** Go + Gin
-- **Ops / Infrastructure:** Nginx + Docker + GitHub Workflow
+- **Ops / Infrastructure:** Nginx + Docker + GitHub Workflow (CI)
 - **Database:** PostgreSQL
-- **Tests:** Playwright + Vitest + (Go?)
+- **Tests:** Playwright + Vitest + Testing (Go) + Sonarqube/Sonarcloud
 
 ## Swagger
 
@@ -22,12 +22,33 @@ This balance allows us to experiment with Go while maintaining productivity and 
 
 # To Launch the project
 
+Go in the scripts directory to create all the logs files
+
+```bash
+cd scripts/
+```
+
+Execture this script
+
+```bash
+./init_log_files.sh
+```
+
+Don't forget to create `.env` files in the following services: `frontend`, `backend` and at the root of the project.
+Use the `.env.sample` in each of these directories as model and change the values.
+
 ## To launch the project in development mode:
 
 Don't forget to copy the `.env.sample` file into a `.env` file and change the values. Then you can use the following command to startup & build the project.
 
 ```bash
 docker compose -f dev.docker-compose.yml up --build
+```
+
+to add the sonarqube in local mode :
+
+```bash
+docker compose -f dev.docker-compose.yml -f sonarqube.docker-compose.yml up --build
 ```
 
 ## To launch the project without seing any logs

@@ -1,7 +1,12 @@
 package handler
 
 import (
+	"app/internal/db"
+	"context"
+	"encoding/json"
+	"log"
 	"net/http"
+	"time"
 
 	"app/internal/app/user/model"
 	"app/internal/app/user/service"
@@ -23,18 +28,40 @@ func NewUserHandler(service service.UserService) *UserHandler {
 // GetUsers retrieves all registered users.
 //
 // @Summary      Get all users
-// @Description  Returns a list of all registered users. 🔒 Requires role: **admin**
+// @Description  [Cache: 5sec] Returns a list of all registered users. 🔒 Requires role: **admin**
 // @Tags         Users
 // @Security     BearerAuth
 // @Produce      json
 // @Success      200  {array}   model.UserRead  "List of users retrieved successfully"
 // @Router       /users [get]
 func (handler *UserHandler) GetUsers(c *gin.Context) {
+	// ⚠️ implement pagination - technical debt ⚠️
+	ctx := c.Request.Context()
+
+	cacheKey := "users_list"
+
+	// Try to get users list from cache
+	cachedUsers, err := db.RedisClient.Get(ctx, cacheKey).Result()
+	if err == nil && cachedUsers != "" {
+		var users []model.UserRead
+		if jsonErr := json.Unmarshal([]byte(cachedUsers), &users); jsonErr == nil {
+			c.JSON(http.StatusOK, users)
+			return
+		}
+	}
+
 	users, err := handler.service.GetUsers()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+
+	// Cache the users list
+	usersJSON, _ := json.Marshal(users)
+	if setErr := db.RedisClient.Set(ctx, cacheKey, usersJSON, 5*time.Second).Err(); setErr != nil {
+		log.Printf("⚠️ Error setting cache for %s : %v", cacheKey, setErr)
+	}
+
 	c.JSON(http.StatusOK, users)
 }
 
@@ -80,17 +107,18 @@ func (handler *UserHandler) RegisterUser(c *gin.Context) {
 // @Produce      json
 // @Param        uuid  path      string  true  "User UUID"
 // @Success      200   {object}  response.UserDeletedResponse  "User deleted successfully"
-// @Router       /users/{uuid} [delete]
+// @Router       /users/delete/{uuid} [delete]
 func (handler *UserHandler) DeleteUser(c *gin.Context) {
 	userUUID := c.Param("uuid")
 
 	if userUUID == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "missing user UUID in URL"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "missing user_uuid field"})
 		return
 	}
 
-	if err := handler.service.DeleteUser(userUUID); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	deleteErr := handler.service.DeleteUser(userUUID)
+	if deleteErr != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": deleteErr.Error()})
 		return
 	}
 
@@ -182,7 +210,7 @@ func (handler *UserHandler) UpdateUser(c *gin.Context) {
 // GetUserByUUID retrieves a user by their UUID.
 //
 // @Summary      Get user by UUID
-// @Description  Returns the details of a user identified by their UUID or not. If the UUID is not specificed it will return the current logged in users details. To query an other user data, must be manager or admin 🔒 Requires role: **all**
+// @Description  [Cache: 5sec] Returns the details of a user identified by their UUID or not. If the UUID is not specificed it will return the current logged in users details. To query an other user data, must be manager or admin 🔒 Requires role: **all**
 // @Tags         Users
 // @Security     BearerAuth
 // @Produce      json
@@ -216,6 +244,20 @@ func (handler *UserHandler) GetUserByUUID(c *gin.Context) {
 		return
 	}
 
+	ctx := context.Background()
+
+	cacheKey := "user:details:" + UserUUID
+
+	// Try to get user details from cache
+	cachedUser, err := db.RedisClient.Get(ctx, cacheKey).Result()
+	if err == nil && cachedUser != "" {
+		var user model.UserReadAll
+		if jsonErr := json.Unmarshal([]byte(cachedUser), &user); jsonErr == nil {
+			c.JSON(http.StatusOK, user)
+			return
+		}
+	}
+
 	user, err := handler.service.GetUserByUUID(UserUUID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -227,5 +269,103 @@ func (handler *UserHandler) GetUserByUUID(c *gin.Context) {
 		return
 	}
 
+	// Cache the user details
+	userJSON, _ := json.Marshal(user)
+	if setErr := db.RedisClient.Set(ctx, cacheKey, userJSON, 5*time.Second).Err(); setErr != nil {
+		log.Printf("⚠️ Error setting cache for %s : %v", cacheKey, setErr)
+	}
+
 	c.JSON(http.StatusOK, user)
+}
+
+// GetCurrentUserDashboardLayout retrieves the dashboard layout for the current user.
+//
+// @Summary      Get current user's dashboard layout
+// @Description  Retrieve the dashboard layout configuration for the currently authenticated user. 🔒 Requires role: **all**
+// @Tags         Users
+// @Produce      json
+// @Success      200  {object}   model.DashboardLayoutResponse
+// @Router       /users/current-user-dashboard-layout [get]
+func (handler *UserHandler) GetCurrentUserDashboardLayout(c *gin.Context) {
+	claims, exists := c.Get("userClaims")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": Config.ErrorMessages()["NO_CLAIMS"]})
+		return
+	}
+
+	authClaims := claims.(*AuthService.Claims)
+
+	dashboardLayout, err := handler.service.GetUserDashboardLayout(authClaims.UUID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	if dashboardLayout.DashboardLayout == nil {
+		c.JSON(http.StatusOK, gin.H{"layout": nil})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"layout": dashboardLayout.DashboardLayout})
+}
+
+// DeleteCurrentUserDashboardLayout deletes the dashboard layout for the current user.
+//
+// @Summary      Delete current user's dashboard layout
+// @Description  Delete the dashboard layout configuration for the currently authenticated user. 🔒 Requires role: **all**
+// @Tags         Users
+// @Produce      json
+// @Success      200  "dashboard layout deleted successfully"
+// @Router       /users/current-user-dashboard-layout/delete [delete]
+func (handler *UserHandler) DeleteCurrentUserDashboardLayout(c *gin.Context) {
+	claims, exists := c.Get("userClaims")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": Config.ErrorMessages()["NO_CLAIMS"]})
+		return
+	}
+
+	authClaims := claims.(*AuthService.Claims)
+
+	deleteErr := handler.service.DeleteUserDashboardLayout(authClaims.UUID)
+	if deleteErr != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": deleteErr.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "dashboard layout deleted successfully"})
+}
+
+// UpdateCurrentUserDashboardLayout updates the dashboard layout for the current user.
+//
+// @Summary      Update current user's dashboard layout
+// @Description  Update the dashboard layout configuration for the currently authenticated user. 🔒 Requires role: **all**
+// @Tags         Users
+// @Accept       json
+// @Produce      json
+// @Param        body  body      model.UserDashboardLayoutUpdate  true  "Dashboard layout payload"
+// @Success      200   "Dashboard layout updated successfully"
+// @Router       /users/current-user-dashboard-layout/edit [put]
+func (handler *UserHandler) UpdateCurrentUserDashboardLayout(c *gin.Context) {
+	var req model.UserDashboardLayoutUpdate
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": Config.ErrorMessages()["INVALID_REQUEST"]})
+		return
+	}
+
+	claims, exists := c.Get("userClaims")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": Config.ErrorMessages()["NO_CLAIMS"]})
+		return
+	}
+
+	authClaims := claims.(*AuthService.Claims)
+
+	// Update the dashboard layout
+	updateErr := handler.service.UpdateUserDashboardLayout(authClaims.UUID, req)
+	if updateErr != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": updateErr.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "dashboard layout updated successfully"})
 }

@@ -33,6 +33,32 @@ definitions:
       rate_name:
         type: string
     type: object
+  model.DashboardLayout:
+    properties:
+      h:
+        type: integer
+      i:
+        type: string
+      minH:
+        type: integer
+      minW:
+        type: integer
+      static:
+        type: boolean
+      w:
+        type: integer
+      x:
+        type: integer
+      "y":
+        type: integer
+    type: object
+  model.DashboardLayoutResponse:
+    properties:
+      layout:
+        items:
+          $ref: '#/definitions/model.DashboardLayout'
+        type: array
+    type: object
   model.NewTeamMember:
     properties:
       is_manager:
@@ -152,6 +178,13 @@ definitions:
       weekly_rate_uuid:
         type: string
     type: object
+  model.UserDashboardLayoutUpdate:
+    properties:
+      layout:
+        items:
+          $ref: '#/definitions/model.DashboardLayout'
+        type: array
+    type: object
   model.UserMeJWT:
     properties:
       email:
@@ -255,12 +288,6 @@ definitions:
         type: string
       team_uuid:
         example: 4bc3df44-491c-4073-9e89-682bb0acfca0
-        type: string
-    type: object
-  model.UserUUIDPayload:
-    properties:
-      user_uuid:
-        example: e1234abc-5678-90de-f123-4567890abcde
         type: string
     type: object
   model.UserUpdateEntry:
@@ -440,8 +467,8 @@ paths:
       - Auth
   /teams:
     get:
-      description: "Returns a list of all registered teams & their members. \U0001F512
-        Requires role: **admin**"
+      description: "[Cache: 5sec] Returns a list of all registered teams & their members.
+        \U0001F512 Requires role: **admin**"
       produces:
       - application/json
       responses:
@@ -619,8 +646,8 @@ paths:
       - Teams
   /users:
     get:
-      description: "Returns a list of all registered users. \U0001F512 Requires role:
-        **admin**"
+      description: "[Cache: 5sec] Returns a list of all registered users. \U0001F512
+        Requires role: **admin**"
       produces:
       - application/json
       responses:
@@ -663,10 +690,10 @@ paths:
       - Users
   /users/{uuid}:
     get:
-      description: "Returns the details of a user identified by their UUID or not.
-        If the UUID is not specificed it will return the current logged in users details.
-        To query an other user data, must be manager or admin \U0001F512 Requires
-        role: **all**"
+      description: "[Cache: 5sec] Returns the details of a user identified by their
+        UUID or not. If the UUID is not specificed it will return the current logged
+        in users details. To query an other user data, must be manager or admin \U0001F512
+        Requires role: **all**"
       parameters:
       - description: User UUID
         in: path
@@ -685,7 +712,54 @@ paths:
       summary: Get user by UUID
       tags:
       - Users
-  /users/delete:
+  /users/current-user-dashboard-layout:
+    get:
+      description: "Retrieve the dashboard layout configuration for the currently
+        authenticated user. \U0001F512 Requires role: **all**"
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.DashboardLayoutResponse'
+      summary: Get current user's dashboard layout
+      tags:
+      - Users
+  /users/current-user-dashboard-layout/delete:
+    delete:
+      description: "Delete the dashboard layout configuration for the currently authenticated
+        user. \U0001F512 Requires role: **all**"
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: dashboard layout deleted successfully
+      summary: Delete current user's dashboard layout
+      tags:
+      - Users
+  /users/current-user-dashboard-layout/edit:
+    put:
+      consumes:
+      - application/json
+      description: "Update the dashboard layout configuration for the currently authenticated
+        user. \U0001F512 Requires role: **all**"
+      parameters:
+      - description: Dashboard layout payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.UserDashboardLayoutUpdate'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Dashboard layout updated successfully
+      summary: Update current user's dashboard layout
+      tags:
+      - Users
+  /users/delete/{uuid}:
     delete:
       consumes:
       - application/json

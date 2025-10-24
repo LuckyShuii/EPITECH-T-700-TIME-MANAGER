@@ -81,7 +81,6 @@ func SetupRouter() *gin.Engine {
 		/**
 		 * User Management Routes
 		 */
-		// TODO: on user creation add the weekly rate in the form to check
 		protected.POST("/users/register", authMiddleware.RequireRoles("admin"), userHandler.RegisterUser)
 		protected.POST("/users/weekly-rates/create", authMiddleware.RequireRoles("admin"), weeklyRateHandler.Create)
 		protected.POST("/users/weekly-rates/:weekly_rate_uuid/assign-to-user/:user_uuid", authMiddleware.RequireRoles("admin"), weeklyRateHandler.AssignToUser)
@@ -89,14 +88,16 @@ func SetupRouter() *gin.Engine {
 		protected.PUT("/users/update-status", authMiddleware.RequireRoles("admin"), userHandler.UpdateUserStatus)
 		protected.PUT("/users", authMiddleware.RequireRoles("admin"), userHandler.UpdateUser)
 		protected.PUT("/users/weekly-rates/:uuid/update", authMiddleware.RequireRoles("admin"), weeklyRateHandler.Update)
+		protected.PUT("/users/current-user-dashboard-layout/edit", authMiddleware.RequireRoles("all"), userHandler.UpdateCurrentUserDashboardLayout)
 
 		protected.GET("/users", authMiddleware.RequireRoles("admin"), userHandler.GetUsers)
 		protected.GET("/users/:uuid", authMiddleware.RequireRoles("all"), userHandler.GetUserByUUID)
 		protected.GET("/users/weekly-rates", authMiddleware.RequireRoles("all"), weeklyRateHandler.GetAll)
+		protected.GET("/users/current-user-dashboard-layout", authMiddleware.RequireRoles("all"), userHandler.GetCurrentUserDashboardLayout)
 
 		protected.DELETE("/users/weekly-rates/:uuid/delete", authMiddleware.RequireRoles("admin"), weeklyRateHandler.Delete)
-
 		protected.DELETE("/users/delete/:uuid", authMiddleware.RequireRoles("admin"), userHandler.DeleteUser)
+		protected.DELETE("/users/current-user-dashboard-layout/delete", authMiddleware.RequireRoles("all"), userHandler.DeleteCurrentUserDashboardLayout)
 
 		/**
 		 * Work Sessions & Breaks Routes

@@ -1,11 +1,16 @@
 package handler
 
 import (
+	"encoding/json"
+	"log"
 	"net/http"
+	"time"
 
 	"app/internal/app/team/model"
 	"app/internal/app/team/service"
 	UserService "app/internal/app/user/service"
+
+	"app/internal/db"
 
 	"github.com/gin-gonic/gin"
 )
@@ -22,18 +27,39 @@ func NewTeamHandler(service service.TeamService, userService UserService.UserSer
 // GetTeams retrieves all teams.
 //
 // @Summary      Get all teams
-// @Description  Returns a list of all registered teams & their members. 🔒 Requires role: **admin**
+// @Description  [Cache: 5sec] Returns a list of all registered teams & their members. 🔒 Requires role: **admin**
 // @Tags         Teams
 // @Security     BearerAuth
 // @Produce      json
 // @Success      200  {array}   model.TeamReadAll  "List of teams retrieved successfully"
 // @Router       /teams [get]
 func (handler *TeamHandler) GetTeams(c *gin.Context) {
+	ctx := c.Request.Context()
+
+	cacheKey := "teams_list"
+
+	// Try to get teams list from cache
+	cachedTeams, err := db.RedisClient.Get(ctx, cacheKey).Result()
+	if err == nil && cachedTeams != "" {
+		var teams []model.TeamReadAll
+		if jsonErr := json.Unmarshal([]byte(cachedTeams), &teams); jsonErr == nil {
+			c.JSON(http.StatusOK, teams)
+			return
+		}
+	}
+
 	teams, err := handler.service.GetTeams()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+
+	// Cache the teams list
+	teamsJSON, _ := json.Marshal(teams)
+	if setErr := db.RedisClient.Set(ctx, cacheKey, teamsJSON, 5*time.Second).Err(); setErr != nil {
+		log.Printf("⚠️ Error setting cache for %s : %v", cacheKey, setErr)
+	}
+
 	c.JSON(http.StatusOK, teams)
 }
 
@@ -48,12 +74,33 @@ func (handler *TeamHandler) GetTeams(c *gin.Context) {
 // @Success      200    {object}  model.TeamReadAll  "Team retrieved successfully"
 // @Router       /teams/{uuid} [get]
 func (handler *TeamHandler) GetTeamByUUID(c *gin.Context) {
+	ctx := c.Request.Context()
+
+	cacheKey := "team_" + c.Param("uuid")
+
+	// Try to get team from cache
+	cachedTeam, err := db.RedisClient.Get(ctx, cacheKey).Result()
+	if err == nil && cachedTeam != "" {
+		var team model.TeamReadAll
+		if jsonErr := json.Unmarshal([]byte(cachedTeam), &team); jsonErr == nil {
+			c.JSON(http.StatusOK, team)
+			return
+		}
+	}
+
 	uuid := c.Param("uuid")
 	team, err := handler.service.GetTeamByUUID(uuid)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+
+	// Cache the team
+	teamJSON, _ := json.Marshal(team)
+	if setErr := db.RedisClient.Set(ctx, cacheKey, teamJSON, 5*time.Second).Err(); setErr != nil {
+		log.Printf("⚠️ Error setting cache for %s : %v", cacheKey, setErr)
+	}
+
 	c.JSON(http.StatusOK, team)
 }
 

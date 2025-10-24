@@ -112,7 +112,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Returns a list of all registered teams \u0026 their members. 🔒 Requires role: **admin**",
+                "description": "[Cache: 5sec] Returns a list of all registered teams \u0026 their members. 🔒 Requires role: **admin**",
                 "produces": [
                     "application/json"
                 ],
@@ -387,7 +387,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Returns a list of all registered users. 🔒 Requires role: **admin**",
+                "description": "[Cache: 5sec] Returns a list of all registered users. 🔒 Requires role: **admin**",
                 "produces": [
                     "application/json"
                 ],
@@ -445,7 +445,75 @@ const docTemplate = `{
                 }
             }
         },
-        "/users/delete": {
+        "/users/current-user-dashboard-layout": {
+            "get": {
+                "description": "Retrieve the dashboard layout configuration for the currently authenticated user. 🔒 Requires role: **all**",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Get current user's dashboard layout",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.DashboardLayoutResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/users/current-user-dashboard-layout/delete": {
+            "delete": {
+                "description": "Delete the dashboard layout configuration for the currently authenticated user. 🔒 Requires role: **all**",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Delete current user's dashboard layout",
+                "responses": {
+                    "200": {
+                        "description": "dashboard layout deleted successfully"
+                    }
+                }
+            }
+        },
+        "/users/current-user-dashboard-layout/edit": {
+            "put": {
+                "description": "Update the dashboard layout configuration for the currently authenticated user. 🔒 Requires role: **all**",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Update current user's dashboard layout",
+                "parameters": [
+                    {
+                        "description": "Dashboard layout payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.UserDashboardLayoutUpdate"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Dashboard layout updated successfully"
+                    }
+                }
+            }
+        },
+        "/users/delete/{uuid}": {
             "delete": {
                 "security": [
                     {
@@ -465,13 +533,11 @@ const docTemplate = `{
                 "summary": "Delete a user",
                 "parameters": [
                     {
-                        "description": "User UUID payload",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/model.UserUUIDPayload"
-                        }
+                        "type": "string",
+                        "description": "User UUID",
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -714,7 +780,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Returns the details of a user identified by their UUID or not. If the UUID is not specificed it will return the current logged in users details. To query an other user data, must be manager or admin 🔒 Requires role: **all**",
+                "description": "[Cache: 5sec] Returns the details of a user identified by their UUID or not. If the UUID is not specificed it will return the current logged in users details. To query an other user data, must be manager or admin 🔒 Requires role: **all**",
                 "produces": [
                     "application/json"
                 ],
@@ -961,6 +1027,46 @@ const docTemplate = `{
                 }
             }
         },
+        "model.DashboardLayout": {
+            "type": "object",
+            "properties": {
+                "h": {
+                    "type": "integer"
+                },
+                "i": {
+                    "type": "string"
+                },
+                "minH": {
+                    "type": "integer"
+                },
+                "minW": {
+                    "type": "integer"
+                },
+                "static": {
+                    "type": "boolean"
+                },
+                "w": {
+                    "type": "integer"
+                },
+                "x": {
+                    "type": "integer"
+                },
+                "y": {
+                    "type": "integer"
+                }
+            }
+        },
+        "model.DashboardLayoutResponse": {
+            "type": "object",
+            "properties": {
+                "layout": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.DashboardLayout"
+                    }
+                }
+            }
+        },
         "model.NewTeamMember": {
             "type": "object",
             "required": [
@@ -1142,6 +1248,17 @@ const docTemplate = `{
                 }
             }
         },
+        "model.UserDashboardLayoutUpdate": {
+            "type": "object",
+            "properties": {
+                "layout": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.DashboardLayout"
+                    }
+                }
+            }
+        },
         "model.UserMeJWT": {
             "type": "object",
             "properties": {
@@ -1296,15 +1413,6 @@ const docTemplate = `{
                 "team_uuid": {
                     "type": "string",
                     "example": "4bc3df44-491c-4073-9e89-682bb0acfca0"
-                }
-            }
-        },
-        "model.UserUUIDPayload": {
-            "type": "object",
-            "properties": {
-                "user_uuid": {
-                    "type": "string",
-                    "example": "e1234abc-5678-90de-f123-4567890abcde"
                 }
             }
         },
