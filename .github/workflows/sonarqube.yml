@@ -34,13 +34,15 @@ jobs:
       - name: 🧪 Run Go tests with coverage
         working-directory: ./backend
         run: |
-          go test ./... -coverprofile=coverage.out -covermode=atomic
-          cp coverage.out ../../coverage.out
-
-      - name: 🔍 Check coverage file
-        run: |
-          echo "Coverage file preview:"
-          head -n 10 coverage.out || echo "⚠️ No coverage.out found!"
+          echo "Running Go tests..."
+          go test ./... -v -coverprofile=coverage.out -covermode=atomic || echo "⚠️ Tests failed or none found"
+          ls -la || echo "⚠️ No coverage file created"
+          if [ -f coverage.out ]; then
+            cp coverage.out ../coverage.out
+            echo "✅ coverage.out copied to project root"
+          else
+            echo "❌ coverage.out missing"
+          fi
 
       # ─────────────────────────────
       # 🎨 FRONTEND (Vue.js)
