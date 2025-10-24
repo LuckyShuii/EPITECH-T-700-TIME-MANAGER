@@ -9,13 +9,14 @@ import (
 )
 
 type UserBase struct {
-	UUID        string            `json:"uuid" gorm:"type:uuid;default:uuid_generate_v4();unique;not null"`
-	Username    string            `json:"username" gorm:"unique;not null"`
-	Email       string            `json:"email" gorm:"unique;not null"`
-	FirstName   string            `json:"first_name"`
-	LastName    string            `json:"last_name"`
-	PhoneNumber *string           `json:"phone_number,omitempty"`
-	Roles       model.StringArray `json:"roles" gorm:"type:text[];default:'{employee}'"`
+	UUID           string            `json:"uuid" gorm:"type:uuid;default:uuid_generate_v4();unique;not null"`
+	Username       string            `json:"username" gorm:"unique;not null"`
+	Email          string            `json:"email" gorm:"unique;not null"`
+	FirstName      string            `json:"first_name"`
+	LastName       string            `json:"last_name"`
+	PhoneNumber    *string           `json:"phone_number,omitempty"`
+	Roles          model.StringArray `json:"roles" gorm:"type:text[];default:'{employee}'"`
+	FirstDayOfWeek *int              `json:"first_day_of_week,omitempty" gorm:"default:1"`
 }
 
 type JSONLayout []map[string]any
@@ -96,6 +97,7 @@ type UserUpdateEntry struct {
 	Status         *string            `json:"status,omitempty"`
 	WeeklyRateUUID *string            `json:"weekly_rate_uuid,omitempty"`
 	WeeklyRateID   *int               `json:"weekly_rate_id,omitempty"`
+	FirstDayOfWeek *int               `json:"first_day_of_week,omitempty"`
 }
 
 // StringArray is a custom type representing an array of strings.

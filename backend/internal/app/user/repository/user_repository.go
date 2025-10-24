@@ -42,6 +42,7 @@ func (repo *userRepository) FindAll() ([]model.UserRead, error) {
 			u.phone_number,
 			u.roles,
 			u.status,
+			u.first_day_of_week,
 			wr.rate_name AS weekly_rate_name,
 			COALESCE(wr.amount, 0) AS weekly_rate,
 			u.created_at,
@@ -77,7 +78,7 @@ func (repo *userRepository) FindByTypeAuth(typeOf string, data string) (*model.U
 		return nil, fmt.Errorf("invalid type: %s", typeOf)
 	}
 
-	query := fmt.Sprintf("SELECT id, uuid, email, roles, first_name, last_name, username, phone_number, password_hash FROM users WHERE %s = ?", typeOf)
+	query := fmt.Sprintf("SELECT id, uuid, first_day_of_week, email, roles, first_name, last_name, username, phone_number, password_hash FROM users WHERE %s = ?", typeOf)
 
 	err := repo.db.Raw(query, data).Scan(&user).Error
 	if err != nil {
@@ -89,8 +90,8 @@ func (repo *userRepository) FindByTypeAuth(typeOf string, data string) (*model.U
 
 func (repo *userRepository) RegisterUser(user model.UserCreate) error {
 	err := repo.db.Exec(
-		"INSERT INTO users (uuid, first_name, last_name, email, username, phone_number, roles, password_hash, weekly_rate_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-		user.UUID, user.FirstName, user.LastName, user.Email, user.Username, user.PhoneNumber, user.Roles, user.PasswordHash, user.WeeklyRateID,
+		"INSERT INTO users (uuid, first_name, last_name, email, username, phone_number, roles, password_hash, weekly_rate_id, first_day_of_week) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+		user.UUID, user.FirstName, user.LastName, user.Email, user.Username, user.PhoneNumber, user.Roles, user.PasswordHash, user.WeeklyRateID, user.FirstDayOfWeek,
 	).Error
 	return err
 }
@@ -134,6 +135,10 @@ func (repo *userRepository) UpdateUser(userID int, user model.UserUpdateEntry) e
 		updateData["weekly_rate_id"] = *user.WeeklyRateID
 	}
 
+	if user.FirstDayOfWeek != nil {
+		updateData["first_day_of_week"] = *user.FirstDayOfWeek
+	}
+
 	if len(updateData) == 0 {
 		return fmt.Errorf("no fields to update")
 	}
@@ -152,6 +157,7 @@ func (repo *userRepository) FindByUUID(userUUID string) (*model.UserReadAll, err
 			u.first_name,
 			u.last_name,
 			u.phone_number,
+			u.first_day_of_week,
 			u.roles,
 			u.status,
 			COALESCE(wr.amount, 0) AS weekly_rate,

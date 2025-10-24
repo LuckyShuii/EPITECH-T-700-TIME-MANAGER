@@ -1115,6 +1115,9 @@
                 "email": {
                     "type": "string"
                 },
+                "first_day_of_week": {
+                    "type": "integer"
+                },
                 "first_name": {
                     "type": "string"
                 },
@@ -1201,6 +1204,9 @@
                 "email": {
                     "type": "string"
                 },
+                "first_day_of_week": {
+                    "type": "integer"
+                },
                 "first_name": {
                     "type": "string"
                 },
@@ -1286,6 +1292,9 @@
                 "email": {
                     "type": "string"
                 },
+                "first_day_of_week": {
+                    "type": "integer"
+                },
                 "first_name": {
                     "type": "string"
                 },
@@ -1329,6 +1338,9 @@
             "properties": {
                 "email": {
                     "type": "string"
+                },
+                "first_day_of_week": {
+                    "type": "integer"
                 },
                 "first_name": {
                     "type": "string"
@@ -1410,6 +1422,9 @@
             "properties": {
                 "email": {
                     "type": "string"
+                },
+                "first_day_of_week": {
+                    "type": "integer"
                 },
                 "first_name": {
                     "type": "string"

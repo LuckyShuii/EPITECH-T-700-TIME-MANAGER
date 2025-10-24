@@ -1126,6 +1126,9 @@ const docTemplate = `{
                 "email": {
                     "type": "string"
                 },
+                "first_day_of_week": {
+                    "type": "integer"
+                },
                 "first_name": {
                     "type": "string"
                 },
@@ -1212,6 +1215,9 @@ const docTemplate = `{
                 "email": {
                     "type": "string"
                 },
+                "first_day_of_week": {
+                    "type": "integer"
+                },
                 "first_name": {
                     "type": "string"
                 },
@@ -1297,6 +1303,9 @@ const docTemplate = `{
                 "email": {
                     "type": "string"
                 },
+                "first_day_of_week": {
+                    "type": "integer"
+                },
                 "first_name": {
                     "type": "string"
                 },
@@ -1340,6 +1349,9 @@ const docTemplate = `{
             "properties": {
                 "email": {
                     "type": "string"
+                },
+                "first_day_of_week": {
+                    "type": "integer"
                 },
                 "first_name": {
                     "type": "string"
@@ -1421,6 +1433,9 @@ const docTemplate = `{
             "properties": {
                 "email": {
                     "type": "string"
+                },
+                "first_day_of_week": {
+                    "type": "integer"
                 },
                 "first_name": {
                     "type": "string"
