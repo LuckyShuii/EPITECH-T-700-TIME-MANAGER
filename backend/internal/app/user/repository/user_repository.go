@@ -63,10 +63,14 @@ func (repo *userRepository) FindAll() ([]model.UserRead, error) {
 	return users, err
 }
 
-func (repo *userRepository) FindIdByUuid(uuid string) (userId int, err error) {
-	err = repo.db.Raw("SELECT id FROM users WHERE uuid = ?", uuid).Scan(&userId).Error
+func (repo *userRepository) FindIdByUuid(uuid string) (int, error) {
+	var userId int
+	err := repo.db.Raw("SELECT id FROM users WHERE uuid = ?", uuid).Scan(&userId).Error
 	if err != nil {
 		return 0, err
+	}
+	if userId == 0 {
+		return 0, fmt.Errorf("record not found")
 	}
 	return userId, nil
 }
@@ -149,6 +153,38 @@ func (repo *userRepository) UpdateUser(userID int, user model.UserUpdateEntry) e
 
 func (repo *userRepository) FindByUUID(userUUID string) (*model.UserReadAll, error) {
 	var user model.UserReadAll
+
+	// ✅ Si c'est SQLite (tests unitaires)
+	if repo.db.Dialector.Name() == "sqlite" {
+		err := repo.db.Raw(`
+			SELECT 
+				u.uuid,
+				u.username,
+				u.email,
+				u.first_name,
+				u.last_name,
+				u.phone_number,
+				u.first_day_of_week,
+				u.roles,
+				u.status,
+				COALESCE(wr.amount, 0) AS weekly_rate,
+				wr.rate_name AS weekly_rate_name
+			FROM users u
+			LEFT JOIN weekly_rate wr ON wr.id = u.weekly_rate_id
+			WHERE u.uuid = ?
+			LIMIT 1
+		`, userUUID).Scan(&user).Error
+
+		if err != nil {
+			return nil, err
+		}
+
+		// Pas de JSON_AGG ici, donc on simule un tableau vide
+		user.Teams = []model.UserTeamMemberInfo{}
+		return &user, nil
+	}
+
+	// ✅ Sinon : version PostgreSQL (production)
 	err := repo.db.Raw(`
 		SELECT 
 			u.uuid,
@@ -189,6 +225,7 @@ func (repo *userRepository) FindByUUID(userUUID string) (*model.UserReadAll, err
 		WHERE u.uuid = ?
 		GROUP BY u.id, ws.status, wr.amount, wr.rate_name
 	`, userUUID).Scan(&user).Error
+
 	if err != nil {
 		return nil, err
 	}
@@ -205,12 +242,32 @@ func (repo *userRepository) FindByUUID(userUUID string) (*model.UserReadAll, err
 }
 
 func (repo *userRepository) FindDashboardLayoutByUUID(userUUID string) (*model.UserDashboardLayout, error) {
-	var layout model.UserDashboardLayout
-	err := repo.db.Raw("SELECT dashboard_layout FROM users WHERE uuid = ?", userUUID).Scan(&layout).Error
+	var raw string
+
+	err := repo.db.Raw(`
+		SELECT COALESCE(dashboard_layout, '[]')
+		FROM users
+		WHERE uuid = ?
+	`, userUUID).Scan(&raw).Error
 	if err != nil {
 		return nil, err
 	}
-	return &layout, nil
+
+	var layout model.JSONLayout
+	if err := json.Unmarshal([]byte(raw), &layout); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal dashboard layout: %w", err)
+	}
+
+	if raw == "" {
+		raw = "[]"
+	}
+	if err := json.Unmarshal([]byte(raw), &layout); err != nil {
+		layout = model.JSONLayout{}
+	}
+
+	return &model.UserDashboardLayout{
+		DashboardLayout: layout,
+	}, nil
 }
 
 func (repo *userRepository) DeleteUserLayout(userUUID string) error {

@@ -68,7 +68,7 @@ func (repo *workSessionRepository) GetUserActiveWorkSession(userId int, status [
 func (repo *workSessionRepository) CompleteWorkSession(uuid string, userId int, duration int) (err error) {
 	log.Println("Completing work session with UUID: ", uuid, " for user ID: ", userId)
 	err = repo.db.Exec(
-		"UPDATE work_session_active SET clock_out = now(), status = 'completed', duration_minutes = ? WHERE uuid = ? AND user_id = ?",
+		"UPDATE work_session_active SET clock_out = CURRENT_TIMESTAMP, status = 'completed', duration_minutes = ? WHERE uuid = ? AND user_id = ?",
 		duration, uuid, userId,
 	).Error
 	return err

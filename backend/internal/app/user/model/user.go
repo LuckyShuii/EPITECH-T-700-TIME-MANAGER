@@ -27,11 +27,29 @@ func (j *JSONLayout) Scan(value interface{}) error {
 		return nil
 	}
 
-	bytes, ok := value.([]byte)
-	if !ok {
-		return fmt.Errorf("type assertion to []byte failed")
+	var data []byte
+	switch v := value.(type) {
+	case []byte:
+		data = v
+	case string:
+		data = []byte(v)
+	default:
+		return fmt.Errorf("unsupported type for JSONLayout: %T", value)
 	}
-	return json.Unmarshal(bytes, j)
+
+	// First try to unmarshal as an array
+	if err := json.Unmarshal(data, j); err == nil {
+		return nil
+	}
+
+	// If it's not an array, try to wrap it in an array with a single element
+	var single map[string]any
+	if err := json.Unmarshal(data, &single); err == nil {
+		*j = []map[string]any{single}
+		return nil
+	}
+
+	return fmt.Errorf("failed to parse JSONLayout: %s", string(data))
 }
 
 func (j JSONLayout) Value() (driver.Value, error) {

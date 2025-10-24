@@ -2,6 +2,9 @@
 import { ref, watch } from 'vue'
 import type { RegisterFormData, RegisterFormErrors } from '@/types/RegisterForm'
 import API from '@/services/API'
+import { useNotificationsStore } from '@/store/NotificationsStore'
+
+const notificationsStore = useNotificationsStore()
 
 const emit = defineEmits<{
     success: []
@@ -104,12 +107,20 @@ const handleSubmit = async () => {
 
     try {
         await API.userAPI.register(formData.value)
-        alert('✅ Employé créé avec succès !')
+        notificationsStore.addNotification({
+            status: 'success',
+            title: 'Employé créé',
+            description: 'Le nouvel employé a été ajouté avec succès'
+        })
         emit('success')
         resetForm()
     } catch (error: any) {
         const errorMessage = error.response?.data?.message || 'Erreur lors de la création'
-        alert('❌ ' + errorMessage)
+        notificationsStore.addNotification({
+            status: 'error',
+            title: 'Erreur de création',
+            description: errorMessage
+        })
         errors.value.general = errorMessage
     } finally {
         isSubmitting.value = false
