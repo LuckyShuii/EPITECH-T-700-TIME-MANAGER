@@ -2,10 +2,12 @@ import ExampleAPI from "@/services/routers/ExampleAPI";
 import AuthAPI from "./routers/AuthAPI";
 import UserAPI from "./routers/UserAPI";
 import WorkSession from "./routers/WorkSessionAPI"
+import TeamAPI from "./routers/TeamAPI"
 
 export default {
-    example: ExampleAPI,
-    authAPI: AuthAPI,
-    userAPI: UserAPI,
-    WorkSession:WorkSession
+  example: ExampleAPI,
+  authAPI: AuthAPI,
+  userAPI: UserAPI,
+  WorkSession: WorkSession,
+  teamAPI: TeamAPI
 }

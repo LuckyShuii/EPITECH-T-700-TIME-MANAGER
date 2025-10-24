@@ -1,96 +1,112 @@
 <script setup lang="ts">
-import { onMounted, ref, computed } from 'vue';
+import { onMounted, computed } from 'vue';
 import { useAuthStore } from '@/store/AuthStore';
 import { storeToRefs } from 'pinia';
+import { useNotificationsStore } from '@/store/NotificationsStore'
 
 const authStore = useAuthStore();
-const { isClockedIn } = storeToRefs(authStore)
+const { isClockedIn, sessionStatus } = storeToRefs(authStore)
 
-// État local pour la pause
-const isPaused = ref(false)
+// Computed pour savoir si on est en pause (basé sur le store maintenant)
+const isPaused = computed(() => sessionStatus.value === 'paused')
+
+
+const notificationsStore = useNotificationsStore()
+
 
 // Computed pour savoir quel état afficher
 const currentState = computed(() => {
-  if (isClockedIn.value === undefined) return 'ERROR'
-  if (!isClockedIn.value) return 'NOT_CLOCKED'
-  if (isPaused.value) return 'PAUSED'
-  return 'CLOCKED_IN'
+  if (sessionStatus.value === 'no_active_session') return 'NOT_CLOCKED'
+  if (sessionStatus.value === 'paused') return 'PAUSED'
+  if (sessionStatus.value === 'active') return 'CLOCKED_IN'
+  return 'ERROR'
 })
 
 const toggleClock = async () => {
   try {
-    //calculate new state
     const newState = !isClockedIn.value;
-    //Call the store function
-    await authStore.updateClocking(newState)
-    //Afficher l'alerte, tant qu'on a pas les toaster (je sais que c'est crado)
+    await updating(newState)
+
     if (newState) {
-      alert('Clock In effectué !');
+      notificationsStore.addNotification({
+            status: 'success',
+            title: 'Début de journée',
+            description: 'Vous commencez votre journée'
+        })
     } else {
-      alert('Clock Out effectué !');
+      notificationsStore.addNotification({
+            status: 'success',
+            title: 'Fin de journée',
+            description: 'Vous avez fini votre journée'
+        })
     }
   }
   catch (error) {
-    alert('Erreur lors du pointage');
+    notificationsStore.addNotification({
+            status: 'error',
+            title: 'Erreur pointage',
+            description: 'Oopsie'
+        })
   }
 };
 
-// Action 2 : Pause/Reprendre (À ÉCRIRE)
-const togglePause = () => {
-  isPaused.value = !isPaused.value
-  // TODO : Appeler une API pour enregistrer la pause si besoin
-  // Pour l'instant juste le toggle local
-}
-
-// Action 3 : Stop (Clock Out depuis la pause) (À ÉCRIRE)
-const stopShift = async () => {
-  isPaused.value = false
-  // Appeler toggleClock ou directement updateClocking(false)
-  await authStore.updateClocking(false)
-  alert('Service terminé')
-}
-
-onMounted(async () => {
+const togglePause = async () => {
   try {
-    await authStore.isClocked();
-  } catch (error) {
-    console.error('Erreur chargement statut:', error);
-  }
-});
-</script>
+    // Si on est en pause, on reprend (is_breaking = false)
+    // Si on est actif, on se met en pause (is_breaking = true)
+    const isBreaking = !isPaused.value
 
+    await authStore.updateBreaking(isBreaking)
+
+    if (isBreaking) {
+      notificationsStore.addNotification({
+            status: 'success',
+            title: 'Pause démarrée',
+            description: 'Vous êtes en pause'
+        })
+    } else {
+      notificationsStore.addNotification({
+            status: 'success',
+            title: 'Pause terminée',
+            description: 'Votre pause est finie'
+        })
+    }
+  } catch (error) {
+    notificationsStore.addNotification({
+            status: 'error',
+            title: 'Echec de la mise en pause',
+            description: 'Oopsie'
+        })
+  }
+}
+
+
+const updating = async (clockingStatus: boolean) => {
+  await authStore.updateClocking(clockingStatus)
+  await authStore.fetchWorkSessionStatus()
+}
+
+</script>
 
 <template>
   <div class="flex gap-2">
     <!-- Bouton gauche : Change selon l'état -->
     <Transition name="morph" mode="out-in">
       <!-- État NOT_CLOCKED : Clock In -->
-      <button 
-        v-if="currentState === 'NOT_CLOCKED'"
-        key="clock-in"
-        @click="toggleClock"
-        class="btn btn-success btn-lg w-full"
-      >
+      <button v-if="currentState === 'NOT_CLOCKED'" key="clock-in" @click="toggleClock"
+        class="btn btn-success btn-lg w-full">
         Clock In
       </button>
-      
+
       <!-- État CLOCKED_IN : Clock Out -->
-      <button 
-        v-else-if="currentState === 'CLOCKED_IN'"
-        key="clock-out"
-        @click="toggleClock"
-        class="btn btn-error btn-lg flex-1"
-      >
+      <button v-else-if="currentState === 'CLOCKED_IN'" key="clock-out" @click="toggleClock"
+        class="btn btn-error btn-lg flex-1">
         Clock Out
       </button>
-      
+
       <!-- État PAUSED : Reprendre -->
-      <button 
-        v-else-if="currentState === 'PAUSED'"
-        key="resume"
-        @click="togglePause"
-        class="btn btn-warning btn-lg flex-1"
-      >
+      <button v-else-if="currentState === 'PAUSED'" key="resume" @click="togglePause"
+        class="btn btn-warning btn-lg flex-1">
         Reprendre
       </button>
     </Transition>
@@ -98,28 +114,13 @@ onMounted(async () => {
     <!-- Bouton droit : N'EXISTE QUE si clocké -->
     <Transition name="morph" mode="out-in">
       <!-- État CLOCKED_IN : Pause active -->
-      <button 
-        v-if="currentState === 'CLOCKED_IN'"
-        key="pause"
-        @click="togglePause"
-        class="btn btn-warning btn-lg flex-1"
-      >
+      <button v-if="currentState === 'CLOCKED_IN'" key="pause" @click="togglePause"
+        class="btn btn-warning btn-lg flex-1">
         ⏸️ Pause
-      </button>
-      
-      <!-- État PAUSED : Stop -->
-      <button 
-        v-else-if="currentState === 'PAUSED'"
-        key="stop"
-        @click="stopShift"
-        class="btn btn-error btn-lg flex-1"
-      >
-        ⏹️ Stop
       </button>
     </Transition>
   </div>
 </template>
-
 
 <style scoped>
 /* Transitions pour l'effet morphing */
@@ -145,9 +146,12 @@ onMounted(async () => {
 
 /* Animation de respiration pour pause (optionnel) */
 @keyframes pulse {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 1;
   }
+
   50% {
     opacity: 0.7;
   }

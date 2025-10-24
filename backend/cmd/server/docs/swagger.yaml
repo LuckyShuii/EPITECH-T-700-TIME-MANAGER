@@ -98,6 +98,8 @@ definitions:
     properties:
       email:
         type: string
+      first_day_of_week:
+        type: integer
       first_name:
         type: string
       is_manager:
@@ -154,6 +156,8 @@ definitions:
     properties:
       email:
         type: string
+      first_day_of_week:
+        type: integer
       first_name:
         type: string
       last_name:
@@ -210,6 +214,8 @@ definitions:
         type: string
       email:
         type: string
+      first_day_of_week:
+        type: integer
       first_name:
         type: string
       last_name:
@@ -239,6 +245,8 @@ definitions:
     properties:
       email:
         type: string
+      first_day_of_week:
+        type: integer
       first_name:
         type: string
       last_name:
@@ -290,16 +298,12 @@ definitions:
         example: 4bc3df44-491c-4073-9e89-682bb0acfca0
         type: string
     type: object
-  model.UserUUIDPayload:
-    properties:
-      user_uuid:
-        example: e1234abc-5678-90de-f123-4567890abcde
-        type: string
-    type: object
   model.UserUpdateEntry:
     properties:
       email:
         type: string
+      first_day_of_week:
+        type: integer
       first_name:
         type: string
       last_name:
@@ -765,18 +769,17 @@ paths:
       summary: Update current user's dashboard layout
       tags:
       - Users
-  /users/delete:
+  /users/delete/{uuid}:
     delete:
       consumes:
       - application/json
       description: "Deletes a user by their UUID. \U0001F512 Requires role: **admin**"
       parameters:
-      - description: User UUID payload
-        in: body
-        name: body
+      - description: User UUID
+        in: path
+        name: uuid
         required: true
-        schema:
-          $ref: '#/definitions/model.UserUUIDPayload'
+        type: string
       produces:
       - application/json
       responses:

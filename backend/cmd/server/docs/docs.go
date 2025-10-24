@@ -513,7 +513,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/users/delete": {
+        "/users/delete/{uuid}": {
             "delete": {
                 "security": [
                     {
@@ -533,13 +533,11 @@ const docTemplate = `{
                 "summary": "Delete a user",
                 "parameters": [
                     {
-                        "description": "User UUID payload",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/model.UserUUIDPayload"
-                        }
+                        "type": "string",
+                        "description": "User UUID",
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -1128,6 +1126,9 @@ const docTemplate = `{
                 "email": {
                     "type": "string"
                 },
+                "first_day_of_week": {
+                    "type": "integer"
+                },
                 "first_name": {
                     "type": "string"
                 },
@@ -1214,6 +1215,9 @@ const docTemplate = `{
                 "email": {
                     "type": "string"
                 },
+                "first_day_of_week": {
+                    "type": "integer"
+                },
                 "first_name": {
                     "type": "string"
                 },
@@ -1299,6 +1303,9 @@ const docTemplate = `{
                 "email": {
                     "type": "string"
                 },
+                "first_day_of_week": {
+                    "type": "integer"
+                },
                 "first_name": {
                     "type": "string"
                 },
@@ -1342,6 +1349,9 @@ const docTemplate = `{
             "properties": {
                 "email": {
                     "type": "string"
+                },
+                "first_day_of_week": {
+                    "type": "integer"
                 },
                 "first_name": {
                     "type": "string"
@@ -1418,20 +1428,14 @@ const docTemplate = `{
                 }
             }
         },
-        "model.UserUUIDPayload": {
-            "type": "object",
-            "properties": {
-                "user_uuid": {
-                    "type": "string",
-                    "example": "e1234abc-5678-90de-f123-4567890abcde"
-                }
-            }
-        },
         "model.UserUpdateEntry": {
             "type": "object",
             "properties": {
                 "email": {
                     "type": "string"
+                },
+                "first_day_of_week": {
+                    "type": "integer"
                 },
                 "first_name": {
                     "type": "string"

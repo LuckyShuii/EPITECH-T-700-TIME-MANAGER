@@ -76,6 +76,11 @@ func (service *userService) RegisterUser(user model.UserCreate) error {
 		user.WeeklyRateID = &weeklyRateID
 	}
 
+	if user.FirstDayOfWeek == nil {
+		defaultDay := 1
+		user.FirstDayOfWeek = &defaultDay
+	}
+
 	return service.repo.RegisterUser(user)
 }
 

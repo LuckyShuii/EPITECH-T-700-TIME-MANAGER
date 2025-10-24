@@ -1,43 +1,40 @@
 <script setup lang="ts">
+import DraggableLayout from './DraggableLayout.vue'
 </script>
 
 <template>
-  <div class="grid grid-cols-4 grid-rows-4 gap-3">
-    <!-- Colonne 1 : Boutons/Actions -->
-    <div class="col-start-1 row-start-1">
+  <DraggableLayout dashboard-name="admin">
+    <!-- On passe tous les slots au DraggableLayout -->
+    <template #add-employee>
       <slot name="add-employee"></slot>
-    </div>
-    
-    <div class="col-start-1 row-start-2">
+    </template>
+
+    <template #staff-settings>
       <slot name="staff-settings"></slot>
-    </div>
-    
-    <div class="col-start-1 row-start-3">
+    </template>
+
+    <template #kpi-monthly>
       <slot name="kpi-monthly"></slot>
-    </div>
-    
-    <div class="col-start-1 row-start-4">
+    </template>
+
+    <template #kpi-history>
       <slot name="kpi-history"></slot>
-    </div>
-    
-    <!-- Centre : Calendrier (2 colonnes, 2 lignes) -->
-    <div class="col-span-2 row-span-2 col-start-2 row-start-1">
+    </template>
+
+    <template #calendar>
       <slot name="calendar"></slot>
-    </div>
-    
-    <!-- Centre bas : Widget 6 (à définir) -->
-    <div class="col-span-2 row-span-2 col-start-2 row-start-3">
+    </template>
+
+    <template #widget-6>
       <slot name="widget-6"></slot>
-    </div>
-    
-    <!-- Droite haut : TT/Absent -->
-    <div class="row-span-2 col-start-4 row-start-1">
+    </template>
+
+    <template #remote-absence>
       <slot name="remote-absence"></slot>
-    </div>
-    
-    <!-- Droite bas : Rapport manager -->
-    <div class="row-span-2 col-start-4 row-start-3">
+    </template>
+
+    <template #manager-report>
       <slot name="manager-report"></slot>
-    </div>
-  </div>
+    </template>
+  </DraggableLayout>
 </template>
