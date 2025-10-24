@@ -96,7 +96,7 @@ func SetupRouter() *gin.Engine {
 		protected.GET("/users/current-user-dashboard-layout", authMiddleware.RequireRoles("all"), userHandler.GetCurrentUserDashboardLayout)
 
 		protected.DELETE("/users/weekly-rates/:uuid/delete", authMiddleware.RequireRoles("admin"), weeklyRateHandler.Delete)
-		protected.DELETE("/users/delete", authMiddleware.RequireRoles("admin"), userHandler.DeleteUser)
+		protected.DELETE("/users/delete/:uuid", authMiddleware.RequireRoles("admin"), userHandler.DeleteUser)
 		protected.DELETE("/users/current-user-dashboard-layout/delete", authMiddleware.RequireRoles("all"), userHandler.DeleteCurrentUserDashboardLayout)
 
 		/**
