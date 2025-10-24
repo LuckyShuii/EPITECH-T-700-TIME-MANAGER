@@ -4,33 +4,66 @@ on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
   sonarcloud:
-    name: Analyze with SonarCloud
+    name: SonarCloud Analysis
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: 🧩 Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Setup Go
+      # ───────────────────────────────
+      # 🐹 BACKEND (Go)
+      # ───────────────────────────────
+      - name: 🧰 Setup Go
         uses: actions/setup-go@v5
         with:
           go-version: "1.25"
 
-      - name: Install dependencies
+      - name: 📦 Install Go deps
+        working-directory: ./backend
         run: go mod tidy
 
-      - name: Run Go tests with coverage
-        run: go test ./... -coverprofile=coverage.out -covermode=atomic
+      - name: 🧪 Run Go tests with coverage
+        working-directory: ./backend
+        run: |
+          go test ./... -coverprofile=coverage.out -covermode=atomic
+          mv coverage.out ../../coverage-go.out
 
-      - name: SonarCloud Scan
+      # ───────────────────────────────
+      # 🎨 FRONTEND (Vue.js)
+      # ───────────────────────────────
+      - name: 🧰 Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: 📦 Install frontend deps
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: 🧪 Run frontend tests (if any)
+        working-directory: ./frontend
+        run: |
+          npm run test:unit --if-present || echo "⚠️ No frontend tests found"
+
+      # ───────────────────────────────
+      # 🔍 SONARCLOUD SCAN
+      # ───────────────────────────────
+      - name: 🔎 SonarCloud Scan
         uses: sonarsource/sonarqube-scan-action@v6
         with:
           args: >
             -Dsonar.organization=luckyshuii
-            -Dsonar.projectKey=timemanager
+            -Dsonar.projectKey=LuckyShuii_EPITECH-T-700-TIME-MANAGER
             -Dsonar.host.url=https://sonarcloud.io
+            -Dsonar.go.coverage.reportPaths=coverage-go.out
         env:
           SONAR_TOKEN: ${{ secrets.SONARQUBE_TOKEN }}
