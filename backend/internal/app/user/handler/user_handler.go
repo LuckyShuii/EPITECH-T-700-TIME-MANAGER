@@ -107,7 +107,7 @@ func (handler *UserHandler) RegisterUser(c *gin.Context) {
 // @Produce      json
 // @Param        uuid  path      string  true  "User UUID"
 // @Success      200   {object}  response.UserDeletedResponse  "User deleted successfully"
-// @Router       /users/delete/:user_uuid [delete]
+// @Router       /users/delete/{uuid} [delete]
 func (handler *UserHandler) DeleteUser(c *gin.Context) {
 	userUUID := c.Param("uuid")
 

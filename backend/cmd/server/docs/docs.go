@@ -513,7 +513,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/users/delete": {
+        "/users/delete/{uuid}": {
             "delete": {
                 "security": [
                     {
@@ -533,13 +533,11 @@ const docTemplate = `{
                 "summary": "Delete a user",
                 "parameters": [
                     {
-                        "description": "User UUID payload",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/model.UserUUIDPayload"
-                        }
+                        "type": "string",
+                        "description": "User UUID",
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -1415,15 +1413,6 @@ const docTemplate = `{
                 "team_uuid": {
                     "type": "string",
                     "example": "4bc3df44-491c-4073-9e89-682bb0acfca0"
-                }
-            }
-        },
-        "model.UserUUIDPayload": {
-            "type": "object",
-            "properties": {
-                "user_uuid": {
-                    "type": "string",
-                    "example": "e1234abc-5678-90de-f123-4567890abcde"
                 }
             }
         },
