@@ -1,40 +1,36 @@
 <script setup lang="ts">
+import DraggableLayout from './DraggableLayout.vue'
 </script>
 
 <template>
-  <div class="grid grid-cols-4 grid-rows-4 gap-3">
-    <!-- Position 1 : Pointeuse (col 1, rows 1-2) -->
-    <div className="row-span-2">
+  <DraggableLayout dashboard-name="manager">
+    <!-- On passe tous les slots au DraggableLayout -->
+    <template #clock>
       <slot name="clock"></slot>
-    </div>
+    </template>
 
-    <!-- Position 2 : KPI Stats (col 1, rows 3-4) -->
-    <div className="col-start-1 row-start-3">
+    <template #kpi-stats>
       <slot name="kpi-stats"></slot>
-    </div>
+    </template>
 
-    <!-- Position 3 : Calendrier (col 2-3, rows 1-2) -->
-   <div className="col-span-2 row-span-2 col-start-2 row-start-1">
+    <template #team-view>
+      <slot name="team-view"></slot>
+    </template>
+
+    <template #calendar>
       <slot name="calendar"></slot>
-    </div>
+    </template>
 
-    <div className="row-start-4">
-      <slot name="team-view"> test </slot>
-    </div>
-
-    <!-- Position 4 : Présence équipe (col 2-3, rows 3-4) -->
-   <div className="row-span-3 col-start-4 row-start-1">
-      <slot name="team-presence"></slot>
-    </div>
-
-    <!-- Position 5 : KPI Carousel (col 4, rows 1-3) -->
-    <div className="col-start-4 row-start-4">
-      <slot name="modal-team"></slot>
-    </div>
-
-    <!-- Position 6 : Bouton rapport (col 4, row 4) -->
-    <div className="col-span-2 row-span-2 col-start-2 row-start-3">
+    <template #report-button>
       <slot name="report-button"></slot>
-    </div>
-  </div>
+    </template>
+
+    <template #team-presence>
+      <slot name="team-presence"></slot>
+    </template>
+
+    <template #modal-team>
+      <slot name="modal-team"></slot>
+    </template>
+  </DraggableLayout>
 </template>

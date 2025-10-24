@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import ManagerLayout from '../layout/ManagerLayout.vue'
+import { useEditModeStore } from '@/store/EditModeStore'
 import ClockWidget from '@/components/widget/ClockWidget.vue'
 import CalendarWidget from '@/components/widget/CalendarWidget.vue'
 import ClockButton from '@/components/ClockButton.vue'
@@ -14,8 +15,18 @@ const authStore = useAuthStore()
 const { clockInTime, sessionStatus } = storeToRefs(authStore)
 
 
-
+const editModeStore = useEditModeStore()
 const isTeamViewModalOpen = ref(false)
+
+// Enregistre que ce dashboard est actif
+onMounted(() => {
+  editModeStore.setCurrentDashboard('manager')
+})
+
+// Nettoie quand on quitte le dashboard
+onUnmounted(() => {
+  editModeStore.reset()
+})
 
 const TeamViewModal = () => {
   isTeamViewModalOpen.value = true

@@ -7,7 +7,7 @@ export interface Employee {
   phone_number: string
   roles: string[]
   weekly_hours: number  // 35, 39, etc.
-  status: 'active' | 'inactive'
+  status: 'active' | 'disabled'
 }
 
 export interface EmployeeUpdateData {
@@ -17,6 +17,6 @@ export interface EmployeeUpdateData {
   phone_number: string
   roles: string[]
   weekly_hours: number
-  status: 'active' | 'inactive'
+  status: 'active' | 'disabled'
 }
 

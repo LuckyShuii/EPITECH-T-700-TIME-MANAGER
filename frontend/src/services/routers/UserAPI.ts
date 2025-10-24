@@ -21,8 +21,8 @@ export default {
     return APIHandler.delete(`${resource}/delete/${userUuid}`)
   },
 
-  updateStatus(userUuid: string, status: 'active' | 'inactive') {
-    return APIHandler.post(`${resource}/update-status`, {
+  updateStatus(userUuid: string, status: 'active' | 'disabled') {
+    return APIHandler.put(`${resource}/update-status`, {
       user_uuid: userUuid,
       status: status
     })
@@ -36,6 +36,6 @@ export default {
   },
 
   getUserSpecific(userUuid: string) {
-    return APIHandler.get(`${resource}/specific/${userUuid}`)
+    return APIHandler.get(`${resource}/${userUuid}`)
   }
 }

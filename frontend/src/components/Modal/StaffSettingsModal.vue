@@ -150,7 +150,7 @@ const weeklyHoursOptions = [24, 28, 35, 39]
 const toggleStatus = async () => {
   if (!selectedEmployee.value || !editForm.value) return
 
-  const newStatus = editForm.value.status === 'active' ? 'inactive' : 'active'
+  const newStatus = editForm.value.status === 'active' ? 'disabled' : 'active'
 
   try {
     await userAPI.updateStatus(selectedEmployee.value.uuid, newStatus)

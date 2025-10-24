@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { RouterLink, useRouter } from 'vue-router';
 import ThemeToggle from './ThemeToggle.vue';
+import CustomizeLayoutButton from '@/components/CustomizeLayoutButton.vue'
 import { useAuthStore } from '@/store/AuthStore';
 import { storeToRefs } from 'pinia';
-import { computed } from 'vue';
+import { computed, inject } from 'vue'; 
+import { useEditModeStore } from '@/store/EditModeStore'
 
 const props = defineProps<{
   currentTheme: string
@@ -16,6 +18,11 @@ const emit = defineEmits<{
 const authStore = useAuthStore()
 const { isAuthenticated, user, avatarColor } = storeToRefs(authStore);
 const router = useRouter();
+
+// AJOUTE CES LIGNES ↓
+const editModeStore = useEditModeStore()
+
+console.log('🔍 Dans NavBar - Dashboard actif:', editModeStore.currentDashboard)
 
 const userInitials = computed(() => {
   if (!user.value?.first_name || !user.value?.last_name) return '';
@@ -35,8 +42,12 @@ const handleLogout = async () => {
         TML
       </RouterLink>
     </div>
+    
     <div class="flex-none gap-2">
+      <CustomizeLayoutButton v-if="editModeStore.currentDashboard" />
+      
       <ThemeToggle :currentTheme="props.currentTheme" @toggle-theme="emit('toggle-theme')" />
+      
       <div class="dropdown dropdown-end">
         <div tabindex="0" class="btn btn-ghost btn-circle avatar">
           <div class="w-10 rounded-full">
