@@ -25,5 +25,5 @@ jobs:
       - name: Push to Epitech repo via SSH
         run: |
           git remote add mirror git@github.com:EpitechMscProPromo2027/T-DEV-700-project-PAR_19.git
-          git push --all mirror
-          git push --tags mirror
+          git push --force --all mirror
+          git push --force --tags mirror

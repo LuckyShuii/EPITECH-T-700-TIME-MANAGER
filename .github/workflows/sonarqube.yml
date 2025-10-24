@@ -3,24 +3,34 @@ name: SonarCloud
 on:
   push:
     branches:
-      # the current sonarcloud plan only supports analysis on the main branch
       - main
 
 jobs:
   sonarcloud:
-    name: SonarCloud analysis
+    name: Analyze with SonarCloud
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.25"
+
+      - name: Install dependencies
+        run: go mod tidy
+
+      - name: Run Go tests with coverage
+        run: go test ./... -coverprofile=coverage.out -covermode=atomic
+
       - name: SonarCloud Scan
         uses: sonarsource/sonarqube-scan-action@v6
         with:
           args: >
             -Dsonar.organization=luckyshuii
-            -Dsonar.projectKey=LuckyShuii_EPITECH-T-700-TIME-MANAGER
+            -Dsonar.projectKey=timemanager
             -Dsonar.host.url=https://sonarcloud.io
         env:
           SONAR_TOKEN: ${{ secrets.SONARQUBE_TOKEN }}
