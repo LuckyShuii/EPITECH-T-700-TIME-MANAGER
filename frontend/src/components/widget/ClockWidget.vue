@@ -1,13 +1,14 @@
 <script setup lang="ts">
-import type { ClockData } from '@/types/clockType';
 import { ref, onMounted, onUnmounted, computed } from 'vue';
 
-interface ClockWidgetProps extends Partial<ClockData> { }
+interface ClockWidgetProps {
+  clockInTime?: string | null
+  status?: 'active' | 'paused' | 'completed' | 'no_active_session'
+}
 
 const props = withDefaults(defineProps<ClockWidgetProps>(), {
   clockInTime: null,
-  clockOutTime: null,
-  status: 'NOT_CLOCKED'
+  status: 'no_active_session'
 })
 
 const currentTime = ref('')
@@ -28,15 +29,20 @@ const formatDuration = (milliseconds: number): string => {
 }
 
 const workedTime = computed(() => {
+  // Force la réactivité avec currentTime
   currentTime.value
+
   
-  if (!props.clockInTime || props.status !== 'CLOCKED_IN') {
+  // Vérifie si on est dans un état "clocké" (active ou paused)
+  if (!props.clockInTime || (props.status !== 'active' && props.status !== 'paused')) {
     return '--:--'
   }
   
   const clockIn = new Date(props.clockInTime)
   const now = new Date()
   const duration = now.getTime() - clockIn.getTime()
+  
+
   
   return formatDuration(duration)
 })
@@ -67,34 +73,35 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="bg-gradient-dark rounded-2xl p-8 shadow-2xl">
-
-    <!-- Temps travaillé -->
-    <div class="text-center">
-      <div class="text-gray-500 text-sm uppercase tracking-[0.15em] mb-2">
-        Temps travaillé
-      </div>
-      <div class="font-mono text-[2rem] lg:text-[3rem] font-bold text-green-500 drop-shadow-[0_0_150px_rgba(0,255,0,0.3)] tracking-[0.1em]">
-        {{ workedTime }}
-      </div>
-      <div class="text-gray-400 text-sm mt-4">
-        Début : {{ startTime }}
-      </div>
+<div class="bg-gradient-dark rounded-2xl p-8 shadow-2xl">
+  <!-- Temps travaillé -->
+  <div class="text-center">
+    <div class="text-gray-500 text-sm uppercase tracking-[0.15em] mb-2">
+      Temps travaillé
     </div>
-    
-    
-    <!-- Séparateur -->
-    <div class="h-px bg-gradient-to-r from-transparent via-gray-600 to-transparent my-6"></div>
-    
-    <!-- Temps travaillé -->
-    <!-- Horloge actuelle -->
-    <div class="text-center mb-8">
-      <div class="font-mono text-2xl lg:text-[2.5rem] font-bold text-red-500 drop-shadow-[0_0_100px_rgba(255,0,0,0.5)] tracking-[0.1em] leading-none">
-        {{ currentTime }}
-      </div>
-      <div class="text-gray-500 text-sm mt-2 uppercase tracking-[0.15em]">
-        Heure actuelle
-      </div>
+    <div class="font-mono text-[2rem] lg:text-[3rem] font-bold text-green-500 drop-shadow-[0_0_150px_rgba(0,255,0,0.3)] tracking-[0.1em]">
+      {{ workedTime }}
+    </div>
+    <div class="text-gray-400 text-sm mt-4">
+      Début : {{ startTime }}
+    </div>
+    <!-- Indicateur de pause (optionnel) -->
+    <div v-if="status === 'paused'" class="mt-2">
+      <span class="text-yellow-500 text-sm uppercase tracking-wider">⏸️ En pause</span>
     </div>
   </div>
+
+  <!-- Séparateur -->
+  <div class="h-px bg-gradient-to-r from-transparent via-gray-600 to-transparent my-6"></div>
+
+  <!-- Horloge actuelle -->
+  <div class="text-center mb-8">
+    <div class="font-mono text-2xl lg:text-[2.5rem] font-bold text-red-500 drop-shadow-[0_0_100px_rgba(255,0,0,0.5)] tracking-[0.1em] leading-none">
+      {{ currentTime }}
+    </div>
+    <div class="text-gray-500 text-sm mt-2 uppercase tracking-[0.15em]">
+      Heure actuelle
+    </div>
+  </div>
+</div>
 </template>

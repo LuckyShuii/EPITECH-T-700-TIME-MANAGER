@@ -8,87 +8,129 @@ export const useAuthStore = defineStore("auth", () => {
 
     const user = ref<UserProfile | null>(null)
     const avatarColor = ref<string>('bg-primary')
-    const isAuthenticated = computed(() => ! !user.value)
+    const isAuthenticated = computed(() => !!user.value)
 
     // Retrieve user roles (empty if not logged in)
-    const userRoles= computed(() => user.value?.roles ?? [])
+    const userRoles = computed(() => user.value?.roles ?? [])
 
     // Check specific roles
-    const isEmployee = computed(()=> hasRole('employee'))
+    const isEmployee = computed(() => hasRole('employee'))
     const isManager = computed(() => hasRole('manager'))
     const isAdmin = computed(() => hasRole('admin'))
 
-
-    const isClockedIn = ref<boolean | undefined>(false)
-
+    // Work Session data
+    const workSessionUuid = ref<string | null>(null)
+    const clockInTime = ref<string | null>(null)
+    const sessionStatus = ref<'active' | 'paused' | 'completed' | 'no_active_session'>('no_active_session')
+    
+    // Computed pour savoir si l'utilisateur est pointé
+    const isClockedIn = computed(() => 
+        sessionStatus.value === 'active' || sessionStatus.value === 'paused'
+    )
 
     const initAuth = async () => {
+    try {
+        await fetchUserProfile()
+        
+        // Charger le statut de travail si disponible
         try {
-            await fetchUserProfile()
-            await isClocked()
-            console.log('✅ Session restaurée depuis cookie')
+            await fetchWorkSessionStatus()
         } catch (error) {
-            console.log('ℹ️ Pas de session active')
-            user.value = null
+            console.log('ℹ️ Aucune session de travail active')
         }
+        
+        console.log('✅ Session restaurée depuis cookie')
+    } catch (error) {
+        console.log('ℹ️ Pas de session active')
+        user.value = null
     }
+}
 
     const login = async (credentials: UserLogin) => {
+    try {
+        await API.authAPI.login(credentials)
+        await fetchUserProfile()
+        console.log("Connected")
+        
+        // Essayer de charger le statut de travail, mais ne pas bloquer si ça échoue
         try {
-
-            //API create the cookie
-
-            await API.authAPI.login(credentials)
-
-            //Request catch the cookie 
-
-            await fetchUserProfile()
-            await isClocked()
-
-            console.log("Connected")
-        }
-        catch (error) {
-            user.value = null
-            throw error
+            await fetchWorkSessionStatus()
+        } catch (error) {
+            console.log('ℹ️ Aucune session de travail active')
+            // On ne throw pas l'erreur, c'est normal de ne pas avoir de session
         }
     }
-    const isClocked = async () => {
-        return ''
-        // try{
-        //     const response = (await API.WorkSession.getClockedStatus()).data
-        //     isClockedIn.value = response.is_clocked
-
-        // }
-        // catch(error){
-        //     console.error('ClockedIN failed:', error)
-        //     isClockedIn.value = undefined
-        //     throw error
-
-
-        // }
+    catch (error) {
+        user.value = null
+        throw error
     }
+}
+
+const fetchWorkSessionStatus = async () => {
+    try {
+        const response = (await API.WorkSession.getClockedStatus()).data
+        
+        console.log('📥 Réponse /status:', response) // AJOUTE ÇA
+        
+        if (response.status === 'no_active_session') {
+            workSessionUuid.value = null
+            clockInTime.value = null
+            sessionStatus.value = 'no_active_session'
+        } else {
+            workSessionUuid.value = response.work_session_uuid
+            clockInTime.value = response.clock_in_time
+            sessionStatus.value = response.status
+            
+            console.log('✅ UUID stocké:', workSessionUuid.value) // AJOUTE ÇA
+        }
+    }
+    catch (error) {
+        console.error('Fetch work session status failed:', error)
+        workSessionUuid.value = null
+        clockInTime.value = null
+        sessionStatus.value = 'no_active_session'
+        throw error
+    }
+}
 
     const updateClocking = async (clockIn: boolean) => {
-
         try {
-            //Call POST with param
-
-            await API.WorkSession.updateClocking(clockIn);
-            isClockedIn.value = clockIn
-
+            await API.WorkSession.updateClocking(clockIn)
+            // Recharger le statut après avoir pointé/dépointé
+            await fetchWorkSessionStatus()
         }
         catch (error) {
             console.error('Update clocking failed:', error)
             throw error
-
         }
+    }
 
+    const updateBreaking = async (isBreaking: boolean) => {
+        try {
+            if (!workSessionUuid.value) {
+                throw new Error('Pas de session active')
+            }
+            
+            const response = await API.WorkSession.updateBreaking({
+                is_breaking: isBreaking,
+                work_session_uuid: workSessionUuid.value
+            })
+            
+            // Mettre à jour le status selon la réponse
+            if (response.data.status === 'break_started') {
+                sessionStatus.value = 'paused'
+            } else if (response.data.status === 'break_ended') {
+                sessionStatus.value = 'active'
+            }
+        }
+        catch (error) {
+            console.error('Update breaking failed:', error)
+            throw error
+        }
     }
 
     const fetchUserProfile = async () => {
         try {
-            //cookie's sending auto by the browser
-
             const response = (await API.authAPI.getUserInfo()).data
             user.value = response
         }
@@ -101,8 +143,6 @@ export const useAuthStore = defineStore("auth", () => {
 
     const logout = async () => {
         try {
-            //call the API : server side deleting cookie
-
             await API.authAPI.logout()
         }
         catch (error) {
@@ -110,13 +150,16 @@ export const useAuthStore = defineStore("auth", () => {
         }
         finally {
             user.value = null
+            workSessionUuid.value = null
+            clockInTime.value = null
+            sessionStatus.value = 'no_active_session'
             console.log('Disconected')
         }
     }
 
-    const hasRole=(role:string):boolean=>{
-        if(!user.value) return false
-        return userRoles.value.some(r => r.toLowerCase()=== role.toLowerCase())
+    const hasRole = (role: string): boolean => {
+        if (!user.value) return false
+        return userRoles.value.some(r => r.toLowerCase() === role.toLowerCase())
     }
 
     const hasAnyRole = (roles: string[]): boolean => {
@@ -124,23 +167,21 @@ export const useAuthStore = defineStore("auth", () => {
         return roles.some(role => hasRole(role))
     }
 
-    const canAccess = (requiredRole:string):boolean =>{
-        if(!user.value) return false
-
-        if(isAdmin.value) return true
-
-        if(isManager.value && (requiredRole === 'manager' || requiredRole === 'employee')){
+    const canAccess = (requiredRole: string): boolean => {
+        if (!user.value) return false
+        if (isAdmin.value) return true
+        if (isManager.value && (requiredRole === 'manager' || requiredRole === 'employee')) {
             return true
         }
-        if (isEmployee.value && requiredRole === 'employee'){
+        if (isEmployee.value && requiredRole === 'employee') {
             return true
         }
-         return false
+        return false
     }
 
     const defaultRoute = computed(() => {
-        if(isAdmin.value) return '/dashboard-admin'
-        if(isManager.value) return '/dashboard-manager'
+        if (isAdmin.value) return '/dashboard-admin'
+        if (isManager.value) return '/dashboard-manager'
         return '/dashboard'
     })
 
@@ -152,21 +193,23 @@ export const useAuthStore = defineStore("auth", () => {
         fetchUserProfile,
         isClockedIn,
         updateClocking,
-        isClocked,
+        fetchWorkSessionStatus,
+        updateBreaking,
         initAuth,
         avatarColor,
+        
+        // Work session data
+        workSessionUuid,
+        clockInTime,
+        sessionStatus,
 
-        userRoles, 
-        isEmployee, 
-        isAdmin, 
-        isManager, 
-        hasRole, 
-        hasAnyRole, 
-        canAccess, 
+        userRoles,
+        isEmployee,
+        isAdmin,
+        isManager,
+        hasRole,
+        hasAnyRole,
+        canAccess,
         defaultRoute
     }
-
-
-
-
 })

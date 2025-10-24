@@ -77,6 +77,9 @@ func (repo *teamRepository) FindIdByUuid(uuid string) (teamId int, err error) {
 	if err != nil {
 		return 0, err
 	}
+	if teamId == 0 {
+		return 0, fmt.Errorf("team not found")
+	}
 	return teamId, nil
 }
 
