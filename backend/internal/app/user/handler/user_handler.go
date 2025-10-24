@@ -322,7 +322,7 @@ func (handler *UserHandler) GetCurrentUserDashboardLayout(c *gin.Context) {
 // @Tags         Users
 // @Produce      json
 // @Success      200  "dashboard layout deleted successfully"
-// @Router       /users/current-user-dashboard-layout [delete]
+// @Router       /users/current-user-dashboard-layout/delete [delete]
 func (handler *UserHandler) DeleteCurrentUserDashboardLayout(c *gin.Context) {
 	claims, exists := c.Get("userClaims")
 	if !exists {
@@ -339,4 +339,39 @@ func (handler *UserHandler) DeleteCurrentUserDashboardLayout(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "dashboard layout deleted successfully"})
+}
+
+// UpdateCurrentUserDashboardLayout updates the dashboard layout for the current user.
+//
+// @Summary      Update current user's dashboard layout
+// @Description  Update the dashboard layout configuration for the currently authenticated user. 🔒 Requires role: **all**
+// @Tags         Users
+// @Accept       json
+// @Produce      json
+// @Param        body  body      model.UserDashboardLayoutUpdate  true  "Dashboard layout payload"
+// @Success      200   "Dashboard layout updated successfully"
+// @Router       /users/current-user-dashboard-layout/edit [put]
+func (handler *UserHandler) UpdateCurrentUserDashboardLayout(c *gin.Context) {
+	var req model.UserDashboardLayoutUpdate
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": Config.ErrorMessages()["INVALID_REQUEST"]})
+		return
+	}
+
+	claims, exists := c.Get("userClaims")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": Config.ErrorMessages()["NO_CLAIMS"]})
+		return
+	}
+
+	authClaims := claims.(*AuthService.Claims)
+
+	// Update the dashboard layout
+	updateErr := handler.service.UpdateUserDashboardLayout(authClaims.UUID, req)
+	if updateErr != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": updateErr.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "dashboard layout updated successfully"})
 }

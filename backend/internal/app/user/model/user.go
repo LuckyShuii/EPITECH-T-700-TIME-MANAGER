@@ -61,6 +61,11 @@ type DashboardLayoutResponse struct {
 	Layout []DashboardLayout `json:"layout"`
 }
 
+// swagger:model UserDashboardLayoutUpdate
+type UserDashboardLayoutUpdate struct {
+	Layout []DashboardLayout `json:"layout"`
+}
+
 // swagger:model UserTeamMemberInfo
 type UserTeamMemberInfo struct {
 	TeamUUID        string  `json:"team_uuid" example:"4bc3df44-491c-4073-9e89-682bb0acfca0"`

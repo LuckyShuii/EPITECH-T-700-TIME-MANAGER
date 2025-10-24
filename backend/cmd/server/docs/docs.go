@@ -463,7 +463,9 @@ const docTemplate = `{
                         }
                     }
                 }
-            },
+            }
+        },
+        "/users/current-user-dashboard-layout/delete": {
             "delete": {
                 "description": "Delete the dashboard layout configuration for the currently authenticated user. 🔒 Requires role: **all**",
                 "produces": [
@@ -476,6 +478,37 @@ const docTemplate = `{
                 "responses": {
                     "200": {
                         "description": "dashboard layout deleted successfully"
+                    }
+                }
+            }
+        },
+        "/users/current-user-dashboard-layout/edit": {
+            "put": {
+                "description": "Update the dashboard layout configuration for the currently authenticated user. 🔒 Requires role: **all**",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Update current user's dashboard layout",
+                "parameters": [
+                    {
+                        "description": "Dashboard layout payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.UserDashboardLayoutUpdate"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Dashboard layout updated successfully"
                     }
                 }
             }
@@ -1214,6 +1247,17 @@ const docTemplate = `{
                 },
                 "weekly_rate_uuid": {
                     "type": "string"
+                }
+            }
+        },
+        "model.UserDashboardLayoutUpdate": {
+            "type": "object",
+            "properties": {
+                "layout": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.DashboardLayout"
+                    }
                 }
             }
         },

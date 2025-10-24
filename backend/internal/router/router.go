@@ -88,6 +88,7 @@ func SetupRouter() *gin.Engine {
 		protected.PUT("/users/update-status", authMiddleware.RequireRoles("admin"), userHandler.UpdateUserStatus)
 		protected.PUT("/users", authMiddleware.RequireRoles("admin"), userHandler.UpdateUser)
 		protected.PUT("/users/weekly-rates/:uuid/update", authMiddleware.RequireRoles("admin"), weeklyRateHandler.Update)
+		protected.PUT("/users/current-user-dashboard-layout/edit", authMiddleware.RequireRoles("all"), userHandler.UpdateCurrentUserDashboardLayout)
 
 		protected.GET("/users", authMiddleware.RequireRoles("admin"), userHandler.GetUsers)
 		protected.GET("/users/:uuid", authMiddleware.RequireRoles("all"), userHandler.GetUserByUUID)
@@ -95,9 +96,8 @@ func SetupRouter() *gin.Engine {
 		protected.GET("/users/current-user-dashboard-layout", authMiddleware.RequireRoles("all"), userHandler.GetCurrentUserDashboardLayout)
 
 		protected.DELETE("/users/weekly-rates/:uuid/delete", authMiddleware.RequireRoles("admin"), weeklyRateHandler.Delete)
-
 		protected.DELETE("/users/delete", authMiddleware.RequireRoles("admin"), userHandler.DeleteUser)
-		protected.DELETE("/users/current-user-dashboard-layout", authMiddleware.RequireRoles("all"), userHandler.DeleteCurrentUserDashboardLayout)
+		protected.DELETE("/users/current-user-dashboard-layout/delete", authMiddleware.RequireRoles("all"), userHandler.DeleteCurrentUserDashboardLayout)
 
 		/**
 		 * Work Sessions & Breaks Routes

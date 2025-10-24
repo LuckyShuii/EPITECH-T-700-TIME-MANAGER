@@ -26,6 +26,7 @@ type UserService interface {
 	GetUserByUUID(userUUID string) (*model.UserReadAll, error)
 	SetWeeklyRateService(w WeeklyRateService.WeeklyRateService)
 	GetUserDashboardLayout(userUUID string) (*model.UserDashboardLayout, error)
+	UpdateUserDashboardLayout(userUUID string, layout model.UserDashboardLayoutUpdate) error
 }
 
 type userService struct {
@@ -117,4 +118,8 @@ func (service *userService) GetUserDashboardLayout(userUUID string) (*model.User
 
 func (service *userService) DeleteUserDashboardLayout(userUUID string) error {
 	return service.repo.DeleteUserLayout(userUUID)
+}
+
+func (service *userService) UpdateUserDashboardLayout(userUUID string, layout model.UserDashboardLayoutUpdate) error {
+	return service.repo.UpdateUserLayout(userUUID, layout)
 }

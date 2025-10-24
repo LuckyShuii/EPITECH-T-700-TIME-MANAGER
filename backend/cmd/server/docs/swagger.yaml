@@ -178,6 +178,13 @@ definitions:
       weekly_rate_uuid:
         type: string
     type: object
+  model.UserDashboardLayoutUpdate:
+    properties:
+      layout:
+        items:
+          $ref: '#/definitions/model.DashboardLayout'
+        type: array
+    type: object
   model.UserMeJWT:
     properties:
       email:
@@ -712,17 +719,6 @@ paths:
       tags:
       - Users
   /users/current-user-dashboard-layout:
-    delete:
-      description: "Delete the dashboard layout configuration for the currently authenticated
-        user. \U0001F512 Requires role: **all**"
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: dashboard layout deleted successfully
-      summary: Delete current user's dashboard layout
-      tags:
-      - Users
     get:
       description: "Retrieve the dashboard layout configuration for the currently
         authenticated user. \U0001F512 Requires role: **all**"
@@ -734,6 +730,39 @@ paths:
           schema:
             $ref: '#/definitions/model.DashboardLayoutResponse'
       summary: Get current user's dashboard layout
+      tags:
+      - Users
+  /users/current-user-dashboard-layout/delete:
+    delete:
+      description: "Delete the dashboard layout configuration for the currently authenticated
+        user. \U0001F512 Requires role: **all**"
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: dashboard layout deleted successfully
+      summary: Delete current user's dashboard layout
+      tags:
+      - Users
+  /users/current-user-dashboard-layout/edit:
+    put:
+      consumes:
+      - application/json
+      description: "Update the dashboard layout configuration for the currently authenticated
+        user. \U0001F512 Requires role: **all**"
+      parameters:
+      - description: Dashboard layout payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.UserDashboardLayoutUpdate'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Dashboard layout updated successfully
+      summary: Update current user's dashboard layout
       tags:
       - Users
   /users/delete:

@@ -14,6 +14,7 @@ type UserRepository interface {
 	RegisterUser(user model.UserCreate) error
 	FindIdByUuid(id string) (userId int, err error)
 	UpdateUserStatus(userUUID string, status string) error
+	UpdateUserLayout(userUUID string, layout model.UserDashboardLayoutUpdate) error
 	DeleteUser(userUUID string) error
 	DeleteUserLayout(userUUID string) error
 	UpdateUser(userID int, user model.UserUpdateEntry) error
@@ -208,5 +209,15 @@ func (repo *userRepository) FindDashboardLayoutByUUID(userUUID string) (*model.U
 
 func (repo *userRepository) DeleteUserLayout(userUUID string) error {
 	err := repo.db.Exec("UPDATE users SET dashboard_layout = NULL WHERE uuid = ?", userUUID).Error
+	return err
+}
+
+func (repo *userRepository) UpdateUserLayout(userUUID string, layout model.UserDashboardLayoutUpdate) error {
+	layoutJSON, err := json.Marshal(layout.Layout)
+	if err != nil {
+		return fmt.Errorf("failed to marshal layout to JSON: %w", err)
+	}
+
+	err = repo.db.Exec("UPDATE users SET dashboard_layout = ? WHERE uuid = ?", layoutJSON, userUUID).Error
 	return err
 }
