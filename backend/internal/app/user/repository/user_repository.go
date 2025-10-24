@@ -15,8 +15,10 @@ type UserRepository interface {
 	FindIdByUuid(id string) (userId int, err error)
 	UpdateUserStatus(userUUID string, status string) error
 	DeleteUser(userUUID string) error
+	DeleteUserLayout(userUUID string) error
 	UpdateUser(userID int, user model.UserUpdateEntry) error
 	FindByUUID(userUUID string) (*model.UserReadAll, error)
+	FindDashboardLayoutByUUID(userUUID string) (*model.UserDashboardLayout, error)
 }
 
 type userRepository struct {
@@ -193,4 +195,18 @@ func (repo *userRepository) FindByUUID(userUUID string) (*model.UserReadAll, err
 	}
 
 	return &user, nil
+}
+
+func (repo *userRepository) FindDashboardLayoutByUUID(userUUID string) (*model.UserDashboardLayout, error) {
+	var layout model.UserDashboardLayout
+	err := repo.db.Raw("SELECT dashboard_layout FROM users WHERE uuid = ?", userUUID).Scan(&layout).Error
+	if err != nil {
+		return nil, err
+	}
+	return &layout, nil
+}
+
+func (repo *userRepository) DeleteUserLayout(userUUID string) error {
+	err := repo.db.Exec("UPDATE users SET dashboard_layout = NULL WHERE uuid = ?", userUUID).Error
+	return err
 }

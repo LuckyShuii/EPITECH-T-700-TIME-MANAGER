@@ -283,3 +283,60 @@ func (handler *UserHandler) GetUserByUUID(c *gin.Context) {
 
 	c.JSON(http.StatusOK, user)
 }
+
+// GetCurrentUserDashboardLayout retrieves the dashboard layout for the current user.
+//
+// @Summary      Get current user's dashboard layout
+// @Description  Retrieve the dashboard layout configuration for the currently authenticated user. 🔒 Requires role: **all**
+// @Tags         Users
+// @Produce      json
+// @Success      200  {object}   model.DashboardLayoutResponse
+// @Router       /users/current-user-dashboard-layout [get]
+func (handler *UserHandler) GetCurrentUserDashboardLayout(c *gin.Context) {
+	claims, exists := c.Get("userClaims")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": Config.ErrorMessages()["NO_CLAIMS"]})
+		return
+	}
+
+	authClaims := claims.(*AuthService.Claims)
+
+	dashboardLayout, err := handler.service.GetUserDashboardLayout(authClaims.UUID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	if dashboardLayout.DashboardLayout == nil {
+		c.JSON(http.StatusOK, gin.H{"layout": nil})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"layout": dashboardLayout.DashboardLayout})
+}
+
+// DeleteCurrentUserDashboardLayout deletes the dashboard layout for the current user.
+//
+// @Summary      Delete current user's dashboard layout
+// @Description  Delete the dashboard layout configuration for the currently authenticated user. 🔒 Requires role: **all**
+// @Tags         Users
+// @Produce      json
+// @Success      200  "dashboard layout deleted successfully"
+// @Router       /users/current-user-dashboard-layout [delete]
+func (handler *UserHandler) DeleteCurrentUserDashboardLayout(c *gin.Context) {
+	claims, exists := c.Get("userClaims")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": Config.ErrorMessages()["NO_CLAIMS"]})
+		return
+	}
+
+	authClaims := claims.(*AuthService.Claims)
+
+	deleteErr := handler.service.DeleteUserDashboardLayout(authClaims.UUID)
+	if deleteErr != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": deleteErr.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "dashboard layout deleted successfully"})
+}

@@ -445,6 +445,41 @@ const docTemplate = `{
                 }
             }
         },
+        "/users/current-user-dashboard-layout": {
+            "get": {
+                "description": "Retrieve the dashboard layout configuration for the currently authenticated user. 🔒 Requires role: **all**",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Get current user's dashboard layout",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.DashboardLayoutResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Delete the dashboard layout configuration for the currently authenticated user. 🔒 Requires role: **all**",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Delete current user's dashboard layout",
+                "responses": {
+                    "200": {
+                        "description": "dashboard layout deleted successfully"
+                    }
+                }
+            }
+        },
         "/users/delete": {
             "delete": {
                 "security": [
@@ -958,6 +993,46 @@ const docTemplate = `{
                 },
                 "rate_name": {
                     "type": "string"
+                }
+            }
+        },
+        "model.DashboardLayout": {
+            "type": "object",
+            "properties": {
+                "h": {
+                    "type": "integer"
+                },
+                "i": {
+                    "type": "string"
+                },
+                "minH": {
+                    "type": "integer"
+                },
+                "minW": {
+                    "type": "integer"
+                },
+                "static": {
+                    "type": "boolean"
+                },
+                "w": {
+                    "type": "integer"
+                },
+                "x": {
+                    "type": "integer"
+                },
+                "y": {
+                    "type": "integer"
+                }
+            }
+        },
+        "model.DashboardLayoutResponse": {
+            "type": "object",
+            "properties": {
+                "layout": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.DashboardLayout"
+                    }
                 }
             }
         },

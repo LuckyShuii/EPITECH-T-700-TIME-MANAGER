@@ -33,6 +33,32 @@ definitions:
       rate_name:
         type: string
     type: object
+  model.DashboardLayout:
+    properties:
+      h:
+        type: integer
+      i:
+        type: string
+      minH:
+        type: integer
+      minW:
+        type: integer
+      static:
+        type: boolean
+      w:
+        type: integer
+      x:
+        type: integer
+      "y":
+        type: integer
+    type: object
+  model.DashboardLayoutResponse:
+    properties:
+      layout:
+        items:
+          $ref: '#/definitions/model.DashboardLayout'
+        type: array
+    type: object
   model.NewTeamMember:
     properties:
       is_manager:
@@ -683,6 +709,31 @@ paths:
       security:
       - BearerAuth: []
       summary: Get user by UUID
+      tags:
+      - Users
+  /users/current-user-dashboard-layout:
+    delete:
+      description: "Delete the dashboard layout configuration for the currently authenticated
+        user. \U0001F512 Requires role: **all**"
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: dashboard layout deleted successfully
+      summary: Delete current user's dashboard layout
+      tags:
+      - Users
+    get:
+      description: "Retrieve the dashboard layout configuration for the currently
+        authenticated user. \U0001F512 Requires role: **all**"
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.DashboardLayoutResponse'
+      summary: Get current user's dashboard layout
       tags:
       - Users
   /users/delete:
