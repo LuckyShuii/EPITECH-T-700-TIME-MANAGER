@@ -22,8 +22,11 @@ const selectIdTeamUuid = "SELECT id FROM teams WHERE uuid = ?"
 
 // Setup in-memory SQLite database for testing
 func setupTestDB(t *testing.T) *gorm.DB {
+	t.Helper()
+
 	ctx := context.Background()
 	const portable = "5432/tcp"
+
 	req := testcontainers.ContainerRequest{
 		Image:        "postgres:16",
 		Env:          map[string]string{"POSTGRES_PASSWORD": "test", "POSTGRES_DB": "testdb"},
@@ -38,22 +41,28 @@ func setupTestDB(t *testing.T) *gorm.DB {
 		t.Fatalf("Failed to start container: %v", err)
 	}
 
-	port, _ := pgC.MappedPort(ctx, portable)
-	dsn := fmt.Sprintf("host=localhost port=%s user=postgres password=test dbname=testdb sslmode=disable", port.Port())
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	// ✅ Récupérer le port et le host réels du conteneur
+	port, err := pgC.MappedPort(ctx, portable)
 	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
+		t.Fatalf("Failed to get mapped port: %v", err)
 	}
 
-	// Creation of necessary tables postgres
-	err = db.Exec(`
-		CREATE TYPE work_session_status AS ENUM(
-			'active',
-			'completed',
-			'paused'
-		);
+	host, err := pgC.Host(ctx)
+	if err != nil {
+		t.Fatalf("Failed to get container host: %v", err)
+	}
 
-		-- User table
+	// ✅ DSN dynamique compatible CI
+	dsn := fmt.Sprintf("host=%s port=%s user=postgres password=test dbname=testdb sslmode=disable", host, port.Port())
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	if err != nil {
+		t.Fatalf("Failed to connect to Postgres: %v", err)
+	}
+
+	// ✅ Crée toutes les tables nécessaires
+	schema := `
+		CREATE TYPE work_session_status AS ENUM('active', 'completed', 'paused');
+
 		CREATE TABLE users (
 			id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 			uuid VARCHAR(36) NOT NULL UNIQUE,
@@ -66,12 +75,11 @@ func setupTestDB(t *testing.T) *gorm.DB {
 			first_name VARCHAR(100),
 			last_name VARCHAR(100),
 			phone_number VARCHAR(15),
-			roles TEXT[] default '{"employee"}',
+			roles TEXT[] DEFAULT '{"employee"}',
 			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 		);
 
-		-- Store active work sessions for the past 30 days
 		CREATE TABLE work_session_active (
 			id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 			uuid VARCHAR(36) NOT NULL UNIQUE,
@@ -85,7 +93,6 @@ func setupTestDB(t *testing.T) *gorm.DB {
 			FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 		);
 
-		-- Store archived work sessions older than 30 days max 2 years
 		CREATE TABLE work_session_archived (
 			id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 			uuid VARCHAR(36) NOT NULL UNIQUE,
@@ -100,8 +107,6 @@ func setupTestDB(t *testing.T) *gorm.DB {
 			FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 		);
 
-		-- Store archived work sessions older than 2 years
-		-- Do not store user data anymore for RGPD compliance
 		CREATE TABLE work_session_history (
 			id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 			uuid VARCHAR(36) NOT NULL UNIQUE,
@@ -114,7 +119,6 @@ func setupTestDB(t *testing.T) *gorm.DB {
 			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 		);
 
-		-- Teams Table
 		CREATE TABLE teams (
 			id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 			uuid VARCHAR(36) NOT NULL UNIQUE,
@@ -124,7 +128,6 @@ func setupTestDB(t *testing.T) *gorm.DB {
 			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 		);
 
-		-- User-Team Relationship Table
 		CREATE TABLE teams_members (
 			id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 			uuid VARCHAR(36) NOT NULL UNIQUE,
@@ -152,16 +155,12 @@ func setupTestDB(t *testing.T) *gorm.DB {
 
 		CREATE INDEX idx_users_weekly_rate_id ON users (weekly_rate_id);
 
-		INSERT INTO weekly_rate (uuid, rate_name, amount)
-		VALUES (gen_random_uuid()::varchar, 'Temps pleins', 35);
+		INSERT INTO weekly_rate (uuid, rate_name, amount) VALUES (gen_random_uuid()::varchar, 'Temps pleins', 35);
+		INSERT INTO weekly_rate (uuid, rate_name, amount) VALUES (gen_random_uuid()::varchar, 'Temps pleins + RTT', 39);
+		INSERT INTO weekly_rate (uuid, rate_name, amount) VALUES (gen_random_uuid()::varchar, 'Temps partiel', 20);
+	`
 
-		INSERT INTO weekly_rate (uuid, rate_name, amount)
-		VALUES (gen_random_uuid()::varchar, 'Temps pleins + RTT', 39);
-
-		INSERT INTO weekly_rate (uuid, rate_name, amount)
-		VALUES (gen_random_uuid()::varchar, 'Temps partiel', 20);
-	`).Error
-	if err != nil {
+	if err := db.Exec(schema).Error; err != nil {
 		t.Fatalf("failed to create tables: %v", err)
 	}
 
