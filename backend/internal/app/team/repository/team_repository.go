@@ -3,6 +3,7 @@ package repository
 import (
 	"app/internal/app/team/model"
 	"fmt"
+	"strings"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -28,20 +29,28 @@ func NewTeamRepository(db *gorm.DB) TeamRepository {
 	return &teamRepository{db}
 }
 
+// 🧩 utilitaire : remplace les fonctions SQL non supportées par SQLite
+func sanitizeForSQLite(query string, isSQLite bool) string {
+	if !isSQLite {
+		return query
+	}
+	replacements := map[string]string{
+		"JSON_AGG":          "GROUP_CONCAT",
+		"JSON_BUILD_OBJECT": "json_object",
+		"COALESCE":          "IFNULL",
+		"LATERAL":           "", // SQLite ne supporte pas LATERAL
+	}
+	for old, new := range replacements {
+		query = strings.ReplaceAll(query, old, new)
+	}
+	return query
+}
+
 func (repo *teamRepository) FindAll() ([]model.TeamReadAll, error) {
 	var teams []model.TeamReadAll
+	isSQLite := repo.db.Dialector.Name() == "sqlite"
 
-	if repo.db.Dialector.Name() == "sqlite" {
-		err := repo.db.Table("teams").
-			Select("uuid, name, description").
-			Find(&teams).Error
-		if err != nil {
-			return nil, fmt.Errorf("failed to fetch teams (sqlite mode): %w", err)
-		}
-		return teams, nil
-	}
-
-	err := repo.db.Raw(`
+	query := `
 		SELECT 
 			t.uuid,
 			t.name,
@@ -64,8 +73,8 @@ func (repo *teamRepository) FindAll() ([]model.TeamReadAll, error) {
 				)
 			) AS team_members
 		FROM teams t
-		JOIN teams_members tm ON tm.team_id = t.id
-		JOIN users u ON u.id = tm.user_id
+		LEFT JOIN teams_members tm ON tm.team_id = t.id
+		LEFT JOIN users u ON u.id = tm.user_id
 		LEFT JOIN weekly_rate wr ON wr.id = u.weekly_rate_id
 		LEFT JOIN LATERAL (
 			SELECT 
@@ -79,8 +88,15 @@ func (repo *teamRepository) FindAll() ([]model.TeamReadAll, error) {
 			t.id, t.uuid, t.name, t.description
 		ORDER BY 
 			t.name;
-	`).Scan(&teams).Error
-	return teams, err
+	`
+
+	query = sanitizeForSQLite(query, isSQLite)
+
+	err := repo.db.Raw(query).Scan(&teams).Error
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch teams: %w", err)
+	}
+	return teams, nil
 }
 
 func (repo *teamRepository) FindIdByUuid(uuid string) (teamId int, err error) {
@@ -96,24 +112,9 @@ func (repo *teamRepository) FindIdByUuid(uuid string) (teamId int, err error) {
 
 func (repo *teamRepository) FindByID(id int) (model.TeamReadAll, error) {
 	var team model.TeamReadAll
+	isSQLite := repo.db.Dialector.Name() == "sqlite"
 
-	if repo.db.Dialector.Name() == "sqlite" {
-		result := repo.db.Table("teams").
-			Select("uuid, name, description").
-			Where("id = ?", id).
-			Find(&team)
-		if result.Error != nil {
-			return team, fmt.Errorf("failed to fetch team (sqlite mode): %w", result.Error)
-		}
-
-		if result.RowsAffected == 0 {
-			return model.TeamReadAll{}, fmt.Errorf("team with id %d not found", id)
-		}
-
-		return team, nil
-	}
-
-	err := repo.db.Raw(`
+	query := `
 		SELECT 
 			t.uuid,
 			t.name,
@@ -136,8 +137,8 @@ func (repo *teamRepository) FindByID(id int) (model.TeamReadAll, error) {
 				)
 			) AS team_members
 		FROM teams t
-		JOIN teams_members tm ON tm.team_id = t.id
-		JOIN users u ON u.id = tm.user_id
+		LEFT JOIN teams_members tm ON tm.team_id = t.id
+		LEFT JOIN users u ON u.id = tm.user_id
 		LEFT JOIN weekly_rate wr ON wr.id = u.weekly_rate_id
 		LEFT JOIN LATERAL (
 			SELECT 
@@ -150,9 +151,18 @@ func (repo *teamRepository) FindByID(id int) (model.TeamReadAll, error) {
 		WHERE t.id = ?
 		GROUP BY 
 			t.id, t.uuid, t.name, t.description;
-	`, id).Scan(&team).Error
+	`
 
-	return team, err
+	query = sanitizeForSQLite(query, isSQLite)
+
+	err := repo.db.Raw(query, id).Scan(&team).Error
+	if err != nil {
+		return team, fmt.Errorf("failed to fetch team: %w", err)
+	}
+	if team.UUID == "" {
+		return model.TeamReadAll{}, fmt.Errorf("team with id %d not found", id)
+	}
+	return team, nil
 }
 
 func (repo *teamRepository) DeleteByID(id int) error {
