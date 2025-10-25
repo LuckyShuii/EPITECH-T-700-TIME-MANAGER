@@ -215,6 +215,28 @@ func setupTestDB(t *testing.T) *gorm.DB {
 // CREATE & FIND ID BY UUID
 //
 
+func TestCreateTeam(t *testing.T) {
+	db := setupTestDB(t)
+	repo := repository.NewTeamRepository(db)
+
+	desc := "Team Description"
+	uuid := "123e4567-e89b-12d3-a456-426614174000"
+
+	err := repo.CreateTeam(uuid, "My Team2", &desc)
+	assert.NoError(t, err)
+
+	var team struct {
+		UUID        string
+		Name        string
+		Description *string
+	}
+	err = db.Table("teams").Where("uuid = ?", uuid).First(&team).Error
+	assert.NoError(t, err)
+	assert.Equal(t, "My Team2", team.Name)
+	assert.NotNil(t, team.Description)
+	assert.Equal(t, desc, *team.Description)
+}
+
 func TestCreateAndFindIdByUuid(t *testing.T) {
 	db := setupTestDB(t)
 	repo := repository.NewTeamRepository(db)
