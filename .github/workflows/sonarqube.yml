@@ -13,6 +13,13 @@ jobs:
     name: SonarCloud Analysis
     runs-on: ubuntu-latest
 
+    env:
+      TESTCONTAINERS_RYUK_DISABLED: true
+      TESTCONTAINERS_CHECKS_DISABLE: true
+      DOCKER_HOST: unix:///var/run/docker.sock
+      SONAR_HOST_URL: https://sonarcloud.io
+      SONAR_TOKEN: ${{ secrets.SONARQUBE_TOKEN }}
+
     steps:
       - name: 🧩 Checkout repository
         uses: actions/checkout@v4
@@ -83,6 +90,3 @@ jobs:
       # ─────────────────────────────
       - name: 🔎 Run SonarCloud Scan
         uses: sonarsource/sonarqube-scan-action@v6
-        env:
-          SONAR_TOKEN: ${{ secrets.SONARQUBE_TOKEN }}
-          SONAR_HOST_URL: https://sonarcloud.io
