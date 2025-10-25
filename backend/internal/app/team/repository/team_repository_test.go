@@ -349,8 +349,25 @@ func TestDeleteUserFromTeam(t *testing.T) {
 	db := setupTestDB(t)
 	repo := repository.NewTeamRepository(db)
 
-	db.Exec(insertTeamMemberQuery, "x", 1, 10, true)
-	err := repo.DeleteUserFromTeam(1, 10)
+	// 1️⃣ Insert user
+	db.Exec(`INSERT INTO users (uuid, username, email, password_hash, status)
+	         VALUES (?, ?, ?, ?, ?)`,
+		"x", "userx", "userx@example.com", "hashedpwd", "active")
+
+	var userID int
+	db.Raw(`SELECT id FROM users WHERE uuid = ?`, "x").Scan(&userID)
+
+	// 2️⃣ Insert team
+	db.Exec(insertTeamQuery, "team-12", "Team 12")
+
+	var teamID int
+	db.Raw(`SELECT id FROM teams WHERE uuid = ?`, "team-12").Scan(&teamID)
+
+	// 3️⃣ Insert member
+	db.Exec(insertTeamMemberQuery, "tm-1", teamID, userID, true)
+
+	// 4️⃣ Delete and check
+	err := repo.DeleteUserFromTeam(teamID, userID)
 	assert.NoError(t, err)
 
 	var count int64

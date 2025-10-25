@@ -72,6 +72,27 @@ func TestCompleteBreak(t *testing.T) {
 	assert.Equal(t, 15, req.DurationMinutes)
 }
 
+func TestCompleteBreakNotFound(t *testing.T) {
+	const uuid = "non-existent-uuid"
+	db := setupTestDB(t)
+	repo := repository.NewBreakRepository(db)
+
+	err := repo.CompleteBreak(uuid, 10, 15)
+	assert.Error(t, err)
+}
+
+func TestGetWorkSessionBreakNotFound(t *testing.T) {
+	db := setupTestDB(t)
+	repo := repository.NewBreakRepository(db)
+
+	br, err := repo.GetWorkSessionBreak(999, "active")
+
+	assert.NoError(t, err)
+	assert.NotNil(t, br)
+	assert.Empty(t, br.UUID)
+	assert.Empty(t, br.Status)
+}
+
 func TestGetWorkSessionBreakFound(t *testing.T) {
 	db := setupTestDB(t)
 	repo := repository.NewBreakRepository(db)
