@@ -1,6 +1,7 @@
 package model
 
 import (
+	"app/internal/app/common/model"
 	"encoding/json"
 	"fmt"
 )
@@ -13,19 +14,19 @@ type TeamBase struct {
 
 // swagger:model TeamMember
 type TeamMember struct {
-	UserUUID          string   `json:"user_uuid"`
-	Roles             []string `json:"roles" gorm:"-"`
-	Status            string   `json:"status"`
-	IsManager         bool     `json:"is_manager"`
-	Username          string   `json:"username"`
-	Email             string   `json:"email"`
-	FirstName         string   `json:"first_name"`
-	LastName          string   `json:"last_name"`
-	PhoneNumber       string   `json:"phone_number"`
-	WorkSessionStatus *string  `json:"work_session_status,omitempty"`
-	WeeklyRate        int      `json:"weekly_rate"`
-	WeeklyRateName    *string  `json:"weekly_rate_name,omitempty"`
-	FirstDayOfWeek    *int     `json:"first_day_of_week,omitempty"`
+	UserUUID          string            `json:"user_uuid"`
+	Roles             model.StringArray `json:"roles"`
+	Status            string            `json:"status"`
+	IsManager         bool              `json:"is_manager"`
+	Username          string            `json:"username"`
+	Email             string            `json:"email"`
+	FirstName         string            `json:"first_name"`
+	LastName          string            `json:"last_name"`
+	PhoneNumber       string            `json:"phone_number"`
+	WorkSessionStatus *string           `json:"work_session_status,omitempty"`
+	WeeklyRate        int               `json:"weekly_rate"`
+	WeeklyRateName    *string           `json:"weekly_rate_name,omitempty"`
+	FirstDayOfWeek    *int              `json:"first_day_of_week,omitempty"`
 }
 
 type TeamMemberInfo struct {
@@ -55,7 +56,7 @@ func (tm *TeamMembers) Scan(value interface{}) error {
 // swagger:model TeamReadAll
 type TeamReadAll struct {
 	TeamBase
-	TeamMembers TeamMembers `json:"team_members" gorm:"column:team_members"`
+	TeamMembers TeamMembers `json:"team_members" gorm:"type:jsonb"`
 }
 
 // swagger:model NewTeamMember

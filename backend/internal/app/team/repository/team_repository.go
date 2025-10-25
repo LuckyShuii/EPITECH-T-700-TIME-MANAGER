@@ -3,7 +3,6 @@ package repository
 import (
 	"app/internal/app/team/model"
 	"fmt"
-	"strings"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -29,26 +28,8 @@ func NewTeamRepository(db *gorm.DB) TeamRepository {
 	return &teamRepository{db}
 }
 
-// 🧩 utilitaire : remplace les fonctions SQL non supportées par SQLite
-func sanitizeForSQLite(query string, isSQLite bool) string {
-	if !isSQLite {
-		return query
-	}
-	replacements := map[string]string{
-		"JSON_AGG":          "GROUP_CONCAT",
-		"JSON_BUILD_OBJECT": "json_object",
-		"COALESCE":          "IFNULL",
-		"LATERAL":           "", // SQLite ne supporte pas LATERAL
-	}
-	for old, new := range replacements {
-		query = strings.ReplaceAll(query, old, new)
-	}
-	return query
-}
-
 func (repo *teamRepository) FindAll() ([]model.TeamReadAll, error) {
 	var teams []model.TeamReadAll
-	isSQLite := repo.db.Dialector.Name() == "sqlite"
 
 	query := `
 		SELECT 
@@ -90,12 +71,11 @@ func (repo *teamRepository) FindAll() ([]model.TeamReadAll, error) {
 			t.name;
 	`
 
-	query = sanitizeForSQLite(query, isSQLite)
-
 	err := repo.db.Raw(query).Scan(&teams).Error
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch teams: %w", err)
 	}
+
 	return teams, nil
 }
 
@@ -112,7 +92,6 @@ func (repo *teamRepository) FindIdByUuid(uuid string) (teamId int, err error) {
 
 func (repo *teamRepository) FindByID(id int) (model.TeamReadAll, error) {
 	var team model.TeamReadAll
-	isSQLite := repo.db.Dialector.Name() == "sqlite"
 
 	query := `
 		SELECT 
@@ -152,8 +131,6 @@ func (repo *teamRepository) FindByID(id int) (model.TeamReadAll, error) {
 		GROUP BY 
 			t.id, t.uuid, t.name, t.description;
 	`
-
-	query = sanitizeForSQLite(query, isSQLite)
 
 	err := repo.db.Raw(query, id).Scan(&team).Error
 	if err != nil {
