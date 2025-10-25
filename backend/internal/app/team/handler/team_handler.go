@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"regexp"
 	"time"
 
 	"app/internal/app/team/model"
@@ -75,8 +76,14 @@ func (handler *TeamHandler) GetTeams(c *gin.Context) {
 // @Router       /teams/{uuid} [get]
 func (handler *TeamHandler) GetTeamByUUID(c *gin.Context) {
 	ctx := c.Request.Context()
-
+	var uuidRegex = regexp.MustCompile(`^[a-fA-F0-9-]{36}$`)
 	uuid := c.Param("uuid")
+
+	if !uuidRegex.MatchString(uuid) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid UUID format"})
+		return
+	}
+
 	cacheKey := "team_" + uuid
 
 	// Try to get team from cache

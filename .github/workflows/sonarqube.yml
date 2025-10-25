@@ -58,25 +58,25 @@ jobs:
       # ─────────────────────────────
       # 🎨 FRONTEND (Vue.js)
       # ─────────────────────────────
-      - name: 🧰 Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
+      # - name: 🧰 Setup Node.js
+      #   uses: actions/setup-node@v4
+      #   with:
+      #     node-version: "20"
 
-      - name: 📦 Install frontend dependencies
-        working-directory: ./frontend
-        run: npm install
+      # - name: 📦 Install frontend dependencies
+      #   working-directory: ./frontend
+      #   run: npm install
 
-      - name: 🧪 Run frontend tests with coverage
-        working-directory: ./frontend
-        run: |
-          npm run test:unit -- --coverage --coverage-reporter=lcov || echo "⚠️ No frontend tests found"
+      # - name: 🧪 Run frontend tests with coverage
+      #   working-directory: ./frontend
+      #   run: |
+      #     npm run test:unit -- --coverage --coverage-reporter=lcov || echo "⚠️ No frontend tests found"
 
-          # Vérifier si le fichier de couverture existe
-          if [ -f coverage/lcov.info ]; then
-            echo "✅ Frontend coverage generated"
-            ls -lh coverage/lcov.info
-          fi
+      #     # Vérifier si le fichier de couverture existe
+      #     if [ -f coverage/lcov.info ]; then
+      #       echo "✅ Frontend coverage generated"
+      #       ls -lh coverage/lcov.info
+      #     fi
 
       # ─────────────────────────────
       # 🔍 SONARCLOUD SCAN

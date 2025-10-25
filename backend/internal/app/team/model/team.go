@@ -14,7 +14,7 @@ type TeamBase struct {
 // swagger:model TeamMember
 type TeamMember struct {
 	UserUUID          string   `json:"user_uuid"`
-	Roles             []string `json:"roles"`
+	Roles             []string `json:"roles" gorm:"-"`
 	Status            string   `json:"status"`
 	IsManager         bool     `json:"is_manager"`
 	Username          string   `json:"username"`

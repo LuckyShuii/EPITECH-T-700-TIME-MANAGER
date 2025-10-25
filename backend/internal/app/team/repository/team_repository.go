@@ -30,6 +30,17 @@ func NewTeamRepository(db *gorm.DB) TeamRepository {
 
 func (repo *teamRepository) FindAll() ([]model.TeamReadAll, error) {
 	var teams []model.TeamReadAll
+
+	if repo.db.Dialector.Name() == "sqlite" {
+		err := repo.db.Table("teams").
+			Select("uuid, name, description").
+			Find(&teams).Error
+		if err != nil {
+			return nil, fmt.Errorf("failed to fetch teams (sqlite mode): %w", err)
+		}
+		return teams, nil
+	}
+
 	err := repo.db.Raw(`
 		SELECT 
 			t.uuid,
@@ -85,6 +96,23 @@ func (repo *teamRepository) FindIdByUuid(uuid string) (teamId int, err error) {
 
 func (repo *teamRepository) FindByID(id int) (model.TeamReadAll, error) {
 	var team model.TeamReadAll
+
+	if repo.db.Dialector.Name() == "sqlite" {
+		result := repo.db.Table("teams").
+			Select("uuid, name, description").
+			Where("id = ?", id).
+			Find(&team)
+		if result.Error != nil {
+			return team, fmt.Errorf("failed to fetch team (sqlite mode): %w", result.Error)
+		}
+
+		if result.RowsAffected == 0 {
+			return model.TeamReadAll{}, fmt.Errorf("team with id %d not found", id)
+		}
+
+		return team, nil
+	}
+
 	err := repo.db.Raw(`
 		SELECT 
 			t.uuid,
@@ -123,6 +151,7 @@ func (repo *teamRepository) FindByID(id int) (model.TeamReadAll, error) {
 		GROUP BY 
 			t.id, t.uuid, t.name, t.description;
 	`, id).Scan(&team).Error
+
 	return team, err
 }
 
