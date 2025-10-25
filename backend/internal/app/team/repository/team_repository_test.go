@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
@@ -28,11 +29,21 @@ func setupTestDB(t *testing.T) *gorm.DB {
 	const portable = "5432/tcp"
 
 	req := testcontainers.ContainerRequest{
-		Image:        "postgres:16",
-		Env:          map[string]string{"POSTGRES_PASSWORD": "test", "POSTGRES_DB": "testdb"},
+		Image: "postgres:16",
+		Env: map[string]string{
+			"POSTGRES_PASSWORD": "test",
+			"POSTGRES_DB":       "testdb",
+			"POSTGRES_USER":     "postgres",
+		},
 		ExposedPorts: []string{portable},
-		WaitingFor:   wait.ForListeningPort(portable),
+		WaitingFor: wait.ForAll(
+			wait.ForListeningPort(portable),
+			wait.ForLog("database system is ready to accept connections").
+				WithStartupTimeout(60*time.Second).
+				WithOccurrence(2), // Wait for 2 occurrences (initial + restart)
+		),
 	}
+
 	pgC, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
 		ContainerRequest: req,
 		Started:          true,
@@ -41,7 +52,14 @@ func setupTestDB(t *testing.T) *gorm.DB {
 		t.Fatalf("Failed to start container: %v", err)
 	}
 
-	// ✅ Récupérer le port et le host réels du conteneur
+	// Ensure container is stopped when test completes
+	t.Cleanup(func() {
+		if err := pgC.Terminate(ctx); err != nil {
+			t.Logf("Failed to terminate container: %v", err)
+		}
+	})
+
+	// Get container connection details
 	port, err := pgC.MappedPort(ctx, portable)
 	if err != nil {
 		t.Fatalf("Failed to get mapped port: %v", err)
@@ -52,14 +70,40 @@ func setupTestDB(t *testing.T) *gorm.DB {
 		t.Fatalf("Failed to get container host: %v", err)
 	}
 
-	// ✅ DSN dynamique compatible CI
-	dsn := fmt.Sprintf("host=%s port=%s user=postgres password=test dbname=testdb sslmode=disable", host, port.Port())
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
-	if err != nil {
-		t.Fatalf("Failed to connect to Postgres: %v", err)
+	// Build DSN with connection parameters
+	dsn := fmt.Sprintf(
+		"host=%s port=%s user=postgres password=test dbname=testdb sslmode=disable connect_timeout=10",
+		host, port.Port(),
+	)
+
+	// Retry connection with exponential backoff
+	var db *gorm.DB
+	maxRetries := 5
+	for i := 0; i < maxRetries; i++ {
+		db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+		if err == nil {
+			// Test the connection
+			sqlDB, err := db.DB()
+			if err == nil {
+				err = sqlDB.Ping()
+				if err == nil {
+					break // Success!
+				}
+			}
+		}
+
+		if i < maxRetries-1 {
+			waitTime := time.Duration(i+1) * time.Second
+			t.Logf("Connection attempt %d failed, retrying in %v... Error: %v", i+1, waitTime, err)
+			time.Sleep(waitTime)
+		}
 	}
 
-	// ✅ Crée toutes les tables nécessaires
+	if err != nil {
+		t.Fatalf("Failed to connect to Postgres after %d attempts: %v", maxRetries, err)
+	}
+
+	// Create all necessary tables
 	schema := `
 		CREATE TYPE work_session_status AS ENUM('active', 'completed', 'paused');
 
