@@ -3,17 +3,10 @@ package repository_test
 import (
 	"app/internal/app/team/model"
 	"app/internal/app/team/repository"
-	"context"
-	"fmt"
+	"app/internal/test"
 	"testing"
-	"time"
-
-	"github.com/testcontainers/testcontainers-go"
-	"github.com/testcontainers/testcontainers-go/wait"
 
 	"github.com/stretchr/testify/assert"
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
 )
 
 const insertTeamQuery = "INSERT INTO teams (uuid, name) VALUES (?, ?)"
@@ -21,202 +14,12 @@ const insertTeamMemberQuery = "INSERT INTO teams_members (uuid, team_id, user_id
 const selectIdUserUuid = "SELECT id FROM users WHERE uuid = ?"
 const selectIdTeamUuid = "SELECT id FROM teams WHERE uuid = ?"
 
-// Setup in-memory SQLite database for testing
-func setupTestDB(t *testing.T) *gorm.DB {
-	t.Helper()
-
-	ctx := context.Background()
-	const portable = "5432/tcp"
-
-	req := testcontainers.ContainerRequest{
-		Image: "postgres:16",
-		Env: map[string]string{
-			"POSTGRES_PASSWORD": "test",
-			"POSTGRES_DB":       "testdb",
-			"POSTGRES_USER":     "postgres",
-		},
-		ExposedPorts: []string{portable},
-		WaitingFor: wait.ForAll(
-			wait.ForListeningPort(portable),
-			wait.ForLog("database system is ready to accept connections").
-				WithStartupTimeout(60*time.Second).
-				WithOccurrence(2), // Wait for 2 occurrences (initial + restart)
-		),
-	}
-
-	pgC, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
-		ContainerRequest: req,
-		Started:          true,
-	})
-	if err != nil {
-		t.Fatalf("Failed to start container: %v", err)
-	}
-
-	// Ensure container is stopped when test completes
-	t.Cleanup(func() {
-		if err := pgC.Terminate(ctx); err != nil {
-			t.Logf("Failed to terminate container: %v", err)
-		}
-	})
-
-	// Get container connection details
-	port, err := pgC.MappedPort(ctx, portable)
-	if err != nil {
-		t.Fatalf("Failed to get mapped port: %v", err)
-	}
-
-	host, err := pgC.Host(ctx)
-	if err != nil {
-		t.Fatalf("Failed to get container host: %v", err)
-	}
-
-	// Build DSN with connection parameters
-	dsn := fmt.Sprintf(
-		"host=%s port=%s user=postgres password=test dbname=testdb sslmode=disable connect_timeout=10",
-		host, port.Port(),
-	)
-
-	// Retry connection with exponential backoff
-	var db *gorm.DB
-	maxRetries := 5
-	for i := 0; i < maxRetries; i++ {
-		db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
-		if err == nil {
-			// Test the connection
-			sqlDB, err := db.DB()
-			if err == nil {
-				err = sqlDB.Ping()
-				if err == nil {
-					break // Success!
-				}
-			}
-		}
-
-		if i < maxRetries-1 {
-			waitTime := time.Duration(i+1) * time.Second
-			t.Logf("Connection attempt %d failed, retrying in %v... Error: %v", i+1, waitTime, err)
-			time.Sleep(waitTime)
-		}
-	}
-
-	if err != nil {
-		t.Fatalf("Failed to connect to Postgres after %d attempts: %v", maxRetries, err)
-	}
-
-	// Create all necessary tables
-	schema := `
-		CREATE TYPE work_session_status AS ENUM('active', 'completed', 'paused');
-
-		CREATE TABLE users (
-			id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-			uuid VARCHAR(36) NOT NULL UNIQUE,
-			username VARCHAR(100) NOT NULL UNIQUE,
-			email VARCHAR(320) NOT NULL UNIQUE,
-			password_hash VARCHAR(100) NOT NULL,
-			status VARCHAR(50) NOT NULL,
-			first_day_of_week INT DEFAULT 1,
-			dashboard_layout JSON DEFAULT NULL,
-			first_name VARCHAR(100),
-			last_name VARCHAR(100),
-			phone_number VARCHAR(15),
-			roles TEXT[] DEFAULT '{"employee"}',
-			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-		);
-
-		CREATE TABLE work_session_active (
-			id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-			uuid VARCHAR(36) NOT NULL UNIQUE,
-			user_id INT NOT NULL,
-			clock_in TIMESTAMP NOT NULL,
-			clock_out TIMESTAMP,
-			duration_minutes INT,
-			status work_session_status DEFAULT 'active',
-			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-			FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
-		);
-
-		CREATE TABLE work_session_archived (
-			id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-			uuid VARCHAR(36) NOT NULL UNIQUE,
-			user_id INT NOT NULL,
-			clock_in TIMESTAMP NOT NULL,
-			clock_out TIMESTAMP,
-			duration_minutes INT,
-			status work_session_status DEFAULT 'active',
-			archived_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-			FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
-		);
-
-		CREATE TABLE work_session_history (
-			id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-			uuid VARCHAR(36) NOT NULL UNIQUE,
-			clock_in TIMESTAMP NOT NULL,
-			clock_out TIMESTAMP,
-			duration_minutes INT,
-			status work_session_status DEFAULT 'active',
-			archived_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-		);
-
-		CREATE TABLE teams (
-			id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-			uuid VARCHAR(36) NOT NULL UNIQUE,
-			name VARCHAR(100) NOT NULL,
-			description TEXT,
-			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-		);
-
-		CREATE TABLE teams_members (
-			id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-			uuid VARCHAR(36) NOT NULL UNIQUE,
-			user_id INT NOT NULL,
-			team_id INT NOT NULL,
-			is_manager BOOLEAN DEFAULT FALSE,
-			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-			FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
-			FOREIGN KEY (team_id) REFERENCES teams (id) ON DELETE CASCADE
-		);
-
-		CREATE TABLE weekly_rate (
-			id SERIAL PRIMARY KEY,
-			uuid VARCHAR(36) NOT NULL UNIQUE,
-			rate_name VARCHAR(255) NOT NULL,
-			amount SMALLINT NOT NULL,
-			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-		);
-
-		ALTER TABLE users
-		ADD COLUMN weekly_rate_id INT,
-		ADD CONSTRAINT fk_weekly_rate FOREIGN KEY (weekly_rate_id) REFERENCES weekly_rate (id);
-
-		CREATE INDEX idx_users_weekly_rate_id ON users (weekly_rate_id);
-
-		INSERT INTO weekly_rate (uuid, rate_name, amount) VALUES (gen_random_uuid()::varchar, 'Temps pleins', 35);
-		INSERT INTO weekly_rate (uuid, rate_name, amount) VALUES (gen_random_uuid()::varchar, 'Temps pleins + RTT', 39);
-		INSERT INTO weekly_rate (uuid, rate_name, amount) VALUES (gen_random_uuid()::varchar, 'Temps partiel', 20);
-	`
-
-	if err := db.Exec(schema).Error; err != nil {
-		t.Fatalf("failed to create tables: %v", err)
-	}
-
-	return db
-}
-
 //
 // CREATE & FIND ID BY UUID
 //
 
 func TestCreateTeam(t *testing.T) {
-	db := setupTestDB(t)
+	db := test.ResetDB(t)
 	repo := repository.NewTeamRepository(db)
 
 	desc := "Team Description"
@@ -238,7 +41,7 @@ func TestCreateTeam(t *testing.T) {
 }
 
 func TestCreateAndFindIdByUuid(t *testing.T) {
-	db := setupTestDB(t)
+	db := test.ResetDB(t)
 	repo := repository.NewTeamRepository(db)
 
 	desc := "Team Description"
@@ -253,7 +56,7 @@ func TestCreateAndFindIdByUuid(t *testing.T) {
 }
 
 func TestFindIdByUuidNotFound(t *testing.T) {
-	db := setupTestDB(t)
+	db := test.ResetDB(t)
 	repo := repository.NewTeamRepository(db)
 
 	id, err := repo.FindIdByUuid("not-existing-uuid")
@@ -261,7 +64,7 @@ func TestFindIdByUuidNotFound(t *testing.T) {
 	assert.Equal(t, 0, id)
 }
 func TestFindAllTeams(t *testing.T) {
-	db := setupTestDB(t)
+	db := test.ResetDB(t)
 	repo := repository.NewTeamRepository(db)
 
 	// 1️⃣ Weekly rate
@@ -307,8 +110,7 @@ func TestFindAllTeams(t *testing.T) {
 }
 
 func TestFindByID(t *testing.T) {
-	db := setupTestDB(t)
-
+	db := test.ResetDB(t)
 	db.Exec(insertTeamQuery, "a", "Team 3")
 
 	type SimpleTeam struct {
@@ -324,7 +126,7 @@ func TestFindByID(t *testing.T) {
 }
 
 func TestFindByIDNotFound(t *testing.T) {
-	db := setupTestDB(t)
+	db := test.ResetDB(t)
 	repo := repository.NewTeamRepository(db)
 
 	_, err := repo.FindByID(999)
@@ -333,7 +135,7 @@ func TestFindByIDNotFound(t *testing.T) {
 
 // DELETE TESTS
 func TestDeleteByID(t *testing.T) {
-	db := setupTestDB(t)
+	db := test.ResetDB(t)
 	repo := repository.NewTeamRepository(db)
 
 	db.Exec(insertTeamQuery, "a", "Test Team")
@@ -346,7 +148,7 @@ func TestDeleteByID(t *testing.T) {
 }
 
 func TestDeleteUserFromTeam(t *testing.T) {
-	db := setupTestDB(t)
+	db := test.ResetDB(t)
 	repo := repository.NewTeamRepository(db)
 
 	// 1️⃣ Insert user
@@ -380,7 +182,7 @@ func TestDeleteUserFromTeam(t *testing.T) {
 //
 
 func TestAddMembersToTeam(t *testing.T) {
-	db := setupTestDB(t)
+	db := test.ResetDB(t)
 	repo := repository.NewTeamRepository(db)
 
 	// 1️⃣ Weekly rate
@@ -427,7 +229,7 @@ func TestAddMembersToTeam(t *testing.T) {
 }
 
 func TestAddMembersToTeamEmpty(t *testing.T) {
-	db := setupTestDB(t)
+	db := test.ResetDB(t)
 	repo := repository.NewTeamRepository(db)
 
 	err := repo.AddMembersToTeam(1, []model.TeamMemberCreate{})
@@ -439,7 +241,7 @@ func TestAddMembersToTeamEmpty(t *testing.T) {
 //
 
 func TestUpdateTeamByID(t *testing.T) {
-	db := setupTestDB(t)
+	db := test.ResetDB(t)
 	repo := repository.NewTeamRepository(db)
 
 	db.Exec("INSERT INTO teams (uuid, name, description) VALUES (?, ?, ?)", "u1", "Old Team", "Old Desc")
@@ -461,7 +263,7 @@ func TestUpdateTeamByID(t *testing.T) {
 }
 
 func TestUpdateTeamByIDNoFields(t *testing.T) {
-	db := setupTestDB(t)
+	db := test.ResetDB(t)
 	repo := repository.NewTeamRepository(db)
 
 	err := repo.UpdateTeamByID(1, model.TeamUpdate{})
@@ -474,7 +276,7 @@ func TestUpdateTeamByIDNoFields(t *testing.T) {
 //
 
 func TestUpdateTeamUserManagerStatus(t *testing.T) {
-	db := setupTestDB(t)
+	db := test.ResetDB(t)
 	repo := repository.NewTeamRepository(db)
 
 	// 1️⃣ Weekly rate

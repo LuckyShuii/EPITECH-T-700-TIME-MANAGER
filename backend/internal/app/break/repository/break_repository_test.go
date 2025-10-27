@@ -2,44 +2,62 @@ package repository_test
 
 import (
 	"app/internal/app/break/repository"
+	"app/internal/test"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
 )
 
-// setupTestDB initializes a temporary SQLite in-memory database.
-func setupTestDB(t *testing.T) *gorm.DB {
-	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
+const WORK_SESSION_NEW_ERROR = "Failed to add work session: %v"
+
+func addWorkSession(t *testing.T, uuid string) (int, error) {
+	db := test.ResetDB(t)
+
+	err := db.Exec(`
+		INSERT INTO users (uuid, username, email, password_hash, status)
+		VALUES (?, ?, ?, ?, 'active')
+	`, uuid, "testuser", "testuser@example.com", "hashedpassword").Error
 	if err != nil {
-		t.Fatalf("failed to connect database: %v", err)
+		return 0, err
+	}
+
+	var userId int
+	err = db.Raw("SELECT id FROM users WHERE uuid = ?", uuid).Scan(&userId).Error
+	if err != nil {
+		return 0, err
 	}
 
 	err = db.Exec(`
-		CREATE TABLE breaks (
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			uuid TEXT,
-			work_session_active_id INTEGER,
-			start_time TEXT,
-			end_time TEXT,
-			status TEXT,
-			duration_minutes INTEGER
-		);
-	`).Error
+		INSERT INTO work_session_active (uuid, user_id, clock_in, status)
+		VALUES (?, ?, ?, 'active')
+	`, uuid, userId, time.Now().Format(time.RFC3339)).Error
+
 	if err != nil {
-		t.Fatalf("failed to create table: %v", err)
+		return 0, err
 	}
-	return db
+
+	var workSessionID int
+	err = db.Raw("SELECT id FROM work_session_active WHERE uuid = ?", uuid).Scan(&workSessionID).Error
+	if err != nil {
+		return 0, err
+	}
+
+	return workSessionID, nil
 }
 
 func TestCreateBreak(t *testing.T) {
-	const uuid = "uuid-1"
-	db := setupTestDB(t)
+	uuid := "123e4567-e89b-12d3-a456-426614174001"
+	db := test.ResetDB(t)
 	repo := repository.NewBreakRepository(db)
 
-	err := repo.CreateBreak(uuid, 10, "active")
+	workSessionID, err := addWorkSession(t, uuid)
+
+	if err != nil {
+		t.Fatalf(WORK_SESSION_NEW_ERROR, err)
+	}
+
+	err = repo.CreateBreak(uuid, workSessionID, "active")
 	assert.NoError(t, err)
 
 	var count int64
@@ -48,17 +66,23 @@ func TestCreateBreak(t *testing.T) {
 }
 
 func TestCompleteBreak(t *testing.T) {
-	const uuid = "uuid-1"
-	db := setupTestDB(t)
+	uuid := "123e4567-e89b-12d3-a456-426614174002"
+	db := test.ResetDB(t)
 	repo := repository.NewBreakRepository(db)
+
+	workSessionID, err := addWorkSession(t, uuid)
+
+	if err != nil {
+		t.Fatalf(WORK_SESSION_NEW_ERROR, err)
+	}
 
 	// Insert row manually so it can be updated later
 	db.Exec(`
 		INSERT INTO breaks (uuid, work_session_active_id, start_time, status)
-		VALUES (?, 10, ?, 'active')
-	`, uuid, time.Now().Format(time.RFC3339))
+		VALUES (?, ?, ?, 'active')
+	`, uuid, workSessionID, time.Now().Format(time.RFC3339))
 
-	err := repo.CompleteBreak(uuid, 10, 15)
+	err = repo.CompleteBreak(uuid, workSessionID, 15)
 	assert.NoError(t, err)
 
 	var req struct {
@@ -73,8 +97,8 @@ func TestCompleteBreak(t *testing.T) {
 }
 
 func TestCompleteBreakNotFound(t *testing.T) {
-	const uuid = "non-existent-uuid"
-	db := setupTestDB(t)
+	const uuid = "123e4567-e8oi-12d3-a456-426614174002"
+	db := test.ResetDB(t)
 	repo := repository.NewBreakRepository(db)
 
 	err := repo.CompleteBreak(uuid, 10, 15)
@@ -82,7 +106,7 @@ func TestCompleteBreakNotFound(t *testing.T) {
 }
 
 func TestGetWorkSessionBreakNotFound(t *testing.T) {
-	db := setupTestDB(t)
+	db := test.ResetDB(t)
 	repo := repository.NewBreakRepository(db)
 
 	br, err := repo.GetWorkSessionBreak(999, "active")
@@ -94,46 +118,70 @@ func TestGetWorkSessionBreakNotFound(t *testing.T) {
 }
 
 func TestGetWorkSessionBreakFound(t *testing.T) {
-	db := setupTestDB(t)
+	uuid := "123e4567-e89b-12d3-a456-426614174003"
+	db := test.ResetDB(t)
 	repo := repository.NewBreakRepository(db)
+
+	workSessionID, err := addWorkSession(t, uuid)
+
+	if err != nil {
+		t.Fatalf(WORK_SESSION_NEW_ERROR, err)
+	}
 
 	start := time.Now().Format(time.RFC3339)
 	db.Exec(`
 		INSERT INTO breaks (uuid, work_session_active_id, start_time, status)
-		VALUES ('uuid-2', 99, ?, 'active')
-	`, start)
+		VALUES (?, ?, ?, 'active')
+	`, uuid, workSessionID, start)
 
-	breakFound, err := repo.GetWorkSessionBreak(99, "active")
+	breakFound, err := repo.GetWorkSessionBreak(workSessionID, "active")
 
 	assert.NoError(t, err)
-	assert.Equal(t, "uuid-2", breakFound.BreakUUID)
+	assert.Equal(t, uuid, breakFound.BreakUUID)
 	assert.Equal(t, "active", breakFound.Status)
 }
 
 func TestGetTotalBreakDurationByWorkSessionId(t *testing.T) {
-	db := setupTestDB(t)
+	uuid1 := "123e4567-e89b-12d3-a456-426614174004"
+	uuid2 := "223e4567-e89b-12d3-a456-426614174006"
+	db := test.ResetDB(t)
 	repo := repository.NewBreakRepository(db)
 
-	db.Exec(`
-		INSERT INTO breaks (uuid, work_session_active_id, duration_minutes)
-		VALUES ('b1', 20, 10), ('b2', 20, 30)
-	`)
+	workSessionID, err := addWorkSession(t, uuid1)
 
-	total, err := repo.GetTotalBreakDurationByWorkSessionId(20)
+	if err != nil {
+		t.Fatalf(WORK_SESSION_NEW_ERROR, err)
+	}
+
+	db.Exec(`
+		INSERT INTO breaks (uuid, work_session_active_id, duration_minutes, start_time)
+		VALUES (?, ?, ?, ?), (?, ?, ?, ?)
+	`, uuid1, workSessionID, 10, time.Now().Format(time.RFC3339), uuid2, workSessionID, 30, time.Now().Format(time.RFC3339),
+	)
+
+	total, err := repo.GetTotalBreakDurationByWorkSessionId(workSessionID)
 	assert.NoError(t, err)
 	assert.Equal(t, 40, total)
 }
 
 func TestDeleteRelatedBreaksToWorkSession(t *testing.T) {
-	db := setupTestDB(t)
+	uuid := "123e4567-e89b-12d3-a456-426614174005"
+	db := test.ResetDB(t)
 	repo := repository.NewBreakRepository(db)
 
-	db.Exec(`
-		INSERT INTO breaks (uuid, work_session_active_id, status)
-		VALUES ('b1', 25, 'completed')
-	`)
+	workSessionID, err := addWorkSession(t, uuid)
 
-	err := repo.DeleteRelatedBreaksToWorkSession(25)
+	if err != nil {
+		t.Fatalf(WORK_SESSION_NEW_ERROR, err)
+	}
+
+	// Insert a break related to the work session
+	db.Exec(`
+		INSERT INTO breaks (uuid, work_session_active_id, status, start_time)
+		VALUES (?, ?, 'completed', ?)
+	`, uuid, workSessionID, time.Now().Format(time.RFC3339))
+
+	err = repo.DeleteRelatedBreaksToWorkSession(workSessionID)
 	assert.NoError(t, err)
 
 	var count int64

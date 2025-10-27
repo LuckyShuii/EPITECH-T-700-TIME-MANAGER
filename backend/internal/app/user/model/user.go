@@ -14,6 +14,7 @@ type UserBase struct {
 	Email          string            `json:"email" gorm:"unique;not null"`
 	FirstName      string            `json:"first_name"`
 	LastName       string            `json:"last_name"`
+	Status         *string           `json:"status" gorm:"default:'pending'"`
 	PhoneNumber    *string           `json:"phone_number,omitempty"`
 	Roles          model.StringArray `json:"roles" gorm:"type:text[];default:'{employee}'"`
 	FirstDayOfWeek *int              `json:"first_day_of_week,omitempty" gorm:"default:1"`
