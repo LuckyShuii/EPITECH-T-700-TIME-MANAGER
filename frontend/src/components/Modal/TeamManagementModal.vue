@@ -255,6 +255,16 @@ const closeModal = () => {
                                     {{ selectedMember.is_manager ? 'Oui' : 'Non' }}
                                 </span>
                             </div>
+
+                            <!-- Volume horaire (visible uniquement pour les managers/admins) -->
+                            <div v-if="authStore.user?.roles.includes('manager') || authStore.user?.roles.includes('admin')"
+                                class="grid grid-cols-[150px_1fr] gap-2 items-center">
+                                <span class="opacity-70">Volume horaire</span>
+                                <div class="flex items-center gap-2">
+                                    <span class="font-medium">{{ selectedMember.weekly_rate }}h / semaine</span>
+                                    <span class="badge badge-sm badge-outline">{{ selectedMember.weekly_rate_name }}</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
