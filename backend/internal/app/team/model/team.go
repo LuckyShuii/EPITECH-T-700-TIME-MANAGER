@@ -87,3 +87,11 @@ type TeamUpdate struct {
 	Name        *string `json:"name"`
 	Description *string `json:"description"`
 }
+
+// swagger:model TeamMemberLight
+type TeamMemberLight struct {
+	UserID    int    `json:"user_id"`
+	UserUUID  string `json:"user_uuid"`
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
+}

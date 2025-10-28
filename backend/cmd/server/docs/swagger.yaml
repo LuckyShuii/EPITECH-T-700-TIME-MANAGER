@@ -59,10 +59,21 @@ definitions:
           $ref: '#/definitions/model.DashboardLayout'
         type: array
     type: object
+  model.KPIWorkSessionTeamMemberWeeklyTotal:
+    properties:
+      total_time:
+        type: integer
+      user_uuid:
+        type: string
+    type: object
   model.KPIWorkSessionTeamWeeklyTotalResponse:
     properties:
       end_date:
         type: string
+      members:
+        items:
+          $ref: '#/definitions/model.KPIWorkSessionTeamMemberWeeklyTotal'
+        type: array
       start_date:
         type: string
       team_uuid:

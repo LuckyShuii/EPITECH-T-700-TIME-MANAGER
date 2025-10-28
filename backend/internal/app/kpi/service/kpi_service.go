@@ -5,13 +5,15 @@ import (
 	TeamService "app/internal/app/team/service"
 	UserService "app/internal/app/user/service"
 	WeeklyRateService "app/internal/app/weekly-rate/service"
+	"log"
 
+	"app/internal/app/kpi/model"
 	KPIRepository "app/internal/app/kpi/repository"
 )
 
 type KPIService interface {
 	GetWorkSessionUserWeeklyTotal(startDate string, endDate string, userUUID string) (int, error)
-	GetWorkSessionTeamWeeklyTotal(startDate string, endDate string, teamUUID string) (int, error)
+	GetWorkSessionTeamWeeklyTotal(startDate string, endDate string, teamUUID string) (model.KPIWorkSessionTeamWeeklyTotalResponse, error)
 }
 
 type kpiService struct {
@@ -46,25 +48,42 @@ func (service *kpiService) GetWorkSessionUserWeeklyTotal(startDate string, endDa
 	return weeklyRates, nil
 }
 
-func (service *kpiService) GetWorkSessionTeamWeeklyTotal(startDate string, endDate string, teamUUID string) (int, error) {
+func (service *kpiService) GetWorkSessionTeamWeeklyTotal(startDate string, endDate string, teamUUID string) (model.KPIWorkSessionTeamWeeklyTotalResponse, error) {
 	teamID, err := service.TeamService.GetIdByUuid(teamUUID)
 	if err != nil {
-		return 0, err
+		return model.KPIWorkSessionTeamWeeklyTotalResponse{}, err
 	}
 
-	userIDs, err := service.TeamService.GetUserIDsByTeamID(teamID)
+	users, err := service.TeamService.GetUserIDsByTeamID(teamID)
+	log.Printf("Found users for team %s: %v", teamUUID, users)
 	if err != nil {
-		return 0, err
+		return model.KPIWorkSessionTeamWeeklyTotalResponse{}, err
 	}
 
-	totalWeeklyRates := 0
-	for _, userID := range userIDs {
-		weeklyRates, err := service.KPIRepository.GetWeeklyRatesByUserIDAndDateRange(userID, startDate, endDate)
+	memberWeeklyRates := make([]model.KPIWorkSessionTeamMemberWeeklyTotal, 0)
+	for _, user := range users {
+		log.Printf("Calculating weekly rates for user %s (%s)", user.UserUUID, user.FirstName+" "+user.LastName)
+		weeklyRates, err := service.KPIRepository.GetWeeklyRatesByUserIDAndDateRange(user.UserID, startDate, endDate)
 		if err != nil {
-			return 0, err
+			return model.KPIWorkSessionTeamWeeklyTotalResponse{}, err
 		}
-		totalWeeklyRates += weeklyRates
+		memberWeeklyRates = append(memberWeeklyRates, model.KPIWorkSessionTeamMemberWeeklyTotal{
+			UserUUID:  user.UserUUID,
+			TotalTime: weeklyRates,
+		})
+		log.Printf("User %s (%s) has total time %d", user.UserUUID, user.FirstName+" "+user.LastName, weeklyRates)
 	}
 
-	return totalWeeklyRates, nil
+	totalTeamTime := 0
+	for _, member := range memberWeeklyRates {
+		totalTeamTime += member.TotalTime
+	}
+
+	return model.KPIWorkSessionTeamWeeklyTotalResponse{
+		TotalTime: totalTeamTime,
+		StartDate: startDate,
+		EndDate:   endDate,
+		TeamUUID:  teamUUID,
+		Members:   memberWeeklyRates,
+	}, nil
 }

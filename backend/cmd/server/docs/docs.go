@@ -1169,11 +1169,28 @@ const docTemplate = `{
                 }
             }
         },
+        "model.KPIWorkSessionTeamMemberWeeklyTotal": {
+            "type": "object",
+            "properties": {
+                "total_time": {
+                    "type": "integer"
+                },
+                "user_uuid": {
+                    "type": "string"
+                }
+            }
+        },
         "model.KPIWorkSessionTeamWeeklyTotalResponse": {
             "type": "object",
             "properties": {
                 "end_date": {
                     "type": "string"
+                },
+                "members": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.KPIWorkSessionTeamMemberWeeklyTotal"
+                    }
                 },
                 "start_date": {
                     "type": "string"

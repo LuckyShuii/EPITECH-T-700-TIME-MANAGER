@@ -106,10 +106,11 @@ func (handler *KPIHandler) GetWorkSessionTeamWeeklyTotal(c *gin.Context) {
 	}
 
 	kpiResponse := model.KPIWorkSessionTeamWeeklyTotalResponse{
-		TotalTime: weeklyRates,
+		TotalTime: weeklyRates.TotalTime,
 		StartDate: startDate,
 		EndDate:   endDate,
 		TeamUUID:  teamUUID,
+		Members:   weeklyRates.Members,
 	}
 
 	c.JSON(http.StatusOK, kpiResponse)
