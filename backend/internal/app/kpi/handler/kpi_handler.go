@@ -41,6 +41,7 @@ func (handler *KPIHandler) isValidISO8601(date string) bool {
 // @Description Retrieves the total work session time in minutes for a specified user UUID between the provided start and end dates. 🔒 Requires role: **any**
 // @Tags KPI
 // @Accept json
+// @Security     BearerAuth
 // @Produce json
 // @Param start_date path string true "Start Date in ISO 8601 format"
 // @Param end_date path string true "End Date in ISO 8601 format"
@@ -69,6 +70,46 @@ func (handler *KPIHandler) GetWorkSessionUserWeeklyTotal(c *gin.Context) {
 		StartDate: startDate,
 		EndDate:   endDate,
 		UserUUID:  userUUID,
+	}
+
+	c.JSON(http.StatusOK, kpiResponse)
+}
+
+// GetWorkSessionTeamWeeklyTotal handles the HTTP request to get the total work session time for a team within a date range.
+//
+// @Summary Get total work session time for a team within a date range
+// @Description Retrieves the total work session time in minutes for a specified team UUID between the provided start and end dates. 🔒 Requires role: **manager**
+// @Tags KPI
+// @Accept json
+// @Security     BearerAuth
+// @Produce json
+// @Param start_date path string true "Start Date in ISO 8601 format"
+// @Param end_date path string true "End Date in ISO 8601 format"
+// @Param team_uuid path string true "Team UUID"
+// @Success 200 {object} model.KPIWorkSessionTeamWeeklyTotalResponse
+// @Router /kpi/work-session-team-weekly-total/{team_uuid}/{start_date}/{end_date} [get]
+func (handler *KPIHandler) GetWorkSessionTeamWeeklyTotal(c *gin.Context) {
+	startDate := c.Param("start_date")
+	endDate := c.Param("end_date")
+	teamUUID := c.Param("team_uuid")
+
+	err := handler.validateDateRange(startDate, endDate)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid date range: " + err.Error()})
+		return
+	}
+
+	weeklyRates, err := handler.service.GetWorkSessionTeamWeeklyTotal(startDate, endDate, teamUUID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve weekly rates: " + err.Error()})
+		return
+	}
+
+	kpiResponse := model.KPIWorkSessionTeamWeeklyTotalResponse{
+		TotalTime: weeklyRates,
+		StartDate: startDate,
+		EndDate:   endDate,
+		TeamUUID:  teamUUID,
 	}
 
 	c.JSON(http.StatusOK, kpiResponse)

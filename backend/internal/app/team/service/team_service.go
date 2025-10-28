@@ -11,6 +11,7 @@ import (
 type TeamService interface {
 	GetTeams() ([]model.TeamReadAll, error)
 	GetIdByUuid(id string) (int, error)
+	GetUserIDsByTeamID(teamID int) ([]int, error)
 	GetTeamByUUID(uuid string) (model.TeamReadAll, error)
 	DeleteTeamByID(id int) error
 	RemoveUserFromTeam(teamID int, userID int) error
@@ -109,4 +110,8 @@ func (service *teamService) UpdateTeamUserManagerStatus(teamUUID string, userUUI
 	}
 
 	return service.repo.UpdateTeamUserManagerStatus(teamID, userID, isManager)
+}
+
+func (service *teamService) GetUserIDsByTeamID(teamID int) ([]int, error) {
+	return service.repo.FindUserIDsByTeamID(teamID)
 }

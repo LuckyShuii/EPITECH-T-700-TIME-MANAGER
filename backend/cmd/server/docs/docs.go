@@ -105,8 +105,64 @@ const docTemplate = `{
                 }
             }
         },
+        "/kpi/work-session-team-weekly-total/{team_uuid}/{start_date}/{end_date}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieves the total work session time in minutes for a specified team UUID between the provided start and end dates. 🔒 Requires role: **manager**",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "KPI"
+                ],
+                "summary": "Get total work session time for a team within a date range",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Start Date in ISO 8601 format",
+                        "name": "start_date",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "End Date in ISO 8601 format",
+                        "name": "end_date",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Team UUID",
+                        "name": "team_uuid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.KPIWorkSessionTeamWeeklyTotalResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/kpi/work-session-user-weekly-total/{user_uuid}/{start_date}/{end_date}": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Retrieves the total work session time in minutes for a specified user UUID between the provided start and end dates. 🔒 Requires role: **any**",
                 "consumes": [
                     "application/json"
@@ -1110,6 +1166,23 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/model.DashboardLayout"
                     }
+                }
+            }
+        },
+        "model.KPIWorkSessionTeamWeeklyTotalResponse": {
+            "type": "object",
+            "properties": {
+                "end_date": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                },
+                "team_uuid": {
+                    "type": "string"
+                },
+                "total_time": {
+                    "type": "integer"
                 }
             }
         },

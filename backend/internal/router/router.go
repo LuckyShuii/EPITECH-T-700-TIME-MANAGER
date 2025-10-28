@@ -136,6 +136,7 @@ func SetupRouter() *gin.Engine {
 		// TODO: route to get all the weekly dates from a user where he worked for the frontend filter/dropdown
 
 		protected.GET("/kpi/work-session-user-weekly-total/:user_uuid/:start_date/:end_date", authMiddleware.RequireRoles("all"), kpiHandler.GetWorkSessionUserWeeklyTotal)
+		protected.GET("/kpi/work-session-team-weekly-total/:team_uuid/:start_date/:end_date", authMiddleware.RequireRoles("manager"), kpiHandler.GetWorkSessionTeamWeeklyTotal)
 	}
 
 	return r

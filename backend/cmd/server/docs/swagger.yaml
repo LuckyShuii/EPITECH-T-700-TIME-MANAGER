@@ -59,6 +59,17 @@ definitions:
           $ref: '#/definitions/model.DashboardLayout'
         type: array
     type: object
+  model.KPIWorkSessionTeamWeeklyTotalResponse:
+    properties:
+      end_date:
+        type: string
+      start_date:
+        type: string
+      team_uuid:
+        type: string
+      total_time:
+        type: integer
+    type: object
   model.KPIWorkSessionUserWeeklyTotalResponse:
     properties:
       end_date:
@@ -486,6 +497,41 @@ paths:
       summary: Get current user info
       tags:
       - Auth
+  /kpi/work-session-team-weekly-total/{team_uuid}/{start_date}/{end_date}:
+    get:
+      consumes:
+      - application/json
+      description: "Retrieves the total work session time in minutes for a specified
+        team UUID between the provided start and end dates. \U0001F512 Requires role:
+        **manager**"
+      parameters:
+      - description: Start Date in ISO 8601 format
+        in: path
+        name: start_date
+        required: true
+        type: string
+      - description: End Date in ISO 8601 format
+        in: path
+        name: end_date
+        required: true
+        type: string
+      - description: Team UUID
+        in: path
+        name: team_uuid
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.KPIWorkSessionTeamWeeklyTotalResponse'
+      security:
+      - BearerAuth: []
+      summary: Get total work session time for a team within a date range
+      tags:
+      - KPI
   /kpi/work-session-user-weekly-total/{user_uuid}/{start_date}/{end_date}:
     get:
       consumes:
@@ -516,6 +562,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/model.KPIWorkSessionUserWeeklyTotalResponse'
+      security:
+      - BearerAuth: []
       summary: Get total work session time for a user within a date range
       tags:
       - KPI
