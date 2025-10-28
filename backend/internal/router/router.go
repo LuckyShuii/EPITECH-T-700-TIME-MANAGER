@@ -26,6 +26,10 @@ import (
 	WeeklyRatesR "app/internal/app/weekly-rate/repository"
 	WeeklyRatesS "app/internal/app/weekly-rate/service"
 
+	KPIH "app/internal/app/kpi/handler"
+	KPIR "app/internal/app/kpi/repository"
+	KPIService "app/internal/app/kpi/service"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -39,6 +43,7 @@ func SetupRouter() *gin.Engine {
 	userRepo := repository.NewUserRepository(database)
 	workSessionRepo := workSessionR.NewWorkSessionRepository(database)
 	breakRepo := BreakR.NewBreakRepository(database)
+	kpiRepo := KPIR.NewKPIRepository(database)
 	teamRepo := TeamR.NewTeamRepository(database)
 	weeklyRateRepo := WeeklyRatesR.NewWeeklyRateRepository(database)
 
@@ -46,12 +51,12 @@ func SetupRouter() *gin.Engine {
 	userService := service.NewUserService(userRepo)
 	weeklyRateService := WeeklyRatesS.NewWeeklyRateService(weeklyRateRepo, userService)
 
-	// Set the WeeklyRateService in UserService to avoid circular dependency
 	userService.SetWeeklyRateService(weeklyRateService)
 
 	workSessionService := workSessionS.NewWorkSessionService(workSessionRepo, userService, breakRepo)
 	breakService := BreakS.NewBreakService(breakRepo, workSessionRepo)
 	teamService := TeamS.NewTeamService(teamRepo, userService)
+	kpiService := KPIService.NewKPIService(breakService, teamService, userService, weeklyRateService, kpiRepo)
 	authService := authS.NewAuthService(userService)
 
 	// 3) Handlers
@@ -60,6 +65,7 @@ func SetupRouter() *gin.Engine {
 	workSessionHandler := workSessionH.NewWorkSessionHandler(workSessionService)
 	breakHandler := BreakH.NewBreakHandler(breakService)
 	teamHandler := TeamH.NewTeamHandler(teamService, userService)
+	kpiHandler := KPIH.NewKPIHandler(kpiService)
 	authHandler := authH.NewAuthHandler(authService)
 	authMiddleware := &authM.AuthHandler{Service: authService}
 
@@ -123,6 +129,13 @@ func SetupRouter() *gin.Engine {
 
 		protected.PUT("/teams/edit/:uuid", authMiddleware.RequireRoles("admin"), teamHandler.UpdateTeamByUUID)
 		protected.PUT("/teams/:team_uuid/users/:user_uuid/edit-manager-status/:is_manager", authMiddleware.RequireRoles("admin"), teamHandler.UpdateTeamUserManagerStatus)
+
+		/**
+		 * KPI Routes
+		 */
+		// TODO: route to get all the weekly dates from a user where he worked for the frontend filter/dropdown
+
+		protected.GET("/kpi/work-session-user-weekly-total/:user_uuid/:start_date/:end_date", authMiddleware.RequireRoles("all"), kpiHandler.GetWorkSessionUserWeeklyTotal)
 	}
 
 	return r

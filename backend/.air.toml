@@ -1,0 +1,15 @@
+root = "."
+tmp_dir = "tmp"
+
+[build]
+# Commande de build (rapide)
+cmd = "go build -o ./tmp/main ./cmd/server/main.go"
+bin = "tmp/main"
+# Fichiers surveillés
+include_ext = ["go", "mod", "sum"]
+exclude_dir = ["vendor", "tmp"]
+
+full_bin = "./tmp/main"
+
+[log]
+time = true
