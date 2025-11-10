@@ -28,3 +28,11 @@ type MemberWeeklyRate struct {
 	UserUUID  string `json:"user_uuid"`
 	TotalTime int    `json:"total_time"`
 }
+
+// swagger:model KPIPresenceRateResponse
+type KPIPresenceRateResponse struct {
+	UserUUID           string  `json:"user_uuid"`
+	PresenceRate       float64 `json:"presence_rate"`
+	WeeklyRateExpected float64 `json:"weekly_rate_expected"`
+	WeeklyTimeDone     float64 `json:"weekly_time_done"`
+}

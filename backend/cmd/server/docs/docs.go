@@ -105,6 +105,57 @@ const docTemplate = `{
                 }
             }
         },
+        "/kpi/presence-rate/{user_uuid}/{start_date}/{end_date}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieves the presence rate percentage for a specified user UUID between the provided start and end dates. 🔒 Requires role: **any**",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "KPI"
+                ],
+                "summary": "Get presence rate for a user within a date range",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Start Date in ISO 8601 format",
+                        "name": "start_date",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "End Date in ISO 8601 format",
+                        "name": "end_date",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "User UUID",
+                        "name": "user_uuid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.KPIPresenceRateResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/kpi/work-session-team-weekly-total/{team_uuid}/{start_date}/{end_date}": {
             "get": {
                 "security": [
@@ -1166,6 +1217,23 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/model.DashboardLayout"
                     }
+                }
+            }
+        },
+        "model.KPIPresenceRateResponse": {
+            "type": "object",
+            "properties": {
+                "presence_rate": {
+                    "type": "number"
+                },
+                "user_uuid": {
+                    "type": "string"
+                },
+                "weekly_rate_expected": {
+                    "type": "number"
+                },
+                "weekly_time_done": {
+                    "type": "number"
                 }
             }
         },

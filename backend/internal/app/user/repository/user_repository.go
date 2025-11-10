@@ -70,7 +70,7 @@ func (repo *userRepository) FindIdByUuid(uuid string) (int, error) {
 		return 0, err
 	}
 	if userId == 0 {
-		return 0, fmt.Errorf("record not found")
+		return 0, fmt.Errorf("user not found")
 	}
 	return userId, nil
 }

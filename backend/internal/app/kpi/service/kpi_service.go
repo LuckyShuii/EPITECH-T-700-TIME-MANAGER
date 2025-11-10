@@ -14,6 +14,7 @@ import (
 type KPIService interface {
 	GetWorkSessionUserWeeklyTotal(startDate string, endDate string, userUUID string) (int, error)
 	GetWorkSessionTeamWeeklyTotal(startDate string, endDate string, teamUUID string) (model.KPIWorkSessionTeamWeeklyTotalResponse, error)
+	GetPresenceRate(startDate string, endDate string, userUUID string) (model.KPIPresenceRateResponse, error)
 }
 
 type kpiService struct {
@@ -85,5 +86,24 @@ func (service *kpiService) GetWorkSessionTeamWeeklyTotal(startDate string, endDa
 		EndDate:   endDate,
 		TeamUUID:  teamUUID,
 		Members:   memberWeeklyRates,
+	}, nil
+}
+
+func (service *kpiService) GetPresenceRate(startDate string, endDate string, userUUID string) (model.KPIPresenceRateResponse, error) {
+	userID, err := service.UserService.GetIdByUuid(userUUID)
+	if err != nil {
+		return model.KPIPresenceRateResponse{}, err
+	}
+
+	presenceRate, weeklyRateExpected, weeklyTimeDone, err := service.KPIRepository.GetUserPresenceRate(userID, startDate, endDate)
+	if err != nil {
+		return model.KPIPresenceRateResponse{}, err
+	}
+
+	return model.KPIPresenceRateResponse{
+		UserUUID:           userUUID,
+		PresenceRate:       presenceRate,
+		WeeklyRateExpected: weeklyRateExpected,
+		WeeklyTimeDone:     weeklyTimeDone,
 	}, nil
 }

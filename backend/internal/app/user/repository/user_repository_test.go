@@ -267,5 +267,5 @@ func TestFindIdByUuidNotFound(t *testing.T) {
 
 	_, err := repo.FindIdByUuid("non-existent-uuid")
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "record not found")
+	assert.Contains(t, err.Error(), "user not found")
 }

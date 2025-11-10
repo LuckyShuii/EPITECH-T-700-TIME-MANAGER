@@ -165,3 +165,36 @@ func (handler *KPIHandler) validateDateRange(startDate string, endDate string) e
 
 	return nil
 }
+
+// GetPresenceRate handles the HTTP request to get the presence rate for a user within a date range.
+//
+// @Summary Get presence rate for a user within a date range
+// @Description Retrieves the presence rate percentage for a specified user UUID between the provided start and end dates. 🔒 Requires role: **any**
+// @Tags KPI
+// @Accept json
+// @Security     BearerAuth
+// @Produce json
+// @Param start_date path string true "Start Date in ISO 8601 format"
+// @Param end_date path string true "End Date in ISO 8601 format"
+// @Param user_uuid path string true "User UUID"
+// @Success 200 {object} model.KPIPresenceRateResponse
+// @Router /kpi/presence-rate/{user_uuid}/{start_date}/{end_date} [get]
+func (handler *KPIHandler) GetPresenceRate(c *gin.Context) {
+	startDate := c.Param("start_date")
+	endDate := c.Param("end_date")
+	userUUID := c.Param("user_uuid")
+
+	err := handler.validateDateRange(startDate, endDate)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid date ranges: " + err.Error()})
+		return
+	}
+
+	response, err := handler.service.GetPresenceRate(startDate, endDate, userUUID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve presence rate: " + err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, response)
+}
