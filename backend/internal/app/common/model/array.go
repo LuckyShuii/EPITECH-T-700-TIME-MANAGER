@@ -12,7 +12,6 @@ import (
 type StringArray []string
 
 // Scan converts the PostgreSQL text[] format ("{a,b,c}") into a Go []string.
-// Scan converts the PostgreSQL text[] format ("{a,b,c}") into a Go []string.
 func (s *StringArray) Scan(value any) error {
 	if value == nil {
 		*s = []string{}

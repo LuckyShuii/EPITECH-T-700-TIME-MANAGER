@@ -1,26 +1,109 @@
-name: SonarCloud
+name: SonarCloud Analysis
 
 on:
   push:
     branches:
-      # the current sonarcloud plan only supports analysis on the main branch
+      - main
+  pull_request:
+    branches:
       - main
 
 jobs:
   sonarcloud:
-    name: SonarCloud analysis
+    name: SonarCloud Analysis
     runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+    # Add Docker service for testcontainers
+    services:
+      docker:
+        image: docker:dind
+        options: --privileged
 
-      - name: SonarCloud Scan
-        uses: sonarsource/sonarqube-scan-action@v6
+    env:
+      TESTCONTAINERS_RYUK_DISABLED: false
+      TESTCONTAINERS_CHECKS_DISABLE: false
+      DOCKER_HOST: unix:///var/run/docker.sock
+      SONAR_HOST_URL: https://sonarcloud.io
+      SONAR_TOKEN: ${{ secrets.SONARQUBE_TOKEN }}
+      TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE: /var/run/docker.sock
+      TESTCONTAINERS_HOST_OVERRIDE: localhost
+
+    steps:
+      - name: 🧩 Checkout repository
+        uses: actions/checkout@v4
         with:
-          args: >
-            -Dsonar.organization=luckyshuii
-            -Dsonar.projectKey=LuckyShuii_EPITECH-T-700-TIME-MANAGER
-            -Dsonar.host.url=https://sonarcloud.io
-        env:
-          SONAR_TOKEN: ${{ secrets.SONARQUBE_TOKEN }}
+          fetch-depth: 0
+
+      # ─────────────────────────────
+      # 🐹 GO BACKEND
+      # ─────────────────────────────
+      - name: 🧰 Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.22" # Fixed version number
+
+      - name: 📦 Install Go dependencies
+        working-directory: ./backend
+        run: go mod tidy
+
+      - name: 🐳 Pull PostgreSQL image (pre-cache)
+        run: docker pull postgres:16
+
+      - name: 🧪 Run Go tests with coverage
+        working-directory: ./backend
+        run: |
+          echo "Running Go tests..."
+          # Run tests with timeout and parallelism control
+          go test ./... -v -timeout 10m -p 1 -coverprofile=coverage.out -covermode=atomic
+
+          # Verify coverage file exists
+          if [ -f coverage.out ]; then
+            echo "✅ Coverage file generated"
+            
+            # Fix paths in coverage.out
+            sed -i 's|^app/|backend/|g' coverage.out
+            
+            # Display sample for debugging
+            echo "📊 Sample of coverage.out:"
+            head -n 5 coverage.out
+            
+            ls -lh coverage.out
+          else
+            echo "❌ coverage.out not generated"
+            exit 1
+          fi
+
+      # ─────────────────────────────
+      # 🎨 FRONTEND (Vue.js)
+      # ─────────────────────────────
+      # - name: 🧰 Setup Node.js
+      #   uses: actions/setup-node@v4
+      #   with:
+      #     node-version: "20"
+
+      # - name: 📦 Install frontend dependencies
+      #   working-directory: ./frontend
+      #   run: npm install
+
+      # - name: 🧪 Run frontend tests with coverage
+      #   working-directory: ./frontend
+      #   run: |
+      #     npm run test:unit -- --coverage --coverage-reporter=lcov || echo "⚠️ No frontend tests found"
+
+      #     # Check if coverage file exists
+      #     if [ -f coverage/lcov.info ]; then
+      #       echo "✅ Frontend coverage generated"
+      #       ls -lh coverage/lcov.info
+      #     fi
+
+      # ─────────────────────────────
+      # 🔍 SONARCLOUD SCAN
+      # ─────────────────────────────
+      - name: 🔎 Run SonarCloud Scan
+        uses: sonarsource/sonarqube-scan-action@v6
+
+      # Cleanup step
+      - name: 🧹 Cleanup Docker containers
+        if: always()
+        run: |
+          docker ps -aq | xargs -r docker rm -f || true

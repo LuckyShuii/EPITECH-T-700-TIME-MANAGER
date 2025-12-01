@@ -1,0 +1,1 @@
+ALTER TABLE users DROP COLUMN first_day_of_week;

@@ -9,13 +9,14 @@ import (
 )
 
 type UserBase struct {
-	UUID        string            `json:"uuid" gorm:"type:uuid;default:uuid_generate_v4();unique;not null"`
-	Username    string            `json:"username" gorm:"unique;not null"`
-	Email       string            `json:"email" gorm:"unique;not null"`
-	FirstName   string            `json:"first_name"`
-	LastName    string            `json:"last_name"`
-	PhoneNumber *string           `json:"phone_number,omitempty"`
-	Roles       model.StringArray `json:"roles" gorm:"type:text[];default:'{employee}'"`
+	UUID           string            `json:"uuid" gorm:"type:uuid;default:uuid_generate_v4();unique;not null"`
+	Username       string            `json:"username" gorm:"unique;not null"`
+	Email          string            `json:"email" gorm:"unique;not null"`
+	FirstName      string            `json:"first_name"`
+	LastName       string            `json:"last_name"`
+	PhoneNumber    *string           `json:"phone_number,omitempty"`
+	Roles          model.StringArray `json:"roles" gorm:"type:text[];default:'{employee}'"`
+	FirstDayOfWeek *int              `json:"first_day_of_week,omitempty" gorm:"default:1"`
 }
 
 type JSONLayout []map[string]any
@@ -26,11 +27,29 @@ func (j *JSONLayout) Scan(value interface{}) error {
 		return nil
 	}
 
-	bytes, ok := value.([]byte)
-	if !ok {
-		return fmt.Errorf("type assertion to []byte failed")
+	var data []byte
+	switch v := value.(type) {
+	case []byte:
+		data = v
+	case string:
+		data = []byte(v)
+	default:
+		return fmt.Errorf("unsupported type for JSONLayout: %T", value)
 	}
-	return json.Unmarshal(bytes, j)
+
+	// First try to unmarshal as an array
+	if err := json.Unmarshal(data, j); err == nil {
+		return nil
+	}
+
+	// If it's not an array, try to wrap it in an array with a single element
+	var single map[string]any
+	if err := json.Unmarshal(data, &single); err == nil {
+		*j = []map[string]any{single}
+		return nil
+	}
+
+	return fmt.Errorf("failed to parse JSONLayout: %s", string(data))
 }
 
 func (j JSONLayout) Value() (driver.Value, error) {
@@ -96,6 +115,7 @@ type UserUpdateEntry struct {
 	Status         *string            `json:"status,omitempty"`
 	WeeklyRateUUID *string            `json:"weekly_rate_uuid,omitempty"`
 	WeeklyRateID   *int               `json:"weekly_rate_id,omitempty"`
+	FirstDayOfWeek *int               `json:"first_day_of_week,omitempty"`
 }
 
 // StringArray is a custom type representing an array of strings.

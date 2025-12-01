@@ -11,6 +11,7 @@ import (
 type TeamRepository interface {
 	FindAll() ([]model.TeamReadAll, error)
 	FindIdByUuid(id string) (teamId int, err error)
+	FindUserIDsByTeamID(teamID int) ([]model.TeamMemberLight, error)
 	FindByID(id int) (model.TeamReadAll, error)
 	DeleteByID(id int) error
 	DeleteUserFromTeam(teamID int, userID int) error
@@ -30,7 +31,8 @@ func NewTeamRepository(db *gorm.DB) TeamRepository {
 
 func (repo *teamRepository) FindAll() ([]model.TeamReadAll, error) {
 	var teams []model.TeamReadAll
-	err := repo.db.Raw(`
+
+	query := `
 		SELECT 
 			t.uuid,
 			t.name,
@@ -46,14 +48,15 @@ func (repo *teamRepository) FindAll() ([]model.TeamReadAll, error) {
 					'first_name', u.first_name,
 					'last_name', u.last_name,
 					'phone_number', u.phone_number,
+					'first_day_of_week', u.first_day_of_week,
 					'is_manager', tm.is_manager,
 					'weekly_rate', COALESCE(wr.amount, 0),
 					'weekly_rate_name', wr.rate_name
 				)
 			) AS team_members
 		FROM teams t
-		JOIN teams_members tm ON tm.team_id = t.id
-		JOIN users u ON u.id = tm.user_id
+		LEFT JOIN teams_members tm ON tm.team_id = t.id
+		LEFT JOIN users u ON u.id = tm.user_id
 		LEFT JOIN weekly_rate wr ON wr.id = u.weekly_rate_id
 		LEFT JOIN LATERAL (
 			SELECT 
@@ -67,8 +70,14 @@ func (repo *teamRepository) FindAll() ([]model.TeamReadAll, error) {
 			t.id, t.uuid, t.name, t.description
 		ORDER BY 
 			t.name;
-	`).Scan(&teams).Error
-	return teams, err
+	`
+
+	err := repo.db.Raw(query).Scan(&teams).Error
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch teams: %w", err)
+	}
+
+	return teams, nil
 }
 
 func (repo *teamRepository) FindIdByUuid(uuid string) (teamId int, err error) {
@@ -76,12 +85,16 @@ func (repo *teamRepository) FindIdByUuid(uuid string) (teamId int, err error) {
 	if err != nil {
 		return 0, err
 	}
+	if teamId == 0 {
+		return 0, fmt.Errorf("team not found")
+	}
 	return teamId, nil
 }
 
 func (repo *teamRepository) FindByID(id int) (model.TeamReadAll, error) {
 	var team model.TeamReadAll
-	err := repo.db.Raw(`
+
+	query := `
 		SELECT 
 			t.uuid,
 			t.name,
@@ -97,14 +110,15 @@ func (repo *teamRepository) FindByID(id int) (model.TeamReadAll, error) {
 					'email', u.email,
 					'first_name', u.first_name,
 					'last_name', u.last_name,
+					'first_day_of_week', u.first_day_of_week,
 					'phone_number', u.phone_number,
 					'weekly_rate', COALESCE(wr.amount, 0),
 					'weekly_rate_name', wr.rate_name
 				)
 			) AS team_members
 		FROM teams t
-		JOIN teams_members tm ON tm.team_id = t.id
-		JOIN users u ON u.id = tm.user_id
+		LEFT JOIN teams_members tm ON tm.team_id = t.id
+		LEFT JOIN users u ON u.id = tm.user_id
 		LEFT JOIN weekly_rate wr ON wr.id = u.weekly_rate_id
 		LEFT JOIN LATERAL (
 			SELECT 
@@ -117,8 +131,16 @@ func (repo *teamRepository) FindByID(id int) (model.TeamReadAll, error) {
 		WHERE t.id = ?
 		GROUP BY 
 			t.id, t.uuid, t.name, t.description;
-	`, id).Scan(&team).Error
-	return team, err
+	`
+
+	err := repo.db.Raw(query, id).Scan(&team).Error
+	if err != nil {
+		return team, fmt.Errorf("failed to fetch team: %w", err)
+	}
+	if team.UUID == "" {
+		return model.TeamReadAll{}, fmt.Errorf("team with id %d not found", id)
+	}
+	return team, nil
 }
 
 func (repo *teamRepository) DeleteByID(id int) error {
@@ -193,4 +215,13 @@ func (repo *teamRepository) UpdateTeamByID(id int, updatedTeam model.TeamUpdate)
 
 func (repo *teamRepository) UpdateTeamUserManagerStatus(teamID int, userID int, isManager bool) error {
 	return repo.db.Exec("UPDATE teams_members SET is_manager = ? WHERE team_id = ? AND user_id = ?", isManager, teamID, userID).Error
+}
+
+func (repo *teamRepository) FindUserIDsByTeamID(teamID int) ([]model.TeamMemberLight, error) {
+	var users []model.TeamMemberLight
+	err := repo.db.Raw("SELECT user_id, u.uuid AS user_uuid, u.first_name, u.last_name FROM teams_members INNER JOIN users u ON u.id = teams_members.user_id WHERE team_id = ?", teamID).Scan(&users).Error
+	if err != nil {
+		return nil, err
+	}
+	return users, nil
 }
