@@ -19,7 +19,6 @@ const handleClick = () => {
   emit('viewDetails', props.data)
 }
 </script>
-
 <template>
   <div class="card bg-base-100 shadow-xl cursor-pointer hover:shadow-2xl transition-shadow" @click="handleClick">
     <div class="card-body">
@@ -34,20 +33,6 @@ const handleClick = () => {
         <div class="stat">
           <div class="stat-title">Total semaine</div>
           <div class="stat-value text-primary">{{ data.totalWeek }}h</div>
-        </div>
-
-        <!-- Détail par jour -->
-        <div class="divider"></div>
-        
-        <div class="space-y-2">
-          <div 
-            v-for="dayWork in data.byDay" 
-            :key="dayWork.day"
-            class="flex justify-between items-center p-2 hover:bg-base-200 rounded-lg transition-colors"
-          >
-            <span class="capitalize font-medium">{{ dayWork.day }}</span>
-            <span class="badge badge-ghost">{{ dayWork.hours }}h</span>
-          </div>
         </div>
       </div>
     </div>

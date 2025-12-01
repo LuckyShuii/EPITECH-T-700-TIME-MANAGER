@@ -1,14 +1,15 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import type { WeeklyProgressData } from '@/types/kpi'
 
 interface Props {
-  data: WeeklyProgressData | null  // ← CHANGEMENT ICI
+  data: WeeklyProgressData | null
   loading?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
   loading: false,
-  data: null  // ← AJOUT ICI
+  data: null
 })
 
 const emit = defineEmits<{
@@ -53,13 +54,12 @@ const hasValidData = computed(() => {
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
         </svg>
         <p class="text-center text-base-content/70">
-          Aucune donnée disponible pour cette semaine.<br>
-          <span class="text-sm">Les données seront disponibles dès demain.</span>
+          Aucune donnée disponible pour le moment.
         </p>
       </div>
 
       <!-- Données disponibles -->
-      <div v-else class="space-y-4">
+      <div v-else-if="data" class="space-y-4">
         <!-- Barre de progression -->
         <div class="w-full">
           <div class="flex justify-between text-sm mb-2">

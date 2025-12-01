@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { PencilSquareIcon, ArrowPathIcon } from '@heroicons/vue/24/outline'
+import { Square3Stack3DIcon, ArrowPathIcon } from '@heroicons/vue/24/outline'
 import { useEditModeStore } from '@/store/editModeStore'
 import { useLayoutStore } from '@/store/layoutStore'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
@@ -8,6 +8,8 @@ import ConfirmDialog from '@/components/ConfirmDialog.vue'
 // Stores
 const editModeStore = useEditModeStore()
 const layoutStore = useLayoutStore()
+
+
 
 // État
 const isEditMode = computed(() => editModeStore.isEditMode)
@@ -50,7 +52,7 @@ function resetLayout() {
     ]"
     :title="isEditMode ? 'Terminer la personnalisation' : 'Personnaliser le dashboard'"
   >
-    <PencilSquareIcon class="w-5 h-5" />
+    <Square3Stack3DIcon class="w-5 h-5" />
   </button>
 
   <!-- Modal de confirmation -->

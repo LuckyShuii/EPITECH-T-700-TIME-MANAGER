@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'  // ← AJOUTE onMounted, onUnmounted
-import { useEditModeStore } from '@/store/EditModeStore'  // ← AJOUTE
+import { ref, onMounted, onUnmounted } from 'vue'
+import { useEditModeStore } from '@/store/EditModeStore'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 import CalendarWidget from '@/components/widget/CalendarWidget.vue'
 import BaseModal from '@/components/Modal/BaseModal.vue'
@@ -8,15 +8,24 @@ import RegisterForm from '@/components/RegisterForm.vue'
 import StaffSettingsModal from '@/components/Modal/StaffSettingsModal.vue'
 import TeamManagementAdminModal from '@/components/Modal/TeamManagementAdminModal.vue'
 
-// AJOUTE CES LIGNES ↓
+// Import des KPI cards
+import WorkingTimeCard from '@/components/kpi/cards/WorkingTimeCard.vue'
+import WeeklyProgressCard from '@/components/kpi/cards/WeeklyProgressCard.vue'
+import ShiftAverageCard from '@/components/kpi/cards/ShiftAverageCard.vue'
+
+// Import des mock data
+import {
+  mockWorkingTimeIndividual,
+  mockWeeklyProgress,
+  mockShiftAverage
+} from '@/mocks/kpiMockData'
+
 const editModeStore = useEditModeStore()
 
-// Enregistre que ce dashboard est actif
 onMounted(() => {
   editModeStore.setCurrentDashboard('admin')
 })
 
-// Nettoie quand on quitte le dashboard
 onUnmounted(() => {
   editModeStore.reset()
 })
@@ -49,11 +58,19 @@ const isTeamManagementModalOpen = ref(false)
 const openTeamManagementModal = () => {
   isTeamManagementModalOpen.value = true
 }
+
+// Handler pour les KPI (placeholder)
+const handleKpiDetails = (data: any) => {
+  console.log('KPI détails:', data)
+  // TODO: Ouvrir un modal ou naviguer
+}
+
+// État de chargement des KPI (pour test)
+const kpiLoading = ref(false)
 </script>
 
 <template>
   <AdminLayout>
-    <!-- Le reste du template reste identique -->
     <template #add-employee>
       <button @click="openAddEmployeeModal"
         class="h-full w-full bg-gradient-to-br from-primary-500 to-secondary-500 hover:shadow-card-hover text-white rounded-3xl shadow-card transition-all duration-300 flex flex-col items-center justify-center gap-4 group cursor-pointer">
@@ -78,45 +95,51 @@ const openTeamManagementModal = () => {
       </button>
     </template>
 
-    <template #kpi-history>
-      <div class="bg-orange-100 p-4 rounded h-full flex items-center justify-center">
-        <p class="text-sm font-medium">📈 KPI historique</p>
-      </div>
+    <!-- KPI Cards dans les slots disponibles -->
+    <template #widget-6>
+      <WorkingTimeCard 
+        :data="mockWorkingTimeIndividual"
+        :loading="kpiLoading"
+        @view-details="handleKpiDetails"
+      />
     </template>
 
+    <!-- CALENDAR RESTE ICI -->
     <template #calendar>
       <div class="bg-white p-6 rounded h-full">
         <CalendarWidget />
       </div>
     </template>
 
-    <template #widget-6>
-      <div class="bg-gray-100 p-6 rounded h-full flex items-center justify-center">
-        <p class="text-gray-500">Widget 6 - À définir</p>
-      </div>
+    <template #manager-report>
+      <WeeklyProgressCard 
+        :data="mockWeeklyProgress"
+        :loading="kpiLoading"
+        @view-details="handleKpiDetails"
+      />
     </template>
 
     <template #remote-absence>
-      <div class="bg-indigo-100 p-4 rounded h-full flex items-center justify-center">
-        <p class="text-sm font-medium">🏠 TT / Absent</p>
-      </div>
+      <ShiftAverageCard 
+        :data="mockShiftAverage"
+        :loading="kpiLoading"
+        @view-details="handleKpiDetails"
+      />
     </template>
 
-    <template #manager-report>
+    <template #kpi-history>
       <div class="bg-yellow-100 p-4 rounded h-full flex items-center justify-center">
         <p class="text-sm font-medium">👔 Rapport manager</p>
       </div>
     </template>
   </AdminLayout>
 
-  <!-- Modal d'ajout d'employé -->
+  <!-- Modals -->
   <BaseModal v-model="isAddEmployeeModalOpen" title="Créer un nouvel employé" size="lg">
     <RegisterForm @success="handleEmployeeCreated" @cancel="closeAddEmployeeModal" />
   </BaseModal>
   
-  <!-- Modal paramétrage effectif -->
   <StaffSettingsModal v-model="isStaffSettingsModalOpen" />
 
-  <!-- Modal gestion des équipes -->
   <TeamManagementAdminModal v-model="isTeamManagementModalOpen" />
 </template>
