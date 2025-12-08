@@ -205,7 +205,7 @@ func (service *kpiService) ExportKPIData(startDate string, endDate string, reque
 	// return file info
 	return model.KPIExportResponse{
 		File: filename,
-		URL:  "/api/kpi/" + filename,
+		URL:  "/api/kpi/files/" + filename,
 	}, nil
 }
 

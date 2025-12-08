@@ -140,6 +140,7 @@ func SetupRouter() *gin.Engine {
 		protected.GET("/kpi/presence-rate/:user_uuid/:start_date/:end_date", authMiddleware.RequireRoles("manager, admin"), kpiHandler.GetPresenceRate)
 
 		protected.POST("/kpi/export", authMiddleware.RequireRoles("manager, admin"), kpiHandler.ExportKPIData)
+		protected.Static("/kpi/files", "/app/data/kpi")
 	}
 
 	return r
