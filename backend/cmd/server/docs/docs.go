@@ -105,6 +105,45 @@ const docTemplate = `{
                 }
             }
         },
+        "/kpi/export": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Exports KPI data for the specified date range. 🔒 Requires role: **manager, admin**",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "KPI"
+                ],
+                "summary": "Export KPI data within a date range",
+                "parameters": [
+                    {
+                        "description": "KPI Export Request",
+                        "name": "kpi_export_request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.KPIExportRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.KPIExportResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/kpi/presence-rate/{user_uuid}/{start_date}/{end_date}": {
             "get": {
                 "security": [
@@ -1220,9 +1259,53 @@ const docTemplate = `{
                 }
             }
         },
+        "model.KPIExportRequest": {
+            "type": "object",
+            "required": [
+                "end_date",
+                "kpi_type",
+                "start_date"
+            ],
+            "properties": {
+                "end_date": {
+                    "type": "string"
+                },
+                "kpi_type": {
+                    "type": "string",
+                    "enum": [
+                        "work_session_user_weekly_total",
+                        "work_session_team_weekly_total",
+                        "presence_rate"
+                    ]
+                },
+                "start_date": {
+                    "type": "string"
+                },
+                "uuid_to_search": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.KPIExportResponse": {
+            "type": "object",
+            "properties": {
+                "file": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
         "model.KPIPresenceRateResponse": {
             "type": "object",
             "properties": {
+                "first_name": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string"
+                },
                 "presence_rate": {
                     "type": "number"
                 },
@@ -1240,6 +1323,12 @@ const docTemplate = `{
         "model.KPIWorkSessionTeamMemberWeeklyTotal": {
             "type": "object",
             "properties": {
+                "first_name": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string"
+                },
                 "total_time": {
                     "type": "integer"
                 },
@@ -1261,6 +1350,9 @@ const docTemplate = `{
                     }
                 },
                 "start_date": {
+                    "type": "string"
+                },
+                "team_name": {
                     "type": "string"
                 },
                 "team_uuid": {

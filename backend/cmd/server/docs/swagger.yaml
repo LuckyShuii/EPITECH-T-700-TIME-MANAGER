@@ -59,8 +59,38 @@ definitions:
           $ref: '#/definitions/model.DashboardLayout'
         type: array
     type: object
+  model.KPIExportRequest:
+    properties:
+      end_date:
+        type: string
+      kpi_type:
+        enum:
+        - work_session_user_weekly_total
+        - work_session_team_weekly_total
+        - presence_rate
+        type: string
+      start_date:
+        type: string
+      uuid_to_search:
+        type: string
+    required:
+    - end_date
+    - kpi_type
+    - start_date
+    type: object
+  model.KPIExportResponse:
+    properties:
+      file:
+        type: string
+      url:
+        type: string
+    type: object
   model.KPIPresenceRateResponse:
     properties:
+      first_name:
+        type: string
+      last_name:
+        type: string
       presence_rate:
         type: number
       user_uuid:
@@ -72,6 +102,10 @@ definitions:
     type: object
   model.KPIWorkSessionTeamMemberWeeklyTotal:
     properties:
+      first_name:
+        type: string
+      last_name:
+        type: string
       total_time:
         type: integer
       user_uuid:
@@ -86,6 +120,8 @@ definitions:
           $ref: '#/definitions/model.KPIWorkSessionTeamMemberWeeklyTotal'
         type: array
       start_date:
+        type: string
+      team_name:
         type: string
       team_uuid:
         type: string
@@ -519,6 +555,31 @@ paths:
       summary: Get current user info
       tags:
       - Auth
+  /kpi/export:
+    post:
+      consumes:
+      - application/json
+      description: "Exports KPI data for the specified date range. \U0001F512 Requires
+        role: **manager, admin**"
+      parameters:
+      - description: KPI Export Request
+        in: body
+        name: kpi_export_request
+        required: true
+        schema:
+          $ref: '#/definitions/model.KPIExportRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.KPIExportResponse'
+      security:
+      - BearerAuth: []
+      summary: Export KPI data within a date range
+      tags:
+      - KPI
   /kpi/presence-rate/{user_uuid}/{start_date}/{end_date}:
     get:
       consumes:
