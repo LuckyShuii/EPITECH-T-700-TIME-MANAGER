@@ -4,7 +4,6 @@ import (
 	"app/internal/app/user/model"
 	"app/internal/app/user/repository"
 	"fmt"
-	"log"
 	"strings"
 	"unicode"
 
@@ -67,7 +66,6 @@ func (service *userService) RegisterUser(user model.UserCreate) error {
 
 	if user.WeeklyRateUUID != nil {
 		weeklyRateID, err := service.WeeklyRateService.GetIdByUuid(*user.WeeklyRateUUID)
-		log.Printf("Fetched weekly rate ID: %d", weeklyRateID)
 		if err != nil {
 			return fmt.Errorf("failed to fetch weekly rates: %w", err)
 		}
