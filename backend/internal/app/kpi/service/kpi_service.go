@@ -5,16 +5,20 @@ import (
 	TeamService "app/internal/app/team/service"
 	UserService "app/internal/app/user/service"
 	WeeklyRateService "app/internal/app/weekly-rate/service"
-	"log"
+	"fmt"
+	"os"
 
 	"app/internal/app/kpi/model"
 	KPIRepository "app/internal/app/kpi/repository"
+
+	"app/internal/app/kpi/export"
 )
 
 type KPIService interface {
 	GetWorkSessionUserWeeklyTotal(startDate string, endDate string, userUUID string) (int, error)
 	GetWorkSessionTeamWeeklyTotal(startDate string, endDate string, teamUUID string) (model.KPIWorkSessionTeamWeeklyTotalResponse, error)
 	GetPresenceRate(startDate string, endDate string, userUUID string) (model.KPIPresenceRateResponse, error)
+	ExportKPIData(startDate string, endDate string, requestedByUUID string, kpiType string, uuidToSearch string) (model.KPIExportResponse, error)
 }
 
 type kpiService struct {
@@ -51,28 +55,28 @@ func (service *kpiService) GetWorkSessionUserWeeklyTotal(startDate string, endDa
 
 func (service *kpiService) GetWorkSessionTeamWeeklyTotal(startDate string, endDate string, teamUUID string) (model.KPIWorkSessionTeamWeeklyTotalResponse, error) {
 	teamID, err := service.TeamService.GetIdByUuid(teamUUID)
+	team, err := service.TeamService.GetTeamByUUID(teamUUID)
 	if err != nil {
 		return model.KPIWorkSessionTeamWeeklyTotalResponse{}, err
 	}
 
 	users, err := service.TeamService.GetUserIDsByTeamID(teamID)
-	log.Printf("Found users for team %s: %v", teamUUID, users)
 	if err != nil {
 		return model.KPIWorkSessionTeamWeeklyTotalResponse{}, err
 	}
 
 	memberWeeklyRates := make([]model.KPIWorkSessionTeamMemberWeeklyTotal, 0)
 	for _, user := range users {
-		log.Printf("Calculating weekly rates for user %s (%s)", user.UserUUID, user.FirstName+" "+user.LastName)
 		weeklyRates, err := service.KPIRepository.GetWeeklyRatesByUserIDAndDateRange(user.UserID, startDate, endDate)
 		if err != nil {
 			return model.KPIWorkSessionTeamWeeklyTotalResponse{}, err
 		}
 		memberWeeklyRates = append(memberWeeklyRates, model.KPIWorkSessionTeamMemberWeeklyTotal{
 			UserUUID:  user.UserUUID,
+			FirstName: user.FirstName,
+			LastName:  user.LastName,
 			TotalTime: weeklyRates,
 		})
-		log.Printf("User %s (%s) has total time %d", user.UserUUID, user.FirstName+" "+user.LastName, weeklyRates)
 	}
 
 	totalTeamTime := 0
@@ -85,6 +89,7 @@ func (service *kpiService) GetWorkSessionTeamWeeklyTotal(startDate string, endDa
 		StartDate: startDate,
 		EndDate:   endDate,
 		TeamUUID:  teamUUID,
+		TeamName:  team.Name,
 		Members:   memberWeeklyRates,
 	}, nil
 }
@@ -100,10 +105,110 @@ func (service *kpiService) GetPresenceRate(startDate string, endDate string, use
 		return model.KPIPresenceRateResponse{}, err
 	}
 
+	data, err := service.UserService.GetUserByUUID(userUUID)
+	if err != nil {
+		return model.KPIPresenceRateResponse{}, err
+	}
+
 	return model.KPIPresenceRateResponse{
+		FirstName:          data.FirstName,
+		LastName:           data.LastName,
 		UserUUID:           userUUID,
 		PresenceRate:       presenceRate,
 		WeeklyRateExpected: weeklyRateExpected,
 		WeeklyTimeDone:     weeklyTimeDone,
 	}, nil
+}
+
+func (service *kpiService) ExportKPIData(startDate string, endDate string, requestedByUUID string, kpiType string, uuidToSearch string) (model.KPIExportResponse, error) {
+	filename := fmt.Sprintf("kpi_%s_%s.csv", kpiType, requestedByUUID)
+	tmpPath := "/app/tmp/kpi/" + filename
+	finalPath := "/app/data/kpi/" + filename
+
+	var headers []string
+	var rows [][]string
+
+	// generate data based on kpiType
+	switch kpiType {
+	case "work_session_user_weekly_total":
+		total, err := service.GetWorkSessionUserWeeklyTotal(startDate, endDate, uuidToSearch)
+		if err != nil {
+			return model.KPIExportResponse{}, err
+		}
+
+		user, err := service.UserService.GetUserByUUID(uuidToSearch)
+		if err != nil {
+			return model.KPIExportResponse{}, err
+		}
+
+		headers = []string{"user uuid", "firstname", "lastname", "start date", "end date", "total minutes"}
+		rows = [][]string{
+			{uuidToSearch, user.FirstName, user.LastName, startDate, endDate, fmt.Sprint(total)},
+		}
+
+	case "work_session_team_weekly_total":
+		data, err := service.GetWorkSessionTeamWeeklyTotal(startDate, endDate, uuidToSearch)
+		if err != nil {
+			return model.KPIExportResponse{}, err
+		}
+
+		headers = []string{"team uuid", "team name", "start date", "end date", "total time"}
+		rows = [][]string{
+			{data.TeamUUID, data.TeamName, startDate, endDate, fmt.Sprint(data.TotalTime)},
+		}
+
+		headers = append(headers, "member user uuid", "firstname", "lastname", "member total minutes")
+		for _, member := range data.Members {
+			rows = append(rows, []string{"", "", "", "", "", member.UserUUID, member.FirstName, member.LastName, fmt.Sprint(member.TotalTime)})
+		}
+
+	case "presence_rate":
+		data, err := service.GetPresenceRate(startDate, endDate, uuidToSearch)
+		if err != nil {
+			return model.KPIExportResponse{}, err
+		}
+
+		headers = []string{"user uuid", "firstname", "lastname", "start date", "end date", "presence rate", "weekly rate expected", "weekly time done"}
+		rows = [][]string{
+			{
+				data.UserUUID,
+				data.FirstName,
+				data.LastName,
+				startDate,
+				endDate,
+				fmt.Sprintf("%.2f", data.PresenceRate),
+				fmt.Sprint(data.WeeklyRateExpected),
+				fmt.Sprint(data.WeeklyTimeDone),
+			},
+		}
+
+	default:
+		return model.KPIExportResponse{}, fmt.Errorf("unknown KPI type: %s", kpiType)
+	}
+
+	if err := exportCSV(headers, rows, tmpPath); err != nil {
+		return model.KPIExportResponse{}, err
+	}
+
+	// if the file already exists in /data/kpi/, delete it
+	if _, err := os.Stat(finalPath); err == nil {
+		if err := os.Remove(finalPath); err != nil {
+			return model.KPIExportResponse{}, err
+		}
+	}
+
+	// move file from tmp to final destination
+	if err := os.Rename(tmpPath, finalPath); err != nil {
+		return model.KPIExportResponse{}, err
+	}
+
+	// return file info
+	return model.KPIExportResponse{
+		File: filename,
+		URL:  "/api/kpi/" + filename,
+	}, nil
+}
+
+func exportCSV(headers []string, rows [][]string, path string) error {
+	return export.ExportCSV(headers, rows, path)
 }

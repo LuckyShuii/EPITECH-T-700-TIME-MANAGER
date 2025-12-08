@@ -5,8 +5,10 @@ import (
 	"net/http"
 	"time"
 
+	AuthService "app/internal/app/auth/service"
 	"app/internal/app/kpi/model"
 	KPIService "app/internal/app/kpi/service"
+	Config "app/internal/config"
 
 	"github.com/gin-gonic/gin"
 )
@@ -197,4 +199,45 @@ func (handler *KPIHandler) GetPresenceRate(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, response)
+}
+
+// ExportKPIData handles the HTTP request to export KPI data within a date range.
+//
+// @Summary Export KPI data within a date range
+// @Description Exports KPI data for the specified date range. 🔒 Requires role: **manager, admin**
+// @Tags KPI
+// @Accept json
+// @Security     BearerAuth
+// @Produce json
+// @Param kpi_export_request body model.KPIExportRequest true "KPI Export Request"
+// @Success 200 {object} model.KPIExportResponse
+// @Router /kpi/export [post]
+func (handler *KPIHandler) ExportKPIData(c *gin.Context) {
+	var exportRequest model.KPIExportRequest
+	if err := c.ShouldBindJSON(&exportRequest); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request payload: " + err.Error()})
+		return
+	}
+
+	claims, exists := c.Get("userClaims")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": Config.ErrorMessages()["NO_CLAIMS"]})
+		return
+	}
+
+	authClaims := claims.(*AuthService.Claims)
+
+	err := handler.validateDateRange(exportRequest.StartDate, exportRequest.EndDate)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid date ranges: " + err.Error()})
+		return
+	}
+
+	exportResponse, err := handler.service.ExportKPIData(exportRequest.StartDate, exportRequest.EndDate, authClaims.UUID, exportRequest.KPIType, exportRequest.UUIDToSearch)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to export KPI data: " + err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, exportResponse)
 }
