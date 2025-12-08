@@ -6,6 +6,7 @@ import (
 	UserService "app/internal/app/user/service"
 	WeeklyRateService "app/internal/app/weekly-rate/service"
 	"fmt"
+	"log"
 	"os"
 
 	"app/internal/app/kpi/model"
@@ -19,6 +20,7 @@ type KPIService interface {
 	GetWorkSessionTeamWeeklyTotal(startDate string, endDate string, teamUUID string) (model.KPIWorkSessionTeamWeeklyTotalResponse, error)
 	GetPresenceRate(startDate string, endDate string, userUUID string) (model.KPIPresenceRateResponse, error)
 	ExportKPIData(startDate string, endDate string, requestedByUUID string, kpiType string, uuidToSearch string) (model.KPIExportResponse, error)
+	GetAverageBreakTime(startDate string, endDate string, userUUID string) (model.KPIAverageBreakTimeResponse, error)
 }
 
 type kpiService struct {
@@ -54,10 +56,14 @@ func (service *kpiService) GetWorkSessionUserWeeklyTotal(startDate string, endDa
 }
 
 func (service *kpiService) GetWorkSessionTeamWeeklyTotal(startDate string, endDate string, teamUUID string) (model.KPIWorkSessionTeamWeeklyTotalResponse, error) {
-	teamID, err := service.TeamService.GetIdByUuid(teamUUID)
-	team, err := service.TeamService.GetTeamByUUID(teamUUID)
-	if err != nil {
-		return model.KPIWorkSessionTeamWeeklyTotalResponse{}, err
+	teamID, userIdErr := service.TeamService.GetIdByUuid(teamUUID)
+	if userIdErr != nil {
+		return model.KPIWorkSessionTeamWeeklyTotalResponse{}, userIdErr
+	}
+
+	team, teamUuidErr := service.TeamService.GetTeamByUUID(teamUUID)
+	if teamUuidErr != nil {
+		return model.KPIWorkSessionTeamWeeklyTotalResponse{}, teamUuidErr
 	}
 
 	users, err := service.TeamService.GetUserIDsByTeamID(teamID)
@@ -182,6 +188,25 @@ func (service *kpiService) ExportKPIData(startDate string, endDate string, reque
 			},
 		}
 
+	case "weekly_average_break_time":
+		log.Println("Exporting weekly average break time")
+		data, err := service.GetAverageBreakTime(startDate, endDate, uuidToSearch)
+		if err != nil {
+			return model.KPIExportResponse{}, err
+		}
+
+		headers = []string{"user uuid", "firstname", "lastname", "start date", "end date", "average break time (minutes)"}
+		rows = [][]string{
+			{
+				data.UserUUID,
+				data.FirstName,
+				data.LastName,
+				startDate,
+				endDate,
+				fmt.Sprintf("%.2f", data.AverageBreakTime),
+			},
+		}
+
 	default:
 		return model.KPIExportResponse{}, fmt.Errorf("unknown KPI type: %s", kpiType)
 	}
@@ -211,4 +236,30 @@ func (service *kpiService) ExportKPIData(startDate string, endDate string, reque
 
 func exportCSV(headers []string, rows [][]string, path string) error {
 	return export.ExportCSV(headers, rows, path)
+}
+
+func (service *kpiService) GetAverageBreakTime(startDate string, endDate string, userUUID string) (model.KPIAverageBreakTimeResponse, error) {
+	userID, err := service.UserService.GetIdByUuid(userUUID)
+	if err != nil {
+		return model.KPIAverageBreakTimeResponse{}, err
+	}
+
+	averageBreakTime, err := service.KPIRepository.GetUserAverageBreakTime(userID, startDate, endDate)
+	if err != nil {
+		return model.KPIAverageBreakTimeResponse{}, err
+	}
+
+	data, err := service.UserService.GetUserByUUID(userUUID)
+	if err != nil {
+		return model.KPIAverageBreakTimeResponse{}, err
+	}
+
+	return model.KPIAverageBreakTimeResponse{
+		FirstName:        data.FirstName,
+		LastName:         data.LastName,
+		UserUUID:         userUUID,
+		AverageBreakTime: averageBreakTime,
+		StartDate:        startDate,
+		EndDate:          endDate,
+	}, nil
 }

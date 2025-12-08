@@ -44,7 +44,7 @@ type KPIPresenceRateResponse struct {
 
 // swagger:model KPIExportRequest
 type KPIExportRequest struct {
-	KPIType      string `json:"kpi_type" binding:"required,oneof=work_session_user_weekly_total work_session_team_weekly_total presence_rate"`
+	KPIType      string `json:"kpi_type" binding:"required,oneof=work_session_user_weekly_total work_session_team_weekly_total presence_rate weekly_average_break_time"`
 	StartDate    string `json:"start_date" binding:"required"`
 	EndDate      string `json:"end_date" binding:"required"`
 	UUIDToSearch string `json:"uuid_to_search"`
@@ -54,4 +54,14 @@ type KPIExportRequest struct {
 type KPIExportResponse struct {
 	File string `json:"file"`
 	URL  string `json:"url"`
+}
+
+// swagger:model KPIAverageBreakTimeResponse
+type KPIAverageBreakTimeResponse struct {
+	FirstName        string  `json:"first_name"`
+	LastName         string  `json:"last_name"`
+	UserUUID         string  `json:"user_uuid"`
+	AverageBreakTime float64 `json:"average_break_time"`
+	StartDate        string  `json:"start_date"`
+	EndDate          string  `json:"end_date"`
 }

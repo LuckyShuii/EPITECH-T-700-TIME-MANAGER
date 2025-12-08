@@ -8,6 +8,7 @@ import (
 
 type KPIRepository interface {
 	GetWeeklyRatesByUserIDAndDateRange(userID int, startDate string, endDate string) (int, error)
+	GetUserAverageBreakTime(userID int, startDate, endDate string) (float64, error)
 	GetUserPresenceRate(userID int, startDate, endDate string) (float64, float64, float64, error)
 }
 
@@ -95,4 +96,31 @@ func (repo *kpiRepository) GetUserPresenceRate(userID int, startDate, endDate st
 	doneHours = math.Round(doneHours*100) / 100
 
 	return presenceRate, weeklyRateDB, doneHours, nil
+}
+
+func (repo *kpiRepository) GetUserAverageBreakTime(userID int, startDate, endDate string) (float64, error) {
+	var totalBreakMinutes float64
+
+	err := repo.db.Raw(`
+        SELECT COALESCE(SUM(breaks_duration_minutes), 0) AS total_break
+        FROM (
+            SELECT breaks_duration_minutes, clock_in
+            FROM work_session_active
+            WHERE user_id = ? AND clock_in BETWEEN ? AND ?
+
+            UNION ALL
+
+            SELECT breaks_duration_minutes, clock_in
+            FROM work_session_archived
+            WHERE user_id = ? AND clock_in BETWEEN ? AND ?
+        ) AS all_sessions;
+    `, userID, startDate, endDate, userID, startDate, endDate).Scan(&totalBreakMinutes).Error
+
+	if err != nil {
+		return 0, err
+	}
+
+	days := 5
+
+	return totalBreakMinutes / float64(days), nil
 }
