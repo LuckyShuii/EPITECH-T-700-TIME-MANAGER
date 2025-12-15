@@ -30,6 +30,8 @@ import (
 	KPIR "app/internal/app/kpi/repository"
 	KPIService "app/internal/app/kpi/service"
 
+	"app/internal/app/mailer"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -48,7 +50,7 @@ func SetupRouter() *gin.Engine {
 	weeklyRateRepo := WeeklyRatesR.NewWeeklyRateRepository(database)
 
 	// 2) Services
-	userService := service.NewUserService(userRepo)
+	userService := service.NewUserService(userRepo, mailer.Service)
 	weeklyRateService := WeeklyRatesS.NewWeeklyRateService(weeklyRateRepo, userService)
 
 	userService.SetWeeklyRateService(weeklyRateService)

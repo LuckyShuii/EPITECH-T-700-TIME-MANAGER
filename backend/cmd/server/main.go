@@ -1,6 +1,8 @@
 package main
 
 import (
+	"app/internal/app/mailer"
+	"app/internal/app/mailer/provider"
 	"app/internal/config"
 	"app/internal/router"
 	"time"
@@ -11,6 +13,8 @@ import (
 
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
+
+	mailerservice "app/internal/app/mailer/service"
 )
 
 // @securityDefinitions.apikey BearerAuth
@@ -18,6 +22,12 @@ import (
 // @name Authorization
 func main() {
 	cfg := config.LoadConfig()
+
+	mailerProvider := &provider.BrevoMailer{
+		APIKey: cfg.Mail.APIKey,
+	}
+
+	mailer.Service = mailerservice.NewMailerService(mailerProvider)
 
 	r := router.SetupRouter()
 
