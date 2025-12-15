@@ -197,7 +197,17 @@ type UserStatusUpdatePayload struct {
 	Status   string `json:"status" example:"active"`
 }
 
+// UpdateUserPassword represents the payload for updating a user's password.
+//
+// swagger:model
 type UpdateUserPassword struct {
 	UserUUID    string `json:"user_uuid" example:"e1234abc-5678-90de-f123-4567890abcde"`
 	NewPassword string `json:"new_password" example:"StrongP@ssw0rd!"`
+}
+
+// UserEmailPayload represents the payload for identifying a user by email.
+//
+// swagger:model
+type UserEmailPayload struct {
+	UserEmail string `json:"user_email" example:"user@example.com"`
 }

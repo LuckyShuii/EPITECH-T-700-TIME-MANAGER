@@ -32,6 +32,8 @@ type UserService interface {
 	SetWeeklyRateService(w WeeklyRateService.WeeklyRateService)
 	GetUserDashboardLayout(userUUID string) (*model.UserDashboardLayout, error)
 	UpdateUserDashboardLayout(userUUID string, layout model.UserDashboardLayoutUpdate) error
+	ChangeUserPassword(userUUID string, newPassword string) error
+	ResetPassword(userEmail string, userUUID string) error
 }
 
 type userService struct {
@@ -162,7 +164,7 @@ func (service *userService) ChangeUserPassword(userUUID string, newPassword stri
 		return err
 	}
 
-	subject := "Your password has been changed"
+	subject := "Hi " + user.FirstName + "! Your password has been changed 👍🏻"
 	body := "Hello " + user.FirstName + ",\n\nThis is a confirmation that the password for your account " + user.Email + " has just been changed.\n\nIf you did not make this change, please contact our support team immediately."
 
 	err = service.MailerService.Send(MailModel.Mail{
@@ -181,4 +183,23 @@ func (service *userService) ChangeUserPassword(userUUID string, newPassword stri
 	}
 
 	return service.repo.UpdateUserPassword(userID, string(hashedPassword))
+}
+
+func (service *userService) ResetPassword(userEmail string, userUUID string) error {
+	link := Config.LoadConfig().FrontendURL + "/reset-password?user_public_key=" + userUUID
+
+	subject := "Hi! Reset your TimeManager password 🔐"
+	body := "Hello,\n\nPlease reset your password by clicking the following link:\n" + link + "\n\nBest regards,\nThe TimeManager Team"
+
+	err := service.MailerService.Send(MailModel.Mail{
+		To:      userEmail,
+		Subject: subject,
+		Body:    body,
+	})
+
+	if err != nil {
+		return fmt.Errorf("failed to send reset password email: %w", err)
+	}
+
+	return nil
 }
