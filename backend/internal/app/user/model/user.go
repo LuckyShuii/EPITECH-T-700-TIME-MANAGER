@@ -160,7 +160,6 @@ type UserReadJWT struct {
 
 type UserUpdate struct {
 	UserBase
-	PasswordHash *string `json:"password_hash,omitempty"`
 }
 
 type UserDelete struct {
@@ -174,8 +173,7 @@ type UserCreate struct {
 	UserBase
 	WeeklyRateUUID *string `json:"weekly_rate_uuid,omitempty"`
 	WeeklyRateID   *int    `json:"weekly_rate_id,omitempty"`
-	PasswordHash   string  `json:"password_hash" gorm:"not null"`
-	Password       string  `json:"password" gorm:"-:all"` // Ignored by GORM, used only for input
+	PasswordHash   *string `json:"password_hash" gorm:"not null"`
 }
 
 type UserLogin struct {
@@ -197,4 +195,19 @@ type UserUUIDPayload struct {
 type UserStatusUpdatePayload struct {
 	UserUUID string `json:"user_uuid" example:"e1234abc-5678-90de-f123-4567890abcde"`
 	Status   string `json:"status" example:"active"`
+}
+
+// UpdateUserPassword represents the payload for updating a user's password.
+//
+// swagger:model
+type UpdateUserPassword struct {
+	UserUUID    string `json:"user_uuid" example:"e1234abc-5678-90de-f123-4567890abcde"`
+	NewPassword string `json:"new_password" example:"StrongP@ssw0rd!"`
+}
+
+// UserEmailPayload represents the payload for identifying a user by email.
+//
+// swagger:model
+type UserEmailPayload struct {
+	UserEmail string `json:"user_email" example:"user@example.com"`
 }

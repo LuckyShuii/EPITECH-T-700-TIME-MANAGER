@@ -30,6 +30,8 @@ import (
 	KPIR "app/internal/app/kpi/repository"
 	KPIService "app/internal/app/kpi/service"
 
+	"app/internal/app/mailer"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -48,7 +50,7 @@ func SetupRouter() *gin.Engine {
 	weeklyRateRepo := WeeklyRatesR.NewWeeklyRateRepository(database)
 
 	// 2) Services
-	userService := service.NewUserService(userRepo)
+	userService := service.NewUserService(userRepo, mailer.Service)
 	weeklyRateService := WeeklyRatesS.NewWeeklyRateService(weeklyRateRepo, userService)
 
 	userService.SetWeeklyRateService(weeklyRateService)
@@ -73,6 +75,7 @@ func SetupRouter() *gin.Engine {
 	* Public Routes
 	 */
 	r.POST("/api/auth/login", authHandler.LoginHandler)
+	r.POST("/api/users/reset-password", userHandler.ResetPassword)
 
 	/**
 	 * Protected Routes
@@ -90,6 +93,7 @@ func SetupRouter() *gin.Engine {
 		protected.POST("/users/register", authMiddleware.RequireRoles("admin"), userHandler.RegisterUser)
 		protected.POST("/users/weekly-rates/create", authMiddleware.RequireRoles("admin"), weeklyRateHandler.Create)
 		protected.POST("/users/weekly-rates/:weekly_rate_uuid/assign-to-user/:user_uuid", authMiddleware.RequireRoles("admin"), weeklyRateHandler.AssignToUser)
+		protected.POST("/users/update-password", authMiddleware.RequireRoles("all"), userHandler.UpdateCurrentUserPassword)
 
 		protected.PUT("/users/update-status", authMiddleware.RequireRoles("admin"), userHandler.UpdateUserStatus)
 		protected.PUT("/users", authMiddleware.RequireRoles("admin"), userHandler.UpdateUser)

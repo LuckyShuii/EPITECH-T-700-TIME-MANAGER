@@ -241,6 +241,15 @@ definitions:
       name:
         type: string
     type: object
+  model.UpdateUserPassword:
+    properties:
+      new_password:
+        example: StrongP@ssw0rd!
+        type: string
+      user_uuid:
+        example: e1234abc-5678-90de-f123-4567890abcde
+        type: string
+    type: object
   model.UpdateWeeklyRate:
     properties:
       amount:
@@ -257,9 +266,6 @@ definitions:
       first_name:
         type: string
       last_name:
-        type: string
-      password:
-        description: Ignored by GORM, used only for input
         type: string
       password_hash:
         type: string
@@ -284,6 +290,12 @@ definitions:
         items:
           $ref: '#/definitions/model.DashboardLayout'
         type: array
+    type: object
+  model.UserEmailPayload:
+    properties:
+      user_email:
+        example: user@example.com
+        type: string
     type: object
   model.UserMeJWT:
     properties:
@@ -1075,6 +1087,48 @@ paths:
       security:
       - BearerAuth: []
       summary: Register a new user
+      tags:
+      - Users
+  /users/reset-password:
+    post:
+      consumes:
+      - application/json
+      description: "Reset the password for a user by their email. \U0001F512 Requires
+        role: **all**"
+      parameters:
+      - description: Password reset payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.UserEmailPayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Password reset successfully
+      summary: Reset user's password
+      tags:
+      - Users
+  /users/update-password:
+    post:
+      consumes:
+      - application/json
+      description: "Update the password for the currently authenticated user. \U0001F512
+        Requires role: **all**"
+      parameters:
+      - description: Password update payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.UpdateUserPassword'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Password updated successfully
+      summary: Update current user's password
       tags:
       - Users
   /users/update-status:

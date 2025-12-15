@@ -832,6 +832,68 @@ const docTemplate = `{
                 }
             }
         },
+        "/users/reset-password": {
+            "post": {
+                "description": "Reset the password for a user by their email. 🔒 Requires role: **all**",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Reset user's password",
+                "parameters": [
+                    {
+                        "description": "Password reset payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.UserEmailPayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Password reset successfully"
+                    }
+                }
+            }
+        },
+        "/users/update-password": {
+            "post": {
+                "description": "Update the password for the currently authenticated user. 🔒 Requires role: **all**",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Update current user's password",
+                "parameters": [
+                    {
+                        "description": "Password update payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.UpdateUserPassword"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Password updated successfully"
+                    }
+                }
+            }
+        },
         "/users/update-status": {
             "put": {
                 "security": [
@@ -1586,6 +1648,19 @@ const docTemplate = `{
                 }
             }
         },
+        "model.UpdateUserPassword": {
+            "type": "object",
+            "properties": {
+                "new_password": {
+                    "type": "string",
+                    "example": "StrongP@ssw0rd!"
+                },
+                "user_uuid": {
+                    "type": "string",
+                    "example": "e1234abc-5678-90de-f123-4567890abcde"
+                }
+            }
+        },
         "model.UpdateWeeklyRate": {
             "type": "object",
             "properties": {
@@ -1610,10 +1685,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "last_name": {
-                    "type": "string"
-                },
-                "password": {
-                    "description": "Ignored by GORM, used only for input",
                     "type": "string"
                 },
                 "password_hash": {
@@ -1650,6 +1721,15 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/model.DashboardLayout"
                     }
+                }
+            }
+        },
+        "model.UserEmailPayload": {
+            "type": "object",
+            "properties": {
+                "user_email": {
+                    "type": "string",
+                    "example": "user@example.com"
                 }
             }
         },
