@@ -5,8 +5,10 @@ import (
 	"net/http"
 	"time"
 
+	AuthService "app/internal/app/auth/service"
 	"app/internal/app/kpi/model"
 	KPIService "app/internal/app/kpi/service"
+	Config "app/internal/config"
 
 	"github.com/gin-gonic/gin"
 )
@@ -33,6 +35,20 @@ func (handler *KPIHandler) isValidISO8601(date string) bool {
 		}
 	}
 	return false
+}
+
+func stripToDate(input string) (time.Time, error) {
+	t, err := time.Parse("2006-01-02 15:04:05.999999", input)
+	if err == nil {
+		return t.Truncate(24 * time.Hour), nil
+	}
+
+	t, err = time.Parse("2006-01-02", input)
+	if err == nil {
+		return t, nil
+	}
+
+	return time.Time{}, fmt.Errorf("invalid date format")
 }
 
 // GetWorkSessionUserWeeklyTotal handles the HTTP request to get the total work session time for a user within a date range.
@@ -197,4 +213,105 @@ func (handler *KPIHandler) GetPresenceRate(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, response)
+}
+
+// ExportKPIData handles the HTTP request to export KPI data within a date range.
+//
+// @Summary Export KPI data within a date range
+// @Description Exports KPI data for the specified date range. 🔒 Requires role: **manager, admin**
+// @Tags KPI
+// @Accept json
+// @Security     BearerAuth
+// @Produce json
+// @Param kpi_export_request body model.KPIExportRequest true "KPI Export Request"
+// @Success 200 {object} model.KPIExportResponse
+// @Router /kpi/export [post]
+func (handler *KPIHandler) ExportKPIData(c *gin.Context) {
+	var exportRequest model.KPIExportRequest
+	if err := c.ShouldBindJSON(&exportRequest); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request payload: " + err.Error()})
+		return
+	}
+
+	claims, exists := c.Get("userClaims")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": Config.ErrorMessages()["NO_CLAIMS"]})
+		return
+	}
+
+	authClaims := claims.(*AuthService.Claims)
+
+	err := handler.validateDateRange(exportRequest.StartDate, exportRequest.EndDate)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid date ranges: " + err.Error()})
+		return
+	}
+
+	exportResponse, err := handler.service.ExportKPIData(exportRequest.StartDate, exportRequest.EndDate, authClaims.UUID, exportRequest.KPIType, exportRequest.UUIDToSearch)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to export KPI data: " + err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, exportResponse)
+}
+
+// GetAverageBreakTime handles the HTTP request to get the average break time for a user within a date range.
+//
+// @Summary Get average break time for a user within a date range
+// @Description Retrieves the average break time in minutes for a specified user UUID between the provided start and end dates. These dates must be 5 days! (work days) Not less, not more 🔒 Requires role: **manager, admin**
+// @Tags KPI
+// @Accept json
+// @Security     BearerAuth
+// @Produce json
+// @Param start_date path string true "Start Date in ISO 8601 format"
+// @Param end_date path string true "End Date in ISO 8601 format"
+// @Param user_uuid path string true "User UUID"
+// @Success 200 {object} model.KPIAverageBreakTimeResponse
+// @Router /kpi/average-break-time/{user_uuid}/{start_date}/{end_date} [get]
+func (handler *KPIHandler) GetAverageBreakTime(c *gin.Context) {
+	startDate := c.Param("start_date")
+	endDate := c.Param("end_date")
+	userUUID := c.Param("user_uuid")
+
+	err := handler.validateDateRange(startDate, endDate)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid date range: " + err.Error()})
+		return
+	}
+
+	start, err := stripToDate(startDate)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid start date"})
+		return
+	}
+
+	end, err := stripToDate(endDate)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid end date"})
+		return
+	}
+
+	diffDays := int(end.Sub(start).Hours() / 24)
+	if diffDays != 4 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Date range must be exactly 5 days apart"})
+		return
+	}
+
+	averageBreakTime, err := handler.service.GetAverageBreakTime(startDate, endDate, userUUID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve average break time"})
+		return
+	}
+
+	kpiResponse := model.KPIAverageBreakTimeResponse{
+		AverageBreakTime: averageBreakTime.AverageBreakTime,
+		StartDate:        startDate,
+		EndDate:          endDate,
+		UserUUID:         userUUID,
+		FirstName:        averageBreakTime.FirstName,
+		LastName:         averageBreakTime.LastName,
+	}
+
+	c.JSON(http.StatusOK, kpiResponse)
 }

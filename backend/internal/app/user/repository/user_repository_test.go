@@ -88,7 +88,6 @@ func TestRegisterUserAndFindIdByUuid(t *testing.T) {
 			Roles:          roles,
 			FirstDayOfWeek: &firstDay,
 		},
-		PasswordHash: "hash",
 		WeeklyRateID: nil,
 	}
 

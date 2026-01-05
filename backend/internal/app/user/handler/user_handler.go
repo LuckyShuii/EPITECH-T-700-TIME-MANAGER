@@ -83,7 +83,7 @@ func (handler *UserHandler) RegisterUser(c *gin.Context) {
 		return
 	}
 
-	if req.Email == "" || req.Password == "" || req.Username == "" || req.FirstName == "" || req.LastName == "" || len(req.Roles) == 0 {
+	if req.Email == "" || req.Username == "" || req.FirstName == "" || req.LastName == "" || len(req.Roles) == 0 {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "missing required fields"})
 		return
 	}
@@ -368,4 +368,85 @@ func (handler *UserHandler) UpdateCurrentUserDashboardLayout(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "dashboard layout updated successfully"})
+}
+
+// UpdateCurrentUserPassword
+// @Summary      Update current user's password
+// @Description  Update the password for the currently authenticated user. 🔒 Requires role: **all**
+// @Tags         Users
+// @Accept       json
+// @Produce      json
+// @Param        body  body      model.UpdateUserPassword  true  "Password update payload"
+// @Success      200   "Password updated successfully"
+// @Router       /users/update-password [post]
+func (handler *UserHandler) UpdateCurrentUserPassword(c *gin.Context) {
+	var req model.UpdateUserPassword
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": Config.ErrorMessages()["INVALID_REQUEST"]})
+		return
+	}
+
+	if req.NewPassword == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "missing new_password field"})
+		return
+	}
+
+	claims, exists := c.Get("userClaims")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": Config.ErrorMessages()["NO_CLAIMS"]})
+		return
+	}
+
+	authClaims := claims.(*AuthService.Claims)
+
+	changeErr := handler.service.ChangeUserPassword(authClaims.UUID, req.NewPassword)
+	if changeErr != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": changeErr.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "password updated successfully"})
+}
+
+// ResetPassword
+// @Summary      Reset user's password
+// @Description  Reset the password for a user by their email. 🔒 Requires role: **all**
+// @Tags         Users
+// @Accept       json
+// @Produce      json
+// @Param        body  body      model.UserEmailPayload  true  "Password reset payload"
+// @Success      200   "Password reset successfully"
+// @Router       /users/reset-password [post]
+func (handler *UserHandler) ResetPassword(c *gin.Context) {
+	var req model.UserEmailPayload
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": Config.ErrorMessages()["INVALID_REQUEST"]})
+		return
+	}
+
+	if req.UserEmail == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "missing user_email field"})
+		return
+	}
+
+	// Fetch user details to get email
+	user, err := handler.service.GetUserByEmailAuth("email", req.UserEmail)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	if user.UUID == "" {
+		c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
+		return
+	}
+
+	// call the service to reset password
+	resetErr := handler.service.ResetPassword(user.Email, user.UUID)
+	if resetErr != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": resetErr.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "request sent by email to reset password successfully"})
 }

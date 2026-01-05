@@ -94,6 +94,96 @@
                 }
             }
         },
+        "/kpi/average-break-time/{user_uuid}/{start_date}/{end_date}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieves the average break time in minutes for a specified user UUID between the provided start and end dates. These dates must be 5 days! (work days) Not less, not more 🔒 Requires role: **manager, admin**",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "KPI"
+                ],
+                "summary": "Get average break time for a user within a date range",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Start Date in ISO 8601 format",
+                        "name": "start_date",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "End Date in ISO 8601 format",
+                        "name": "end_date",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "User UUID",
+                        "name": "user_uuid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.KPIAverageBreakTimeResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/kpi/export": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Exports KPI data for the specified date range. 🔒 Requires role: **manager, admin**",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "KPI"
+                ],
+                "summary": "Export KPI data within a date range",
+                "parameters": [
+                    {
+                        "description": "KPI Export Request",
+                        "name": "kpi_export_request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.KPIExportRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.KPIExportResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/kpi/presence-rate/{user_uuid}/{start_date}/{end_date}": {
             "get": {
                 "security": [
@@ -731,6 +821,68 @@
                 }
             }
         },
+        "/users/reset-password": {
+            "post": {
+                "description": "Reset the password for a user by their email. 🔒 Requires role: **all**",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Reset user's password",
+                "parameters": [
+                    {
+                        "description": "Password reset payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.UserEmailPayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Password reset successfully"
+                    }
+                }
+            }
+        },
+        "/users/update-password": {
+            "post": {
+                "description": "Update the password for the currently authenticated user. 🔒 Requires role: **all**",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Update current user's password",
+                "parameters": [
+                    {
+                        "description": "Password update payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.UpdateUserPassword"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Password updated successfully"
+                    }
+                }
+            }
+        },
         "/users/update-status": {
             "put": {
                 "security": [
@@ -1209,9 +1361,77 @@
                 }
             }
         },
+        "model.KPIAverageBreakTimeResponse": {
+            "type": "object",
+            "properties": {
+                "average_break_time": {
+                    "type": "number"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                },
+                "user_uuid": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.KPIExportRequest": {
+            "type": "object",
+            "required": [
+                "end_date",
+                "kpi_type",
+                "start_date"
+            ],
+            "properties": {
+                "end_date": {
+                    "type": "string"
+                },
+                "kpi_type": {
+                    "type": "string",
+                    "enum": [
+                        "work_session_user_weekly_total",
+                        "work_session_team_weekly_total",
+                        "presence_rate",
+                        "weekly_average_break_time"
+                    ]
+                },
+                "start_date": {
+                    "type": "string"
+                },
+                "uuid_to_search": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.KPIExportResponse": {
+            "type": "object",
+            "properties": {
+                "file": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
         "model.KPIPresenceRateResponse": {
             "type": "object",
             "properties": {
+                "first_name": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string"
+                },
                 "presence_rate": {
                     "type": "number"
                 },
@@ -1229,6 +1449,12 @@
         "model.KPIWorkSessionTeamMemberWeeklyTotal": {
             "type": "object",
             "properties": {
+                "first_name": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string"
+                },
                 "total_time": {
                     "type": "integer"
                 },
@@ -1250,6 +1476,9 @@
                     }
                 },
                 "start_date": {
+                    "type": "string"
+                },
+                "team_name": {
                     "type": "string"
                 },
                 "team_uuid": {
@@ -1408,6 +1637,19 @@
                 }
             }
         },
+        "model.UpdateUserPassword": {
+            "type": "object",
+            "properties": {
+                "new_password": {
+                    "type": "string",
+                    "example": "StrongP@ssw0rd!"
+                },
+                "user_uuid": {
+                    "type": "string",
+                    "example": "e1234abc-5678-90de-f123-4567890abcde"
+                }
+            }
+        },
         "model.UpdateWeeklyRate": {
             "type": "object",
             "properties": {
@@ -1432,10 +1674,6 @@
                     "type": "string"
                 },
                 "last_name": {
-                    "type": "string"
-                },
-                "password": {
-                    "description": "Ignored by GORM, used only for input",
                     "type": "string"
                 },
                 "password_hash": {
@@ -1472,6 +1710,15 @@
                     "items": {
                         "$ref": "#/definitions/model.DashboardLayout"
                     }
+                }
+            }
+        },
+        "model.UserEmailPayload": {
+            "type": "object",
+            "properties": {
+                "user_email": {
+                    "type": "string",
+                    "example": "user@example.com"
                 }
             }
         },
