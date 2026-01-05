@@ -4,7 +4,6 @@ import DraggableLayout from './DraggableLayout.vue'
 
 <template>
   <DraggableLayout dashboard-name="admin">
-    <!-- On passe tous les slots au DraggableLayout -->
     <template #add-employee>
       <slot name="add-employee"></slot>
     </template>
@@ -29,6 +28,11 @@ import DraggableLayout from './DraggableLayout.vue'
       <slot name="widget-6"></slot>
     </template>
 
+    <!-- ✨ NOUVEAU SLOT -->
+    <template #widget-7>
+      <slot name="widget-7"></slot>
+    </template>
+
     <template #remote-absence>
       <slot name="remote-absence"></slot>
     </template>
@@ -38,6 +42,3 @@ import DraggableLayout from './DraggableLayout.vue'
     </template>
   </DraggableLayout>
 </template>
-
-
-

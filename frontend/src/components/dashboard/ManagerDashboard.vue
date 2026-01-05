@@ -8,22 +8,27 @@ import ClockButton from '@/components/ClockButton.vue'
 import { useAuthStore } from '@/store/AuthStore'
 import { storeToRefs } from 'pinia'
 import TeamManagementModal from '@/components/Modal/TeamManagementModal.vue'
-
 import TeamPresenceWidget from '@/components/widget/TeamPresenceWidget.vue'
+
+// Import des KPI cards PERTINENTS pour Manager
+import TeamWorkingTimeCard from '@/components/kpi/cards/TeamWorkingTimeCard.vue'
+import ClockingTimeCard from '@/components/kpi/cards/ClockingTimeCard.vue'
+
+// Import des mock data
+import {
+  mockTeamWorkingTime,
+  mockClockingTime
+} from '@/mocks/kpiMockData'
 
 const authStore = useAuthStore()
 const { clockInTime, sessionStatus } = storeToRefs(authStore)
-
-
 const editModeStore = useEditModeStore()
 const isTeamViewModalOpen = ref(false)
 
-// Enregistre que ce dashboard est actif
 onMounted(() => {
   editModeStore.setCurrentDashboard('manager')
 })
 
-// Nettoie quand on quitte le dashboard
 onUnmounted(() => {
   editModeStore.reset()
 })
@@ -32,6 +37,13 @@ const TeamViewModal = () => {
   isTeamViewModalOpen.value = true
 }
 
+// Handler pour les KPI
+const handleKpiDetails = (data: any) => {
+  console.log('KPI détails:', data)
+}
+
+// État de chargement des KPI
+const kpiLoading = ref(false)
 </script>
 
 <template>
@@ -45,16 +57,13 @@ const TeamViewModal = () => {
       <ClockButton />
     </template>
 
-    <!-- KPI Stats -->
+    <!-- KPI: Heures de pointage équipe -->
     <template #kpi-stats>
-      <div class="bg-green-100 p-6 rounded h-full">
-        <button class="btn btn-primary w-full">📊 Rapport</button>
-      </div>
-    </template>
-
-    <template #team-view>
-      <div class="bg-orange-100 p-6 rounded h-full"></div>
-
+      <ClockingTimeCard 
+        :data="mockClockingTime"
+        :loading="kpiLoading"
+        @view-details="handleKpiDetails"
+      />
     </template>
 
     <!-- Calendrier -->
@@ -64,26 +73,26 @@ const TeamViewModal = () => {
       </div>
     </template>
 
-    <!-- Présence équipe -->
-    <template #modal-team>
-      <button 
-        @click="isTeamViewModalOpen = true"
-        class="h-full w-full bg-gradient-to-br from-primary-500 to-secondary-500 hover:shadow-card-hover text-white rounded-3xl shadow-card transition-all duration-300 flex flex-col items-center justify-center gap-4 group cursor-pointer"
-      >
-        <div class="text-4xl group-hover:scale-110 transition-transform duration-300">👥</div>
-        <p class="font-bold text-base">Voir mon équipe</p>
-      </button>
+    <!-- KPI: Travail hebdomadaire équipe -->
+    <template #team-view>
+      <TeamWorkingTimeCard 
+        :data="mockTeamWorkingTime"
+        :loading="kpiLoading"
+        @view-details="handleKpiDetails"
+      />
     </template>
 
-    <!-- KPI Carousel -->
+    <!-- Widget présence équipe temps réel -->
     <template #team-presence>
       <TeamPresenceWidget />
     </template>
 
-    <!-- Bouton rapport -->
-    <template #report-button>
-      <div class="bg-orange-100 p-6 rounded h-full">
-      </div>
+    <!-- Bouton: Voir mon équipe -->
+    <template #modal-team>
+      <button @click="isTeamViewModalOpen = true"
+        class="brutal-btn brutal-btn-primary h-full w-full flex flex-col items-center justify-center gap-4">
+        <p class="font-bold text-base">Voir mon équipe</p>
+      </button>
     </template>
   </ManagerLayout>
 

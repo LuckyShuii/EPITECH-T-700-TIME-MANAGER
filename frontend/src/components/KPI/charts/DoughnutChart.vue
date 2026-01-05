@@ -49,7 +49,10 @@ watch(() => props.data, () => {
 onBeforeUnmount(() => {
   if (chartInstance) {
     chartInstance.destroy()
-  })
+  }
+})
+
+
 </script>
 
 <template>

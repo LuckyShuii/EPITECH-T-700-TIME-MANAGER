@@ -11,7 +11,6 @@ const emit = defineEmits<{
     cancel: []
 }>()
 
-// État du formulaire
 const formData = ref<RegisterFormData>({
     first_name: '',
     last_name: '',
@@ -25,7 +24,6 @@ const formData = ref<RegisterFormData>({
 const errors = ref<RegisterFormErrors>({})
 const isSubmitting = ref(false)
 
-// Génération automatique du username
 const generateUsername = () => {
     const firstName = formData.value.first_name.trim()
     const lastName = formData.value.last_name.trim()
@@ -36,12 +34,10 @@ const generateUsername = () => {
     }
 }
 
-// Watch pour générer le username automatiquement
 watch([() => formData.value.first_name, () => formData.value.last_name], () => {
     generateUsername()
 })
 
-// Validation du formulaire
 const validateForm = (): boolean => {
     errors.value = {}
     let isValid = true
@@ -96,7 +92,6 @@ const validateForm = (): boolean => {
     return isValid
 }
 
-// Soumission du formulaire
 const handleSubmit = async () => {
     if (!validateForm()) {
         return
@@ -149,20 +144,22 @@ const handleCancel = () => {
 <template>
     <form @submit.prevent="handleSubmit" class="space-y-4">
         <!-- Erreur générale -->
-        <div v-if="errors.general" class="alert alert-error">
-            <span>{{ errors.general }}</span>
+        <div v-if="errors.general" class="brutal-container bg-red-50 border-red-700">
+            <p class="text-red-700 font-bold">ERREUR</p>
+            <p class="text-red-600 text-sm mt-1">{{ errors.general }}</p>
         </div>
 
         <!-- Prénom -->
         <div class="grid grid-cols-[150px_1fr] gap-2 items-start">
             <label class="label pt-3">
-                <span class="label-text">Prénom *</span>
+                <span class="label-text font-bold uppercase text-xs">Prénom</span>
             </label>
             <div>
-                <input v-model="formData.first_name" type="text" placeholder="Max" class="input input-bordered w-full"
-                    :class="{ 'input-error': errors.first_name }" />
+                <input v-model="formData.first_name" type="text" placeholder="Max" 
+                    class="input input-bordered w-full border-2" 
+                    :class="{ 'border-red-700': errors.first_name }" />
                 <label v-if="errors.first_name" class="label">
-                    <span class="label-text-alt text-error">{{ errors.first_name }}</span>
+                    <span class="label-text-alt text-red-700 font-bold text-xs">{{ errors.first_name }}</span>
                 </label>
             </div>
         </div>
@@ -170,13 +167,14 @@ const handleCancel = () => {
         <!-- Nom -->
         <div class="grid grid-cols-[150px_1fr] gap-2 items-start">
             <label class="label pt-3">
-                <span class="label-text">Nom *</span>
+                <span class="label-text font-bold uppercase text-xs">Nom</span>
             </label>
             <div>
-                <input v-model="formData.last_name" type="text" placeholder="Nom de famille"
-                    class="input input-bordered w-full" :class="{ 'input-error': errors.last_name }" />
+                <input v-model="formData.last_name" type="text" placeholder="Loris" 
+                    class="input input-bordered w-full border-2"
+                    :class="{ 'border-red-700': errors.last_name }" />
                 <label v-if="errors.last_name" class="label">
-                    <span class="label-text-alt text-error">{{ errors.last_name }}</span>
+                    <span class="label-text-alt text-red-700 font-bold text-xs">{{ errors.last_name }}</span>
                 </label>
             </div>
         </div>
@@ -184,13 +182,14 @@ const handleCancel = () => {
         <!-- Email -->
         <div class="grid grid-cols-[150px_1fr] gap-2 items-start">
             <label class="label pt-3">
-                <span class="label-text">Email *</span>
+                <span class="label-text font-bold uppercase text-xs">Email</span>
             </label>
             <div>
-                <input v-model="formData.email" type="email" placeholder="email@email.com"
-                    class="input input-bordered w-full" :class="{ 'input-error': errors.email }" />
+                <input v-model="formData.email" type="email" placeholder="email@example.com"
+                    class="input input-bordered w-full border-2" 
+                    :class="{ 'border-red-700': errors.email }" />
                 <label v-if="errors.email" class="label">
-                    <span class="label-text-alt text-error">{{ errors.email }}</span>
+                    <span class="label-text-alt text-red-700 font-bold text-xs">{{ errors.email }}</span>
                 </label>
             </div>
         </div>
@@ -198,13 +197,14 @@ const handleCancel = () => {
         <!-- Username -->
         <div class="grid grid-cols-[150px_1fr] gap-2 items-start">
             <label class="label pt-3">
-                <span class="label-text">Nom d'utilisateur *</span>
+                <span class="label-text font-bold uppercase text-xs">Username</span>
             </label>
             <div>
-                <input disabled v-model="formData.username" type="text" class="input input-bordered w-full"
-                    :class="{ 'input-error': errors.username }" />
+                <input disabled v-model="formData.username" type="text" 
+                    class="input input-bordered w-full border-2 opacity-50"
+                    :class="{ 'border-red-700': errors.username }" />
                 <label v-if="errors.username" class="label">
-                    <span class="label-text-alt text-error">{{ errors.username }}</span>
+                    <span class="label-text-alt text-red-700 font-bold text-xs">{{ errors.username }}</span>
                 </label>
             </div>
         </div>
@@ -212,13 +212,14 @@ const handleCancel = () => {
         <!-- Téléphone -->
         <div class="grid grid-cols-[150px_1fr] gap-2 items-start">
             <label class="label pt-3">
-                <span class="label-text">Téléphone *</span>
+                <span class="label-text font-bold uppercase text-xs">Téléphone</span>
             </label>
             <div>
                 <input v-model="formData.phone_number" type="tel" placeholder="0123456789" maxlength="10"
-                    class="input input-bordered w-full" :class="{ 'input-error': errors.phone_number }" />
+                    class="input input-bordered w-full border-2" 
+                    :class="{ 'border-red-700': errors.phone_number }" />
                 <label v-if="errors.phone_number" class="label">
-                    <span class="label-text-alt text-error">{{ errors.phone_number }}</span>
+                    <span class="label-text-alt text-red-700 font-bold text-xs">{{ errors.phone_number }}</span>
                 </label>
             </div>
         </div>
@@ -226,28 +227,28 @@ const handleCancel = () => {
         <!-- Rôles -->
         <div class="grid grid-cols-[150px_1fr] gap-2 items-start">
             <label class="label pt-3">
-                <span class="label-text">Rôles *</span>
+                <span class="label-text font-bold uppercase text-xs">Rôles</span>
             </label>
             <div>
                 <div class="flex gap-4 pt-3">
                     <label class="label cursor-pointer gap-2">
                         <input v-model="formData.roles" type="checkbox" value="employee"
-                            class="checkbox checkbox-primary" />
+                            class="checkbox checkbox-primary border-2" />
                         <span class="label-text">Employé</span>
                     </label>
                     <label class="label cursor-pointer gap-2">
                         <input v-model="formData.roles" type="checkbox" value="manager"
-                            class="checkbox checkbox-primary" />
+                            class="checkbox checkbox-primary border-2" />
                         <span class="label-text">Manager</span>
                     </label>
                     <label class="label cursor-pointer gap-2">
-                        <input v-model="formData.roles" type="checkbox" value="admin"
-                            class="checkbox checkbox-primary" />
+                        <input v-model="formData.roles" type="checkbox" value="admin" 
+                            class="checkbox checkbox-primary border-2" />
                         <span class="label-text">Admin</span>
                     </label>
                 </div>
                 <label v-if="errors.roles" class="label">
-                    <span class="label-text-alt text-error">{{ errors.roles }}</span>
+                    <span class="label-text-alt text-red-700 font-bold text-xs">{{ errors.roles }}</span>
                 </label>
             </div>
         </div>
@@ -255,24 +256,24 @@ const handleCancel = () => {
         <!-- Mot de passe -->
         <div class="grid grid-cols-[150px_1fr] gap-2 items-start">
             <label class="label pt-3">
-                <span class="label-text">Mot de passe *</span>
+                <span class="label-text font-bold uppercase text-xs">Mot de passe</span>
             </label>
             <div>
                 <input v-model="formData.password" type="password" placeholder="••••••••"
-                    class="input input-bordered w-full" :class="{ 'input-error': errors.password }" />
+                    class="input input-bordered w-full border-2" 
+                    :class="{ 'border-red-700': errors.password }" />
                 <label v-if="errors.password" class="label">
-                    <span class="label-text-alt text-error">{{ errors.password }}</span>
+                    <span class="label-text-alt text-red-700 font-bold text-xs">{{ errors.password }}</span>
                 </label>
             </div>
         </div>
 
         <!-- Boutons -->
         <div class="flex gap-2 justify-end pt-4">
-            <button type="button" class="btn btn-ghost" @click="handleCancel" :disabled="isSubmitting">
+            <button type="button" class="brutal-btn" @click="handleCancel" :disabled="isSubmitting">
                 Annuler
             </button>
-            <button type="submit" class="btn btn-primary" :disabled="isSubmitting">
-                <span v-if="isSubmitting" class="loading loading-spinner"></span>
+            <button type="submit" class="brutal-btn brutal-btn-success" :disabled="isSubmitting">
                 {{ isSubmitting ? 'Création...' : 'Créer l\'employé' }}
             </button>
         </div>

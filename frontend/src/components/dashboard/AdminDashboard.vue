@@ -8,16 +8,18 @@ import RegisterForm from '@/components/RegisterForm.vue'
 import StaffSettingsModal from '@/components/Modal/StaffSettingsModal.vue'
 import TeamManagementAdminModal from '@/components/Modal/TeamManagementAdminModal.vue'
 
-// Import des KPI cards
-import WorkingTimeCard from '@/components/kpi/cards/WorkingTimeCard.vue'
+import ClockingTimeCard from '@/components/kpi/cards/ClockingTimeCard.vue'
 import WeeklyProgressCard from '@/components/kpi/cards/WeeklyProgressCard.vue'
 import ShiftAverageCard from '@/components/kpi/cards/ShiftAverageCard.vue'
+import TeamPauseCard from '@/components/kpi/cards/TeamPauseCard.vue'
+import ShiftPauseCard from '@/components/kpi/cards/ShiftPauseCard.vue'
 
-// Import des mock data
 import {
-  mockWorkingTimeIndividual,
   mockWeeklyProgress,
-  mockShiftAverage
+  mockShiftAverage,
+  mockClockingTime,
+  mockTeamPause,
+  mockShiftPause
 } from '@/mocks/kpiMockData'
 
 const editModeStore = useEditModeStore()
@@ -30,9 +32,7 @@ onUnmounted(() => {
   editModeStore.reset()
 })
 
-// Contrôle du modal d'ajout employé
 const isAddEmployeeModalOpen = ref(false)
-
 const openAddEmployeeModal = () => {
   isAddEmployeeModalOpen.value = true
 }
@@ -45,80 +45,84 @@ const handleEmployeeCreated = () => {
   closeAddEmployeeModal()
 }
 
-// Contrôle du modal paramétrage effectif
 const isStaffSettingsModalOpen = ref(false)
-
 const openStaffSettingsModal = () => {
   isStaffSettingsModalOpen.value = true
 }
 
-// Contrôle du modal gestion des équipes
 const isTeamManagementModalOpen = ref(false)
-
 const openTeamManagementModal = () => {
   isTeamManagementModalOpen.value = true
 }
 
-// Handler pour les KPI (placeholder)
 const handleKpiDetails = (data: any) => {
   console.log('KPI détails:', data)
-  // TODO: Ouvrir un modal ou naviguer
 }
 
-// État de chargement des KPI (pour test)
 const kpiLoading = ref(false)
 </script>
 
 <template>
   <AdminLayout>
+    <!-- Bouton: Nouvel employé -->
     <template #add-employee>
-      <button @click="openAddEmployeeModal"
-        class="h-full w-full bg-gradient-to-br from-primary-500 to-secondary-500 hover:shadow-card-hover text-white rounded-3xl shadow-card transition-all duration-300 flex flex-col items-center justify-center gap-4 group cursor-pointer">
-        <div class="text-4xl group-hover:scale-110 transition-transform duration-300">➕</div>
-        <p class="font-bold text-base">Nouvel employé</p>
+      <button @click="openAddEmployeeModal" class="brutal-btn brutal-btn-primary w-full h-full flex flex-col items-center justify-center gap-4">
+        <div class="text-2xl">+</div>
+        <p class="font-bold">Nouvel employé</p>
       </button>
     </template>
 
+    <!-- Bouton: Paramétrage effectifs -->
     <template #staff-settings>
-      <button @click="openStaffSettingsModal"
-        class="h-full w-full bg-gradient-to-br from-purple-500 to-indigo-600 hover:shadow-card-hover text-white rounded-3xl shadow-card transition-all duration-300 flex flex-col items-center justify-center gap-4 group cursor-pointer">
-        <div class="text-4xl group-hover:scale-110 transition-transform duration-300">⚙️</div>
-        <p class="font-bold text-base">Paramétrage effectifs</p>
+      <button @click="openStaffSettingsModal" class="brutal-btn brutal-btn-primary w-full h-full flex flex-col items-center justify-center gap-4">
+        <div class="text-2xl">!</div>
+        <p class="font-bold">Paramétrage effectifs</p>
       </button>
     </template>
 
+    <!-- Bouton: Gestion des équipes -->
     <template #kpi-monthly>
-      <button @click="openTeamManagementModal"
-        class="h-full w-full bg-gradient-to-br from-green-500 to-teal-600 hover:shadow-card-hover text-white rounded-3xl shadow-card transition-all duration-300 flex flex-col items-center justify-center gap-4 group cursor-pointer">
-        <div class="text-4xl group-hover:scale-110 transition-transform duration-300">👥</div>
-        <p class="font-bold text-base">Gestion des équipes</p>
+      <button @click="openTeamManagementModal" class="brutal-btn brutal-btn-primary w-full h-full flex flex-col items-center justify-center gap-4">
+        <div class="text-2xl">=</div>
+        <p class="font-bold">Gestion des équipes</p>
       </button>
     </template>
 
-    <!-- KPI Cards dans les slots disponibles -->
-    <template #widget-6>
-      <WorkingTimeCard 
-        :data="mockWorkingTimeIndividual"
+    <!-- KPI: Temps de pointage moyen hebdo -->
+    <template #kpi-history>
+      <ClockingTimeCard 
+        :data="mockClockingTime"
         :loading="kpiLoading"
         @view-details="handleKpiDetails"
       />
     </template>
 
-    <!-- CALENDAR RESTE ICI -->
+    <!-- Calendrier -->
     <template #calendar>
       <div class="bg-white p-6 rounded h-full">
         <CalendarWidget />
       </div>
     </template>
 
-    <template #manager-report>
-      <WeeklyProgressCard 
-        :data="mockWeeklyProgress"
+    <!-- KPI: Pause moyenne équipe -->
+    <template #widget-6>
+      <TeamPauseCard 
+        :data="mockTeamPause"
         :loading="kpiLoading"
         @view-details="handleKpiDetails"
       />
     </template>
 
+    <!-- KPI: Répartition shift (pause) -->
+    <template #widget-7>
+      <ShiftPauseCard 
+        :data="mockShiftPause"
+        :loading="kpiLoading"
+        @view-details="handleKpiDetails"
+      />
+    </template>
+
+    <!-- KPI: Moyenne par shift -->
     <template #remote-absence>
       <ShiftAverageCard 
         :data="mockShiftAverage"
@@ -127,15 +131,18 @@ const kpiLoading = ref(false)
       />
     </template>
 
-    <template #kpi-history>
-      <div class="bg-yellow-100 p-4 rounded h-full flex items-center justify-center">
-        <p class="text-sm font-medium">👔 Rapport manager</p>
-      </div>
+    <!-- KPI: Progression hebdo -->
+    <template #manager-report>
+      <WeeklyProgressCard 
+        :data="mockWeeklyProgress"
+        :loading="kpiLoading"
+        @view-details="handleKpiDetails"
+      />
     </template>
   </AdminLayout>
 
   <!-- Modals -->
-  <BaseModal v-model="isAddEmployeeModalOpen" title="Créer un nouvel employé" size="lg">
+  <BaseModal v-model="isAddEmployeeModalOpen" title="Créer un nouvel employé">
     <RegisterForm @success="handleEmployeeCreated" @cancel="closeAddEmployeeModal" />
   </BaseModal>
   

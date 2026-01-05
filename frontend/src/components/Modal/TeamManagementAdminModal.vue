@@ -1,78 +1,40 @@
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue'
+import { ref, watch, computed, defineModel } from 'vue'
 import type { Team, TeamMember } from '@/types/Team'
 import type { Employee } from '@/types/Employee'
 import API from '@/services/API'
 import { useNotificationsStore } from '@/store/NotificationsStore'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
+import BaseModal from '@/components/Modal/BaseModal.vue'
 import { PencilIcon, CheckIcon, XMarkIcon } from '@heroicons/vue/24/outline'
 
-interface Props {
-    modelValue: boolean
-}
-
-const props = defineProps<Props>()
-
-const emit = defineEmits<{
-    'update:modelValue': [value: boolean]
-}>()
-
+const modelValue = defineModel<boolean>()
 const notificationsStore = useNotificationsStore()
 
-// État : chargement
 const isLoading = ref(false)
-
-// État : liste des équipes
 const teams = ref<Team[]>([])
-
-// État : équipe sélectionnée
 const selectedTeam = ref<Team | null>(null)
-
-// État : liste de tous les employés (pour l'ajout de membre)
 const allEmployees = ref<Employee[]>([])
 
-// État : modales
 const showCreateTeamModal = ref(false)
 const showAddMemberModal = ref(false)
 const showDeleteTeamConfirm = ref(false)
 const showRemoveMemberConfirm = ref(false)
 
-// État : membre à retirer
 const memberToRemove = ref<TeamMember | null>(null)
-
-// État : édition équipe
 const isEditingTeam = ref(false)
-const editTeamForm = ref({
-    name: '',
-    description: ''
-})
+const editTeamForm = ref({ name: '', description: '' })
+const createTeamForm = ref({ name: '', description: '', manager_uuid: '' })
+const addMemberForm = ref({ user_uuid: '', is_manager: false })
 
-// Formulaire de création d'équipe
-const createTeamForm = ref({
-    name: '',
-    description: '',
-    manager_uuid: '' // Nouveau champ pour le manager initial
-})
-
-// Formulaire d'ajout de membre
-const addMemberForm = ref({
-    user_uuid: '',
-    is_manager: false
-})
-
-// Charger toutes les équipes
 const loadTeams = async () => {
     isLoading.value = true
     try {
         const response = await API.teamAPI.getAll()
         teams.value = response.data
-
-        // Si une équipe était sélectionnée, la recharger
         if (selectedTeam.value) {
             const updatedTeam = teams.value.find(t => t.uuid === selectedTeam.value?.uuid)
-            if (updatedTeam) {
-                selectedTeam.value = updatedTeam
-            }
+            if (updatedTeam) selectedTeam.value = updatedTeam
         }
     } catch (error) {
         console.error('Erreur lors du chargement des équipes:', error)
@@ -86,7 +48,6 @@ const loadTeams = async () => {
     }
 }
 
-// Charger tous les employés (pour le dropdown)
 const loadAllEmployees = async () => {
     try {
         const response = await API.userAPI.getAll()
@@ -101,48 +62,34 @@ const loadAllEmployees = async () => {
     }
 }
 
-// Watcher : charger à l'ouverture de la modale
-watch(() => props.modelValue, (newValue) => {
+watch(() => modelValue.value, (newValue) => {
     if (newValue) {
         loadTeams()
         loadAllEmployees()
     }
 })
 
-// Sélectionner une équipe
 const selectTeam = (team: Team) => {
     selectedTeam.value = team
 }
 
-// Fermer la modale principale
 const closeModal = () => {
-    emit('update:modelValue', false)
+    modelValue.value = false
     selectedTeam.value = null
     teams.value = []
     resetCreateTeamForm()
     resetAddMemberForm()
 }
 
-// Reset formulaire création équipe
 const resetCreateTeamForm = () => {
-    createTeamForm.value = {
-        name: '',
-        description: '',
-        manager_uuid: ''
-    }
+    createTeamForm.value = { name: '', description: '', manager_uuid: '' }
 }
 
-// Reset formulaire ajout membre
 const resetAddMemberForm = () => {
-    addMemberForm.value = {
-        user_uuid: '',
-        is_manager: false
-    }
+    addMemberForm.value = { user_uuid: '', is_manager: false }
 }
 
-// Créer une nouvelle équipe
 const createTeam = async () => {
-    // Validation
     if (!createTeamForm.value.name.trim()) {
         notificationsStore.addNotification({
             status: 'warning',
@@ -162,7 +109,6 @@ const createTeam = async () => {
     }
 
     try {
-        // Préparer le payload avec le manager
         const payload = {
             name: createTeamForm.value.name,
             description: createTeamForm.value.description,
@@ -191,7 +137,6 @@ const createTeam = async () => {
     }
 }
 
-// Supprimer une équipe
 const deleteTeam = async () => {
     if (!selectedTeam.value) return
 
@@ -214,7 +159,6 @@ const deleteTeam = async () => {
     }
 }
 
-// Ajouter un membre à l'équipe
 const addMember = async () => {
     if (!selectedTeam.value || !addMemberForm.value.user_uuid) {
         notificationsStore.addNotification({
@@ -251,13 +195,11 @@ const addMember = async () => {
     }
 }
 
-// Préparer la suppression d'un membre
 const confirmRemoveMember = (member: TeamMember) => {
     memberToRemove.value = member
     showRemoveMemberConfirm.value = true
 }
 
-// Retirer un membre de l'équipe
 const removeMember = async () => {
     if (!selectedTeam.value || !memberToRemove.value) return
 
@@ -266,7 +208,7 @@ const removeMember = async () => {
         notificationsStore.addNotification({
             status: 'success',
             title: 'Membre retiré',
-            description: `${memberToRemove.value.first_name} ${memberToRemove.value.last_name} a été retiré de l'équipe`
+            description: `${memberToRemove.value.first_name} ${memberToRemove.value.last_name} a été retiré`
         })
         memberToRemove.value = null
         await loadTeams()
@@ -280,20 +222,16 @@ const removeMember = async () => {
     }
 }
 
-// Computed : employés disponibles (non déjà dans l'équipe)
 const availableEmployees = computed(() => {
     if (!selectedTeam.value || !selectedTeam.value.team_members) {
         return allEmployees.value
     }
-
     const memberUuids = selectedTeam.value.team_members.map(m => m.user_uuid)
     return allEmployees.value.filter(emp => emp.uuid && !memberUuids.includes(emp.uuid))
 })
 
-// Activer le mode édition
 const startEditingTeam = () => {
     if (!selectedTeam.value) return
-
     editTeamForm.value = {
         name: selectedTeam.value.name,
         description: selectedTeam.value.description
@@ -301,13 +239,11 @@ const startEditingTeam = () => {
     isEditingTeam.value = true
 }
 
-// Annuler l'édition
 const cancelEditingTeam = () => {
     isEditingTeam.value = false
     editTeamForm.value = { name: '', description: '' }
 }
 
-// Sauvegarder les modifications
 const saveTeamEdit = async () => {
     if (!selectedTeam.value) return
 
@@ -319,13 +255,6 @@ const saveTeamEdit = async () => {
         })
         return
     }
-    console.log('🔍 UUID de l\'équipe:', selectedTeam.value.uuid)
-  console.log('🔍 Payload:', {
-    name: editTeamForm.value.name,
-    description: editTeamForm.value.description
-  })
-  console.log('🔍 URL complète:', `http://localhost:8081/api/teams/${selectedTeam.value.uuid}`)
-  
 
     try {
         await API.teamAPI.updateTeam(selectedTeam.value.uuid, {
@@ -350,281 +279,219 @@ const saveTeamEdit = async () => {
         })
     }
 }
-
-
 </script>
 
 <template>
-    <Transition name="modal">
-        <div v-if="modelValue" class="modal modal-open" @click.self="closeModal">
-            <div class="modal-box max-w-6xl h-[80vh]">
-                <!-- Header -->
-                <div class="flex justify-between items-center mb-6">
-                    <h3 class="font-bold text-2xl">Gestion des équipes</h3>
-                    <div class="flex gap-2">
-                        <button class="btn btn-primary btn-sm" @click="showCreateTeamModal = true">
-                            + Créer une équipe
-                        </button>
-                        <button class="btn btn-sm btn-circle btn-ghost" @click="closeModal">
-                            ✕
-                        </button>
+    <BaseModal v-model="modelValue" title="Gestion des équipes">
+        <div v-if="isLoading && teams.length === 0" class="flex justify-center items-center h-full">
+            <span class="loading loading-spinner loading-lg"></span>
+        </div>
+
+        <div v-else class="grid grid-cols-[300px_1fr] gap-6" style="height: calc(80vh - 240px);">
+            <!-- Gauche : Liste des équipes -->
+            <div class="border-r-2 border-black pr-4 overflow-y-auto">
+                <h4 class="font-bold uppercase text-sm mb-3 tracking-wider">
+                    Équipes ({{ teams.length }})
+                </h4>
+
+                <div class="space-y-1">
+                    <div v-for="team in teams" :key="team.uuid" @click="selectTeam(team)"
+                        class="p-3 border-2 border-gray-400 cursor-pointer" :class="{
+                            'bg-black text-white border-black': selectedTeam?.uuid === team.uuid,
+                            'hover:bg-gray-500': selectedTeam?.uuid !== team.uuid
+                        }">
+                        <p class="font-bold text-sm">{{ team.name }}</p>
+                        <p class="text-xs mt-1">{{ team.team_members.length }} membres</p>
                     </div>
                 </div>
 
-                <!-- Indicateur de chargement global -->
-                <div v-if="isLoading && teams.length === 0" class="flex justify-center items-center h-full">
-                    <span class="loading loading-spinner loading-lg"></span>
+                <div v-if="teams.length === 0" class="text-center py-8 opacity-50">
+                    <p class="font-bold text-xs">Aucune équipe créée</p>
                 </div>
+            </div>
 
-                <!-- Contenu principal -->
-                <div v-else class="grid grid-cols-[300px_1fr] gap-6" style="height: calc(80vh - 120px);">
-                    <!-- Gauche : Liste des équipes -->
-                    <div class="border-r border-base-300 pr-4 overflow-y-auto">
-                        <h4 class="font-semibold text-sm mb-3 opacity-70">
-                            Équipes ({{ teams.length }})
-                        </h4>
-
-                        <!-- Liste des équipes -->
-                        <div class="space-y-1">
-                            <div v-for="team in teams" :key="team.uuid" @click="selectTeam(team)"
-                                class="p-3 rounded-lg cursor-pointer transition-colors" :class="{
-                                    'bg-primary text-primary-content': selectedTeam?.uuid === team.uuid,
-                                    'bg-base-200 hover:bg-base-300': selectedTeam?.uuid !== team.uuid
-                                }">
-                                <p class="font-medium text-sm">{{ team.name }}</p>
-                                <p class="text-xs opacity-70 mt-1">{{ team.team_members.length }} membre(s)</p>
-                            </div>
-                        </div>
-
-                        <!-- Message si aucune équipe -->
-                        <div v-if="teams.length === 0" class="text-center py-8 opacity-50">
-                            <p class="text-sm">Aucune équipe créée</p>
-                        </div>
-                    </div>
-
-                    <!-- Droite : Détails de l'équipe sélectionnée -->
-                    <div v-if="selectedTeam" class="overflow-y-auto">
-                        <!-- En-tête équipe -->
-                        <div class="mb-6">
-                            <!-- Mode lecture -->
-                            <div v-if="!isEditingTeam" class="flex items-start gap-2">
-                                <div class="flex-1">
-                                    <div class="flex items-center gap-2">
-                                        <h4 class="font-semibold text-xl">{{ selectedTeam.name }}</h4>
-                                        <button @click="startEditingTeam" class="btn btn-ghost btn-xs btn-circle"
-                                            title="Modifier">
-                                            <PencilIcon class="w-4 h-4" />
-                                        </button>
-                                    </div>
-                                    <p class="text-sm opacity-70 mt-1">{{ selectedTeam.description || 'Aucune description' }}</p>
-                                </div>
-                            </div>
-
-                            <!-- Mode édition -->
-                            <div v-else class="space-y-3">
-                                <div class="flex items-center gap-2">
-                                    <input v-model="editTeamForm.name" type="text"
-                                        class="input input-bordered input-sm flex-1" placeholder="Nom de l'équipe" />
-                                    <button @click="saveTeamEdit" class="btn btn-success btn-sm btn-circle"
-                                        title="Sauvegarder">
-                                        <CheckIcon class="w-4 h-4" />
-                                    </button>
-                                    <button @click="cancelEditingTeam" class="btn btn-error btn-sm btn-circle"
-                                        title="Annuler">
-                                        <XMarkIcon class="w-4 h-4" />
-                                    </button>
-                                </div>
-                                <textarea v-model="editTeamForm.description"
-                                    class="textarea textarea-bordered textarea-sm w-full"
-                                    placeholder="Description de l'équipe" rows="2"></textarea>
-                            </div>
-                        </div>
-
-                        <!-- Liste des membres -->
-                        <div class="mb-6">
-                            <div class="flex justify-between items-center mb-3">
-                                <h5 class="font-semibold text-sm opacity-70">
-                                    Membres ({{ selectedTeam.team_members.length }})
-                                </h5>
-                                <button class="btn btn-sm btn-primary" @click="showAddMemberModal = true">
-                                    + Ajouter un membre
+            <!-- Droite : Détails de l'équipe sélectionnée -->
+            <div v-if="selectedTeam" class="overflow-y-auto">
+                <!-- En-tête équipe -->
+                <div class="mb-6">
+                    <div v-if="!isEditingTeam" class="flex items-start gap-2">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2">
+                                <h4 class="font-bold text-lg uppercase">{{ selectedTeam.name }}</h4>
+                                <button @click="startEditingTeam" class="border-2 border-black w-6 h-6 flex items-center justify-center" title="Modifier">
+                                    <PencilIcon class="w-3 h-3" />
                                 </button>
                             </div>
-
-                            <!-- Tableau des membres -->
-                            <div class="space-y-2">
-                                <div v-for="member in selectedTeam.team_members" :key="member.user_uuid"
-                                    class="flex items-center justify-between p-3 bg-base-200 rounded-lg">
-                                    <div class="flex-1">
-                                        <p class="font-medium text-sm">
-                                            {{ member.first_name }} {{ member.last_name }}
-                                        </p>
-                                        <p class="text-xs opacity-70">{{ member.email }}</p>
-                                    </div>
-
-                                    <div class="flex items-center gap-2">
-                                        <!-- Badge Manager -->
-                                        <span v-if="member.is_manager" class="badge badge-xs badge-primary">
-                                            Manager
-                                        </span>
-
-                                        <!-- Badge Status -->
-                                        <span class="badge badge-xs" :class="{
-                                            'badge-success': member.status === 'active',
-                                            'badge-error': member.status === 'inactive',
-                                            'badge-warning': member.status === 'pending'
-                                        }">
-                                            {{ member.status === 'active' ? 'Actif' : member.status === 'inactive' ?
-                                                'Inactif' : 'En attente' }}
-                                        </span>
-
-                                        <!-- Bouton retirer -->
-                                        <button class="btn btn-ghost btn-xs btn-circle"
-                                            @click="confirmRemoveMember(member)">
-                                            ✕
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Message si aucun membre -->
-                            <div v-if="selectedTeam.team_members.length === 0" class="text-center py-8 opacity-50">
-                                <p class="text-sm">Aucun membre dans cette équipe</p>
-                            </div>
+                            <p class="text-xs mt-1 font-bold">{{ selectedTeam.description || 'Aucune description' }}</p>
                         </div>
+                    </div>
 
-                        <div class="divider"></div>
-
-                        <!-- Actions équipe -->
-                        <div class="flex justify-end">
-                            <button class="btn btn-error btn-outline" @click="showDeleteTeamConfirm = true">
-                                Supprimer l'équipe
+                    <div v-else class="space-y-3">
+                        <div class="flex items-center gap-2">
+                            <input v-model="editTeamForm.name" type="text"
+                                class="input input-bordered input-sm flex-1 border-2" placeholder="Nom de l'équipe" />
+                            <button @click="saveTeamEdit" class="border-2 border-black w-6 h-6 flex items-center justify-center bg-green-600 text-white" title="Sauvegarder">
+                                <CheckIcon class="w-3 h-3" />
+                            </button>
+                            <button @click="cancelEditingTeam" class="border-2 border-black w-6 h-6 flex items-center justify-center bg-red-600 text-white" title="Annuler">
+                                <XMarkIcon class="w-3 h-3" />
                             </button>
                         </div>
-                    </div>
-
-                    <!-- Placeholder si aucune équipe sélectionnée -->
-                    <div v-else class="flex items-center justify-center opacity-50 h-full">
-                        <p>Sélectionnez une équipe dans la liste</p>
+                        <textarea v-model="editTeamForm.description"
+                            class="textarea textarea-bordered textarea-sm w-full border-2"
+                            placeholder="Description de l'équipe" rows="2"></textarea>
                     </div>
                 </div>
+
+                <!-- Liste des membres -->
+                <div class="mb-6">
+                    <div class="flex justify-between items-center mb-3">
+                        <h5 class="font-bold uppercase text-xs">
+                            Membres ({{ selectedTeam.team_members.length }})
+                        </h5>
+                        <button class="brutal-btn brutal-btn-primary text-xs" @click="showAddMemberModal = true">
+                            Ajouter
+                        </button>
+                    </div>
+
+                    <div class="space-y-2">
+                        <div v-for="member in selectedTeam.team_members" :key="member.user_uuid"
+                            class="flex items-center justify-between p-3 border-2 border-black">
+                            <div class="flex-1">
+                                <p class="font-bold text-sm">
+                                    {{ member.first_name }} {{ member.last_name }}
+                                </p>
+                                <p class="text-xs">{{ member.email }}</p>
+                            </div>
+
+                            <div class="flex items-center gap-2">
+                                <span v-if="member.is_manager" class="font-bold text-xs border-2 border-black px-2 py-1">
+                                    MANAGER
+                                </span>
+
+                                <span class="font-bold text-xs border-2 px-2 py-1" :class="{
+                                    'border-green-700 text-green-700': member.status === 'active',
+                                    'border-red-700 text-red-700': member.status === 'inactive',
+                                    'border-yellow-700 text-yellow-700': member.status === 'pending'
+                                }">
+                                    {{ member.status === 'active' ? 'ACTIF' : member.status === 'inactive' ? 'INACTIF' : 'ATTENTE' }}
+                                </span>
+
+                                <button class="border-2 border-black w-5 h-5 flex items-center justify-center text-xs font-bold" @click="confirmRemoveMember(member)">
+                                    X
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div v-if="selectedTeam.team_members.length === 0" class="text-center py-8 opacity-50">
+                        <p class="font-bold text-xs">Aucun membre dans cette équipe</p>
+                    </div>
+                </div>
+
+                <div class="h-px bg-black my-4"></div>
+
+                <!-- Actions équipe -->
+                <div class="flex justify-end">
+                    <button class="brutal-btn brutal-btn-error" @click="showDeleteTeamConfirm = true">
+                        Supprimer l'équipe
+                    </button>
+                </div>
+            </div>
+
+            <div v-else class="flex items-center justify-center opacity-50 h-full">
+                <p class="font-bold">Sélectionnez une équipe</p>
             </div>
         </div>
-    </Transition>
+
+        <!-- Footer -->
+        <template #footer>
+            <button class="brutal-btn brutal-btn-primary" @click="showCreateTeamModal = true">
+                Créer une équipe
+            </button>
+        </template>
+    </BaseModal>
 
     <!-- Modal de création d'équipe -->
-    <dialog :open="showCreateTeamModal" class="modal">
-        <div class="modal-box">
-            <h3 class="font-bold text-lg mb-4">Créer une nouvelle équipe</h3>
-
-            <div class="space-y-4">
-                <!-- Nom de l'équipe -->
-                <div>
-                    <label class="label">
-                        <span class="label-text">Nom de l'équipe *</span>
-                    </label>
-                    <input v-model="createTeamForm.name" type="text" placeholder="Ex: Équipe développement"
-                        class="input input-bordered w-full" />
-                </div>
-
-                <!-- Description -->
-                <div>
-                    <label class="label">
-                        <span class="label-text">Description</span>
-                    </label>
-                    <textarea v-model="createTeamForm.description" placeholder="Description de l'équipe..."
-                        class="textarea textarea-bordered w-full" rows="3"></textarea>
-                </div>
-
-                <!-- Sélection du manager -->
-                <div>
-                    <label class="label">
-                        <span class="label-text">Manager de l'équipe *</span>
-                    </label>
-                    <select v-model="createTeamForm.manager_uuid" class="select select-bordered w-full">
-                        <option value="">Sélectionnez un manager</option>
-                        <option v-for="employee in allEmployees" :key="employee.uuid" :value="employee.uuid">
-                            {{ employee.first_name }} {{ employee.last_name }} ({{ employee.email }})
-                        </option>
-                    </select>
-                    <label class="label">
-                        <span class="label-text-alt opacity-70">Cette personne sera définie comme manager de
-                            l'équipe</span>
-                    </label>
-                </div>
+    <BaseModal v-model="showCreateTeamModal" title="Créer une nouvelle équipe">
+        <div class="space-y-4">
+            <div>
+                <label class="label">
+                    <span class="label-text font-bold uppercase text-xs">Nom de l'équipe</span>
+                </label>
+                <input v-model="createTeamForm.name" type="text" placeholder="Ex: Équipe développement"
+                    class="input input-bordered w-full border-2" />
             </div>
 
-            <div class="modal-action">
-                <button class="btn btn-ghost" @click="showCreateTeamModal = false; resetCreateTeamForm()">
-                    Annuler
-                </button>
-                <button class="btn btn-primary" @click="createTeam">
-                    Créer l'équipe
-                </button>
+            <div>
+                <label class="label">
+                    <span class="label-text font-bold uppercase text-xs">Description</span>
+                </label>
+                <textarea v-model="createTeamForm.description" placeholder="Description de l'équipe..."
+                    class="textarea textarea-bordered w-full border-2" rows="3"></textarea>
+            </div>
+
+            <div>
+                <label class="label">
+                    <span class="label-text font-bold uppercase text-xs">Manager de l'équipe</span>
+                </label>
+                <select v-model="createTeamForm.manager_uuid" class="select select-bordered w-full border-2">
+                    <option value="">Sélectionnez un manager</option>
+                    <option v-for="employee in allEmployees" :key="employee.uuid" :value="employee.uuid">
+                        {{ employee.first_name }} {{ employee.last_name }} ({{ employee.email }})
+                    </option>
+                </select>
             </div>
         </div>
-        <div class="modal-backdrop" @click="showCreateTeamModal = false"></div>
-    </dialog>
+
+        <template #footer>
+            <button class="brutal-btn" @click="showCreateTeamModal = false; resetCreateTeamForm()">
+                Annuler
+            </button>
+            <button class="brutal-btn brutal-btn-success" @click="createTeam">
+                Créer l'équipe
+            </button>
+        </template>
+    </BaseModal>
 
     <!-- Modal d'ajout de membre -->
-    <dialog :open="showAddMemberModal" class="modal">
-        <div class="modal-box">
-            <h3 class="font-bold text-lg mb-4">Ajouter un membre</h3>
-
-            <div class="space-y-4">
-                <!-- Sélection employé -->
-                <div>
-                    <label class="label">
-                        <span class="label-text">Employé *</span>
-                    </label>
-                    <select v-model="addMemberForm.user_uuid" class="select select-bordered w-full">
-                        <option value="">Sélectionnez un employé</option>
-                        <option v-for="employee in availableEmployees" :key="employee.uuid" :value="employee.uuid">
-                            {{ employee.first_name }} {{ employee.last_name }} ({{ employee.email }})
-                        </option>
-                    </select>
-                </div>
-
-                <!-- Checkbox Manager -->
-                <div>
-                    <label class="label cursor-pointer justify-start gap-2">
-                        <input v-model="addMemberForm.is_manager" type="checkbox" class="checkbox checkbox-primary" />
-                        <span class="label-text">Définir comme manager de l'équipe</span>
-                    </label>
-                </div>
+    <BaseModal v-model="showAddMemberModal" title="Ajouter un membre">
+        <div class="space-y-4">
+            <div>
+                <label class="label">
+                    <span class="label-text font-bold uppercase text-xs">Employé</span>
+                </label>
+                <select v-model="addMemberForm.user_uuid" class="select select-bordered w-full border-2">
+                    <option value="">Sélectionnez un employé</option>
+                    <option v-for="employee in availableEmployees" :key="employee.uuid" :value="employee.uuid">
+                        {{ employee.first_name }} {{ employee.last_name }} ({{ employee.email }})
+                    </option>
+                </select>
             </div>
 
-            <div class="modal-action">
-                <button class="btn btn-ghost" @click="showAddMemberModal = false; resetAddMemberForm()">
-                    Annuler
-                </button>
-                <button class="btn btn-primary" @click="addMember">
-                    Ajouter
-                </button>
+            <div>
+                <label class="label cursor-pointer justify-start gap-2">
+                    <input v-model="addMemberForm.is_manager" type="checkbox" class="checkbox checkbox-primary border-2" />
+                    <span class="label-text font-bold uppercase text-xs">Manager de l'équipe</span>
+                </label>
             </div>
         </div>
-        <div class="modal-backdrop" @click="showAddMemberModal = false"></div>
-    </dialog>
 
-    <!-- ConfirmDialog pour supprimer l'équipe -->
+        <template #footer>
+            <button class="brutal-btn" @click="showAddMemberModal = false; resetAddMemberForm()">
+                Annuler
+            </button>
+            <button class="brutal-btn brutal-btn-success" @click="addMember">
+                Ajouter
+            </button>
+        </template>
+    </BaseModal>
+
     <ConfirmDialog v-model="showDeleteTeamConfirm" title="Supprimer l'équipe"
-        :message="`Êtes-vous sûr de vouloir supprimer l'équipe <span class='font-bold'>${selectedTeam?.name}</span> ?<br><span class='text-sm opacity-70'>Tous les membres seront retirés de cette équipe.</span>`"
+        :message="`Êtes-vous sûr de vouloir supprimer l'équipe <span class='font-bold'>${selectedTeam?.name}</span> ?`"
         confirm-text="Supprimer l'équipe" cancel-text="Annuler" variant="error" @confirm="deleteTeam" />
 
-    <!-- ConfirmDialog pour retirer un membre -->
     <ConfirmDialog v-model="showRemoveMemberConfirm" title="Retirer le membre"
-        :message="`Êtes-vous sûr de vouloir retirer <span class='font-bold'>${memberToRemove?.first_name} ${memberToRemove?.last_name}</span> de l'équipe ?`"
+        :message="`Êtes-vous sûr de vouloir retirer <span class='font-bold'>${memberToRemove?.first_name} ${memberToRemove?.last_name}</span> ?`"
         confirm-text="Retirer" cancel-text="Annuler" variant="warning" @confirm="removeMember" />
 </template>
-
-<style scoped>
-.modal-enter-active,
-.modal-leave-active {
-    transition: opacity 0.3s ease;
-}
-
-.modal-enter-from,
-.modal-leave-to {
-    opacity: 0;
-}
-</style>

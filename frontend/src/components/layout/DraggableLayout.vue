@@ -31,11 +31,7 @@ const currentLayout = computed({
 // Le mode édition vient maintenant du store
 const isEditMode = computed(() => editModeStore.isEditMode)  // ← MODIFIÉ
 
-// SUPPRIME ces fonctions (elles sont maintenant dans le store) :
-// function toggleEditMode() { ... }
-// function resetLayout() { ... }
 
-// SUPPRIME le defineExpose (on n'en a plus besoin)
 </script>
 
 <template>
