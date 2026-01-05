@@ -16,3 +16,6 @@ touch "$PWD/../logs/frontend.log"
 touch "$PWD/../logs/backend.log"
 touch "$PWD/../logs/database.log"
 touch "$PWD/../logs/apigateway.log"
+
+# Create empty folder for KPI exports csv files
+mkdir "$PWD/../backend/data/kpi
