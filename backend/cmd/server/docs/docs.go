@@ -1492,7 +1492,8 @@ const docTemplate = `{
                         "work_session_user_weekly_total",
                         "work_session_team_weekly_total",
                         "presence_rate",
-                        "weekly_average_break_time"
+                        "weekly_average_break_time",
+                        "weekly_average_time_per_shift"
                     ]
                 },
                 "start_date": {
