@@ -103,6 +103,7 @@ definitions:
         - work_session_team_weekly_total
         - presence_rate
         - weekly_average_break_time
+        - weekly_average_time_per_shift
         type: string
       start_date:
         type: string

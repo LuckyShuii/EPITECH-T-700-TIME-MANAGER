@@ -6,7 +6,6 @@ import (
 	UserService "app/internal/app/user/service"
 	WeeklyRateService "app/internal/app/weekly-rate/service"
 	"fmt"
-	"log"
 	"os"
 
 	"app/internal/app/kpi/model"
@@ -190,7 +189,6 @@ func (service *kpiService) ExportKPIData(startDate string, endDate string, reque
 		}
 
 	case "weekly_average_break_time":
-		log.Println("Exporting weekly average break time")
 		data, err := service.GetAverageBreakTime(startDate, endDate, uuidToSearch)
 		if err != nil {
 			return model.KPIExportResponse{}, err
@@ -205,6 +203,26 @@ func (service *kpiService) ExportKPIData(startDate string, endDate string, reque
 				startDate,
 				endDate,
 				fmt.Sprintf("%.2f", data.AverageBreakTime),
+			},
+		}
+
+	case "weekly_average_time_per_shift":
+		data, err := service.GetAverageTimePerShift(startDate, endDate, uuidToSearch)
+		if err != nil {
+			return model.KPIExportResponse{}, err
+		}
+
+		headers = []string{"user uuid", "firstname", "lastname", "start date", "end date", "average time per shift (minutes)", "total shifts", "total time (minutes)"}
+		rows = [][]string{
+			{
+				data.UserUUID,
+				data.FirstName,
+				data.LastName,
+				startDate,
+				endDate,
+				fmt.Sprintf("%.2f", data.AverageTimePerShift),
+				fmt.Sprint(data.TotalShifts),
+				fmt.Sprint(data.TotalTime),
 			},
 		}
 
