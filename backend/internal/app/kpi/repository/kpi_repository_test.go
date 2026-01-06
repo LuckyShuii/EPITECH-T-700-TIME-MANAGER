@@ -2,56 +2,154 @@ package repository_test
 
 import (
 	"app/internal/app/kpi/repository"
+	"context"
+	"fmt"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
-	"gorm.io/driver/sqlite"
+	"github.com/testcontainers/testcontainers-go"
+	"github.com/testcontainers/testcontainers-go/wait"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
-// setupKPITestDB initializes a temporary SQLite in-memory database.
+// setupKPITestDB initializes a PostgreSQL test database using testcontainers.
 func setupKPITestDB(t *testing.T) *gorm.DB {
-	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
-	if err != nil {
-		t.Fatalf("failed to connect database: %v", err)
+	t.Helper()
+
+	ctx := context.Background()
+	const portable = "5432/tcp"
+
+	req := testcontainers.ContainerRequest{
+		Image: "postgres:16",
+		Env: map[string]string{
+			"POSTGRES_PASSWORD": "test",
+			"POSTGRES_DB":       "testdb",
+			"POSTGRES_USER":     "postgres",
+		},
+		ExposedPorts: []string{portable},
+		WaitingFor: wait.ForAll(
+			wait.ForListeningPort(portable),
+			wait.ForLog("database system is ready to accept connections").
+				WithStartupTimeout(60*time.Second).
+				WithOccurrence(2),
+		),
 	}
 
-	err = db.Exec(`
-		CREATE TABLE users (
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			uuid TEXT,
-			username TEXT,
-			first_name TEXT,
-			last_name TEXT,
-			weekly_rate_id INTEGER
-		);
+	pgC, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
+		ContainerRequest: req,
+		Started:          true,
+	})
+	if err != nil {
+		t.Fatalf("Failed to start container: %v", err)
+	}
+
+	t.Cleanup(func() {
+		if err := pgC.Terminate(ctx); err != nil {
+			t.Logf("Failed to terminate container: %v", err)
+		}
+	})
+
+	port, err := pgC.MappedPort(ctx, portable)
+	if err != nil {
+		t.Fatalf("Failed to get mapped port: %v", err)
+	}
+
+	host, err := pgC.Host(ctx)
+	if err != nil {
+		t.Fatalf("Failed to get container host: %v", err)
+	}
+
+	dsn := fmt.Sprintf(
+		"host=%s port=%s user=postgres password=test dbname=testdb sslmode=disable connect_timeout=10",
+		host, port.Port(),
+	)
+
+	var db *gorm.DB
+	maxRetries := 5
+	for i := 0; i < maxRetries; i++ {
+		db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+		if err == nil {
+			sqlDB, err := db.DB()
+			if err == nil {
+				err = sqlDB.Ping()
+				if err == nil {
+					break
+				}
+			}
+		}
+
+		if i < maxRetries-1 {
+			waitTime := time.Duration(i+1) * time.Second
+			t.Logf("Connection attempt %d failed, retrying in %v... Error: %v", i+1, waitTime, err)
+			time.Sleep(waitTime)
+		}
+	}
+
+	if err != nil {
+		t.Fatalf("Failed to connect to Postgres after %d attempts: %v", maxRetries, err)
+	}
+
+	schema := `
+		CREATE TYPE work_session_status AS ENUM('active', 'completed', 'paused');
 
 		CREATE TABLE weekly_rate (
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			rate_name TEXT,
-			amount REAL
+			id SERIAL PRIMARY KEY,
+			uuid VARCHAR(36) NOT NULL UNIQUE,
+			rate_name VARCHAR(255) NOT NULL,
+			amount SMALLINT NOT NULL,
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+		);
+
+		CREATE TABLE users (
+			id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+			uuid VARCHAR(36) NOT NULL UNIQUE,
+			username VARCHAR(100) NOT NULL UNIQUE,
+			email VARCHAR(320) NOT NULL UNIQUE,
+			password_hash VARCHAR(100) NOT NULL,
+			first_name VARCHAR(100),
+			last_name VARCHAR(100),
+			phone_number VARCHAR(15),
+			roles TEXT[] DEFAULT '{"employee"}',
+			weekly_rate_id INT,
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			CONSTRAINT fk_weekly_rate FOREIGN KEY (weekly_rate_id) REFERENCES weekly_rate (id)
 		);
 
 		CREATE TABLE work_session_active (
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			user_id INTEGER,
-			clock_in TEXT,
-			clock_out TEXT,
-			duration_minutes INTEGER,
-			breaks_duration_minutes INTEGER,
-			status TEXT
+			id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+			uuid VARCHAR(36) NOT NULL UNIQUE,
+			user_id INT NOT NULL,
+			clock_in TIMESTAMP NOT NULL,
+			clock_out TIMESTAMP,
+			duration_minutes INT,
+			breaks_duration_minutes INT DEFAULT 0,
+			status work_session_status DEFAULT 'active',
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 		);
 
 		CREATE TABLE work_session_archived (
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			user_id INTEGER,
-			clock_in TEXT,
-			clock_out TEXT,
-			duration_minutes INTEGER,
-			breaks_duration_minutes INTEGER
+			id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+			uuid VARCHAR(36) NOT NULL UNIQUE,
+			user_id INT NOT NULL,
+			clock_in TIMESTAMP NOT NULL,
+			clock_out TIMESTAMP,
+			duration_minutes INT,
+			breaks_duration_minutes INT DEFAULT 0,
+			status work_session_status DEFAULT 'active',
+			archived_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 		);
-	`).Error
-	if err != nil {
+	`
+
+	if err := db.Exec(schema).Error; err != nil {
 		t.Fatalf("failed to create tables: %v", err)
 	}
 
