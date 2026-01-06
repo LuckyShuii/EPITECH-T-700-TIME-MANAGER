@@ -206,7 +206,7 @@ func (service *kpiService) ExportKPIData(startDate string, endDate string, reque
 			},
 		}
 
-	case "weekly_average_time_per_shift":
+	case "average_time_per_shift":
 		data, err := service.GetAverageTimePerShift(startDate, endDate, uuidToSearch)
 		if err != nil {
 			return model.KPIExportResponse{}, err
