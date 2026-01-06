@@ -143,6 +143,8 @@ func SetupRouter() *gin.Engine {
 		protected.GET("/kpi/work-session-team-weekly-total/:team_uuid/:start_date/:end_date", authMiddleware.RequireRoles("manager"), kpiHandler.GetWorkSessionTeamWeeklyTotal)
 		protected.GET("/kpi/presence-rate/:user_uuid/:start_date/:end_date", authMiddleware.RequireRoles("manager, admin"), kpiHandler.GetPresenceRate)
 		protected.GET("/kpi/weekly-average-break-time/:user_uuid/:start_date/:end_date", authMiddleware.RequireRoles("manager, admin"), kpiHandler.GetAverageBreakTime)
+		// moyenne par shift par individu
+		protected.GET("/kpi/average-time-per-shift/:user_uuid/:start_date/:end_date", authMiddleware.RequireRoles("manager, admin"), kpiHandler.GetAverageTimePerShift)
 
 		protected.POST("/kpi/export", authMiddleware.RequireRoles("manager, admin"), kpiHandler.ExportKPIData)
 		protected.Static("/kpi/files", "/app/data/kpi")

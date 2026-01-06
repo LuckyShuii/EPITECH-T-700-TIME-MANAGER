@@ -156,6 +156,57 @@ const docTemplate = `{
                 }
             }
         },
+        "/kpi/average-time-per-shift/{user_uuid}/{start_date}/{end_date}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieves the average time per shift in minutes for a specified user UUID between the provided start and end dates. 🔒 Requires role: **manager, admin**",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "KPI"
+                ],
+                "summary": "Get average time per shift for a user within a date range",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Start Date in ISO 8601 format",
+                        "name": "start_date",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "End Date in ISO 8601 format",
+                        "name": "end_date",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "User UUID",
+                        "name": "user_uuid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.KPIAverageTimePerShiftResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/kpi/export": {
             "post": {
                 "security": [
@@ -1389,6 +1440,35 @@ const docTemplate = `{
                 },
                 "start_date": {
                     "type": "string"
+                },
+                "user_uuid": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.KPIAverageTimePerShiftResponse": {
+            "type": "object",
+            "properties": {
+                "average_time_per_shift": {
+                    "type": "number"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                },
+                "total_shifts": {
+                    "type": "integer"
+                },
+                "total_time": {
+                    "type": "integer"
                 },
                 "user_uuid": {
                     "type": "string"
