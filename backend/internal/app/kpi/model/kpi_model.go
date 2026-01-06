@@ -65,3 +65,15 @@ type KPIAverageBreakTimeResponse struct {
 	StartDate        string  `json:"start_date"`
 	EndDate          string  `json:"end_date"`
 }
+
+// swagger:model KPIAverageTimePerShiftResponse
+type KPIAverageTimePerShiftResponse struct {
+	FirstName           string  `json:"first_name"`
+	LastName            string  `json:"last_name"`
+	UserUUID            string  `json:"user_uuid"`
+	AverageTimePerShift float64 `json:"average_time_per_shift"`
+	TotalShifts         int     `json:"total_shifts"`
+	TotalTime           int     `json:"total_time"`
+	StartDate           string  `json:"start_date"`
+	EndDate             string  `json:"end_date"`
+}
