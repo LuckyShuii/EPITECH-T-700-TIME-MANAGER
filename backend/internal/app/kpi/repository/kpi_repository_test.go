@@ -12,9 +12,11 @@ import (
 	"github.com/testcontainers/testcontainers-go/wait"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
-// setupKPITestDB initializes a PostgreSQL test database using testcontainers.
+// setupKPITestDB starts a Postgres testcontainer and creates a minimal schema
+// compatible with KPI repository queries. No external SQL files needed.
 func setupKPITestDB(t *testing.T) *gorm.DB {
 	t.Helper()
 
@@ -46,9 +48,7 @@ func setupKPITestDB(t *testing.T) *gorm.DB {
 	}
 
 	t.Cleanup(func() {
-		if err := pgC.Terminate(ctx); err != nil {
-			t.Logf("Failed to terminate container: %v", err)
-		}
+		_ = pgC.Terminate(ctx)
 	})
 
 	port, err := pgC.MappedPort(ctx, portable)
@@ -66,32 +66,33 @@ func setupKPITestDB(t *testing.T) *gorm.DB {
 		host, port.Port(),
 	)
 
+	// Connect (retry a bit)
 	var db *gorm.DB
 	maxRetries := 5
 	for i := 0; i < maxRetries; i++ {
-		db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+		db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{
+			// keep tests quiet; remove this if you want to see every SQL query
+			Logger: logger.Default.LogMode(logger.Silent),
+		})
 		if err == nil {
-			sqlDB, err := db.DB()
-			if err == nil {
-				err = sqlDB.Ping()
-				if err == nil {
+			sqlDB, e := db.DB()
+			if e == nil {
+				if e = sqlDB.Ping(); e == nil {
 					break
 				}
 			}
 		}
-
 		if i < maxRetries-1 {
-			waitTime := time.Duration(i+1) * time.Second
-			t.Logf("Connection attempt %d failed, retrying in %v... Error: %v", i+1, waitTime, err)
-			time.Sleep(waitTime)
+			time.Sleep(time.Duration(i+1) * time.Second)
 		}
 	}
-
 	if err != nil {
 		t.Fatalf("Failed to connect to Postgres after %d attempts: %v", maxRetries, err)
 	}
 
 	schema := `
+		CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
 		CREATE TYPE work_session_status AS ENUM('active', 'completed', 'paused');
 
 		CREATE TABLE weekly_rate (
@@ -109,82 +110,125 @@ func setupKPITestDB(t *testing.T) *gorm.DB {
 			username VARCHAR(100) NOT NULL UNIQUE,
 			email VARCHAR(320) NOT NULL UNIQUE,
 			password_hash VARCHAR(100) NOT NULL,
-			first_name VARCHAR(100),
-			last_name VARCHAR(100),
-			phone_number VARCHAR(15),
+			status VARCHAR(15) NOT NULL DEFAULT 'pending',
 			roles TEXT[] DEFAULT '{"employee"}',
-			weekly_rate_id INT,
+			weekly_rate_id INT NULL REFERENCES weekly_rate (id),
+			dashboard_layout JSON DEFAULT NULL,
+			first_day_of_week INT DEFAULT 1,
 			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-			CONSTRAINT fk_weekly_rate FOREIGN KEY (weekly_rate_id) REFERENCES weekly_rate (id)
+			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 		);
 
 		CREATE TABLE work_session_active (
 			id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 			uuid VARCHAR(36) NOT NULL UNIQUE,
-			user_id INT NOT NULL,
+			user_id INT NOT NULL REFERENCES users(id),
 			clock_in TIMESTAMP NOT NULL,
 			clock_out TIMESTAMP,
 			duration_minutes INT,
-			breaks_duration_minutes INT DEFAULT 0,
 			status work_session_status DEFAULT 'active',
+			breaks_duration_minutes INTEGER DEFAULT 0,
 			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-			FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 		);
 
 		CREATE TABLE work_session_archived (
 			id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 			uuid VARCHAR(36) NOT NULL UNIQUE,
-			user_id INT NOT NULL,
+			user_id INT NOT NULL REFERENCES users(id),
 			clock_in TIMESTAMP NOT NULL,
 			clock_out TIMESTAMP,
 			duration_minutes INT,
-			breaks_duration_minutes INT DEFAULT 0,
 			status work_session_status DEFAULT 'active',
+			breaks_duration_minutes INTEGER DEFAULT 0,
 			archived_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-			FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 		);
 	`
 
 	if err := db.Exec(schema).Error; err != nil {
-		t.Fatalf("failed to create tables: %v", err)
+		t.Fatalf("failed to create schema: %v", err)
 	}
 
 	return db
+}
+
+func insertUser(t *testing.T, db *gorm.DB, uuid, username string, weeklyRateID *int) int {
+	t.Helper()
+
+	email := fmt.Sprintf("%s@example.com", username)
+
+	var id int
+	if weeklyRateID != nil {
+		err := db.Raw(`
+			INSERT INTO users (uuid, username, email, password_hash, status, weekly_rate_id)
+			VALUES (?, ?, ?, 'hash', 'active', ?)
+			RETURNING id
+		`, uuid, username, email, *weeklyRateID).Scan(&id).Error
+		if err != nil {
+			t.Fatalf("failed to insert user: %v", err)
+		}
+		return id
+	}
+
+	err := db.Raw(`
+		INSERT INTO users (uuid, username, email, password_hash, status)
+		VALUES (?, ?, ?, 'hash', 'active')
+		RETURNING id
+	`, uuid, username, email).Scan(&id).Error
+	if err != nil {
+		t.Fatalf("failed to insert user: %v", err)
+	}
+	return id
+}
+
+func insertWeeklyRate(t *testing.T, db *gorm.DB, uuid, name string, amount int) int {
+	t.Helper()
+
+	var id int
+	err := db.Raw(`
+		INSERT INTO weekly_rate (uuid, rate_name, amount)
+		VALUES (?, ?, ?)
+		RETURNING id
+	`, uuid, name, amount).Scan(&id).Error
+	if err != nil {
+		t.Fatalf("failed to insert weekly_rate: %v", err)
+	}
+	return id
 }
 
 func TestGetWeeklyRatesByUserIDAndDateRange(t *testing.T) {
 	db := setupKPITestDB(t)
 	repo := repository.NewKPIRepository(db)
 
-	// Insert test user
-	db.Exec(`INSERT INTO users (id, uuid, username) VALUES (1, 'user-uuid-1', 'testuser')`)
+	userID := insertUser(t, db, "user-uuid-1", "testuser", nil)
 
-	// Insert work sessions in active table
-	db.Exec(`INSERT INTO work_session_active (user_id, clock_in, duration_minutes, status) 
-		VALUES (1, '2026-01-06 09:00:00', 480, 'completed')`)
-	db.Exec(`INSERT INTO work_session_active (user_id, clock_in, duration_minutes, status) 
-		VALUES (1, '2026-01-07 09:00:00', 450, 'completed')`)
+	db.Exec(`
+		INSERT INTO work_session_active (uuid, user_id, clock_in, duration_minutes, status)
+		VALUES ('ws-a-1', ?, '2026-01-06 09:00:00', 480, 'completed')
+	`, userID)
+	db.Exec(`
+		INSERT INTO work_session_active (uuid, user_id, clock_in, duration_minutes, status)
+		VALUES ('ws-a-2', ?, '2026-01-07 09:00:00', 450, 'completed')
+	`, userID)
+	db.Exec(`
+		INSERT INTO work_session_archived (uuid, user_id, clock_in, duration_minutes, status)
+		VALUES ('ws-ar-1', ?, '2026-01-08 09:00:00', 500, 'completed')
+	`, userID)
 
-	// Insert work sessions in archived table
-	db.Exec(`INSERT INTO work_session_archived (user_id, clock_in, duration_minutes) 
-		VALUES (1, '2026-01-08 09:00:00', 500)`)
-
-	totalMinutes, err := repo.GetWeeklyRatesByUserIDAndDateRange(1, "2026-01-06 00:00:00", "2026-01-08 23:59:59")
+	totalMinutes, err := repo.GetWeeklyRatesByUserIDAndDateRange(userID, "2026-01-06 00:00:00", "2026-01-08 23:59:59")
 	assert.NoError(t, err)
-	assert.Equal(t, 1430, totalMinutes) // 480 + 450 + 500
+	assert.Equal(t, 1430, totalMinutes)
 }
 
 func TestGetWeeklyRatesByUserIDAndDateRangeNoData(t *testing.T) {
 	db := setupKPITestDB(t)
 	repo := repository.NewKPIRepository(db)
 
-	db.Exec(`INSERT INTO users (id, uuid, username) VALUES (2, 'user-uuid-2', 'testuser2')`)
+	userID := insertUser(t, db, "user-uuid-2", "testuser2", nil)
 
-	totalMinutes, err := repo.GetWeeklyRatesByUserIDAndDateRange(2, "2026-01-06 00:00:00", "2026-01-08 23:59:59")
+	totalMinutes, err := repo.GetWeeklyRatesByUserIDAndDateRange(userID, "2026-01-06 00:00:00", "2026-01-08 23:59:59")
 	assert.NoError(t, err)
 	assert.Equal(t, 0, totalMinutes)
 }
@@ -193,17 +237,19 @@ func TestGetUserPresenceRate(t *testing.T) {
 	db := setupKPITestDB(t)
 	repo := repository.NewKPIRepository(db)
 
-	// Insert test user with weekly rate
-	db.Exec(`INSERT INTO weekly_rate (id, rate_name, amount) VALUES (1, 'Standard', 40)`)
-	db.Exec(`INSERT INTO users (id, uuid, username, weekly_rate_id) VALUES (1, 'user-uuid-1', 'testuser', 1)`)
+	wrID := insertWeeklyRate(t, db, "wr-1", "Standard", 40)
+	userID := insertUser(t, db, "user-uuid-1", "testuser", &wrID)
 
-	// Insert work sessions totaling 2400 minutes = 40 hours
-	db.Exec(`INSERT INTO work_session_active (user_id, clock_in, duration_minutes, status) 
-		VALUES (1, '2026-01-06 09:00:00', 1200, 'completed')`)
-	db.Exec(`INSERT INTO work_session_archived (user_id, clock_in, duration_minutes) 
-		VALUES (1, '2026-01-07 09:00:00', 1200)`)
+	db.Exec(`
+		INSERT INTO work_session_active (uuid, user_id, clock_in, duration_minutes, status)
+		VALUES ('ws-a-1', ?, '2026-01-06 09:00:00', 1200, 'completed')
+	`, userID)
+	db.Exec(`
+		INSERT INTO work_session_archived (uuid, user_id, clock_in, duration_minutes, status)
+		VALUES ('ws-ar-1', ?, '2026-01-07 09:00:00', 1200, 'completed')
+	`, userID)
 
-	presenceRate, weeklyRateExpected, weeklyTimeDone, err := repo.GetUserPresenceRate(1, "2026-01-06 00:00:00", "2026-01-08 23:59:59")
+	presenceRate, weeklyRateExpected, weeklyTimeDone, err := repo.GetUserPresenceRate(userID, "2026-01-06 00:00:00", "2026-01-08 23:59:59")
 	assert.NoError(t, err)
 	assert.Equal(t, 100.0, presenceRate)
 	assert.Equal(t, 40.0, weeklyRateExpected)
@@ -214,14 +260,14 @@ func TestGetUserPresenceRateWithoutWeeklyRate(t *testing.T) {
 	db := setupKPITestDB(t)
 	repo := repository.NewKPIRepository(db)
 
-	// Insert test user without weekly rate (should default to 40)
-	db.Exec(`INSERT INTO users (id, uuid, username) VALUES (2, 'user-uuid-2', 'testuser2')`)
+	userID := insertUser(t, db, "user-uuid-2", "testuser2", nil)
 
-	// Insert work sessions totaling 1200 minutes = 20 hours
-	db.Exec(`INSERT INTO work_session_active (user_id, clock_in, duration_minutes, status) 
-		VALUES (2, '2026-01-06 09:00:00', 1200, 'completed')`)
+	db.Exec(`
+		INSERT INTO work_session_active (uuid, user_id, clock_in, duration_minutes, status)
+		VALUES ('ws-a-1', ?, '2026-01-06 09:00:00', 1200, 'completed')
+	`, userID)
 
-	presenceRate, weeklyRateExpected, weeklyTimeDone, err := repo.GetUserPresenceRate(2, "2026-01-06 00:00:00", "2026-01-08 23:59:59")
+	presenceRate, weeklyRateExpected, weeklyTimeDone, err := repo.GetUserPresenceRate(userID, "2026-01-06 00:00:00", "2026-01-08 23:59:59")
 	assert.NoError(t, err)
 	assert.Equal(t, 50.0, presenceRate)
 	assert.Equal(t, 40.0, weeklyRateExpected)
@@ -232,33 +278,38 @@ func TestGetUserAverageBreakTime(t *testing.T) {
 	db := setupKPITestDB(t)
 	repo := repository.NewKPIRepository(db)
 
-	// Insert test user
-	db.Exec(`INSERT INTO users (id, uuid, username) VALUES (1, 'user-uuid-1', 'testuser')`)
+	userID := insertUser(t, db, "user-uuid-1", "testuser", nil)
 
-	// Insert work sessions with breaks
-	db.Exec(`INSERT INTO work_session_active (user_id, clock_in, duration_minutes, breaks_duration_minutes, status) 
-		VALUES (1, '2026-01-06 09:00:00', 480, 30, 'completed')`)
-	db.Exec(`INSERT INTO work_session_active (user_id, clock_in, duration_minutes, breaks_duration_minutes, status) 
-		VALUES (1, '2026-01-07 09:00:00', 450, 45, 'completed')`)
-	db.Exec(`INSERT INTO work_session_archived (user_id, clock_in, duration_minutes, breaks_duration_minutes) 
-		VALUES (1, '2026-01-08 09:00:00', 500, 25)`)
+	db.Exec(`
+		INSERT INTO work_session_active (uuid, user_id, clock_in, duration_minutes, breaks_duration_minutes, status)
+		VALUES ('ws-a-1', ?, '2026-01-06 09:00:00', 480, 30, 'completed')
+	`, userID)
+	db.Exec(`
+		INSERT INTO work_session_active (uuid, user_id, clock_in, duration_minutes, breaks_duration_minutes, status)
+		VALUES ('ws-a-2', ?, '2026-01-07 09:00:00', 450, 45, 'completed')
+	`, userID)
+	db.Exec(`
+		INSERT INTO work_session_archived (uuid, user_id, clock_in, duration_minutes, breaks_duration_minutes, status)
+		VALUES ('ws-ar-1', ?, '2026-01-08 09:00:00', 500, 25, 'completed')
+	`, userID)
 
-	averageBreakTime, err := repo.GetUserAverageBreakTime(1, "2026-01-06 00:00:00", "2026-01-10 23:59:59")
+	averageBreakTime, err := repo.GetUserAverageBreakTime(userID, "2026-01-06 00:00:00", "2026-01-10 23:59:59")
 	assert.NoError(t, err)
-	assert.Equal(t, 20.0, averageBreakTime) // 100 minutes / 5 days = 20 minutes/day
+	assert.Equal(t, 20.0, averageBreakTime) // (30 + 45 + 25) / 5
 }
 
 func TestGetUserAverageBreakTimeNoBreaks(t *testing.T) {
 	db := setupKPITestDB(t)
 	repo := repository.NewKPIRepository(db)
 
-	db.Exec(`INSERT INTO users (id, uuid, username) VALUES (2, 'user-uuid-2', 'testuser2')`)
+	userID := insertUser(t, db, "user-uuid-2", "testuser2", nil)
 
-	// Insert work sessions with no breaks
-	db.Exec(`INSERT INTO work_session_active (user_id, clock_in, duration_minutes, breaks_duration_minutes, status) 
-		VALUES (2, '2026-01-06 09:00:00', 480, 0, 'completed')`)
+	db.Exec(`
+		INSERT INTO work_session_active (uuid, user_id, clock_in, duration_minutes, breaks_duration_minutes, status)
+		VALUES ('ws-a-1', ?, '2026-01-06 09:00:00', 480, 0, 'completed')
+	`, userID)
 
-	averageBreakTime, err := repo.GetUserAverageBreakTime(2, "2026-01-06 00:00:00", "2026-01-10 23:59:59")
+	averageBreakTime, err := repo.GetUserAverageBreakTime(userID, "2026-01-06 00:00:00", "2026-01-10 23:59:59")
 	assert.NoError(t, err)
 	assert.Equal(t, 0.0, averageBreakTime)
 }
@@ -267,18 +318,22 @@ func TestGetUserAverageTimePerShift(t *testing.T) {
 	db := setupKPITestDB(t)
 	repo := repository.NewKPIRepository(db)
 
-	// Insert test user
-	db.Exec(`INSERT INTO users (id, uuid, username) VALUES (1, 'user-uuid-1', 'testuser')`)
+	userID := insertUser(t, db, "user-uuid-1", "testuser", nil)
 
-	// Insert work sessions
-	db.Exec(`INSERT INTO work_session_active (user_id, clock_in, duration_minutes, status) 
-		VALUES (1, '2026-01-06 09:00:00', 480, 'completed')`)
-	db.Exec(`INSERT INTO work_session_active (user_id, clock_in, duration_minutes, status) 
-		VALUES (1, '2026-01-07 09:00:00', 450, 'completed')`)
-	db.Exec(`INSERT INTO work_session_archived (user_id, clock_in, duration_minutes) 
-		VALUES (1, '2026-01-08 09:00:00', 500)`)
+	db.Exec(`
+		INSERT INTO work_session_active (uuid, user_id, clock_in, duration_minutes, status)
+		VALUES ('ws-a-1', ?, '2026-01-06 09:00:00', 480, 'completed')
+	`, userID)
+	db.Exec(`
+		INSERT INTO work_session_active (uuid, user_id, clock_in, duration_minutes, status)
+		VALUES ('ws-a-2', ?, '2026-01-07 09:00:00', 450, 'completed')
+	`, userID)
+	db.Exec(`
+		INSERT INTO work_session_archived (uuid, user_id, clock_in, duration_minutes, status)
+		VALUES ('ws-ar-1', ?, '2026-01-08 09:00:00', 500, 'completed')
+	`, userID)
 
-	averageTime, totalShifts, totalTime, err := repo.GetUserAverageTimePerShift(1, "2026-01-06 00:00:00", "2026-01-08 23:59:59")
+	averageTime, totalShifts, totalTime, err := repo.GetUserAverageTimePerShift(userID, "2026-01-06 00:00:00", "2026-01-08 23:59:59")
 	assert.NoError(t, err)
 	assert.Equal(t, 476.67, averageTime)
 	assert.Equal(t, 3, totalShifts)
@@ -289,9 +344,9 @@ func TestGetUserAverageTimePerShiftNoData(t *testing.T) {
 	db := setupKPITestDB(t)
 	repo := repository.NewKPIRepository(db)
 
-	db.Exec(`INSERT INTO users (id, uuid, username) VALUES (2, 'user-uuid-2', 'testuser2')`)
+	userID := insertUser(t, db, "user-uuid-2", "testuser2", nil)
 
-	averageTime, totalShifts, totalTime, err := repo.GetUserAverageTimePerShift(2, "2026-01-06 00:00:00", "2026-01-08 23:59:59")
+	averageTime, totalShifts, totalTime, err := repo.GetUserAverageTimePerShift(userID, "2026-01-06 00:00:00", "2026-01-08 23:59:59")
 	assert.NoError(t, err)
 	assert.Equal(t, 0.0, averageTime)
 	assert.Equal(t, 0, totalShifts)
@@ -302,13 +357,14 @@ func TestGetUserAverageTimePerShiftSingleShift(t *testing.T) {
 	db := setupKPITestDB(t)
 	repo := repository.NewKPIRepository(db)
 
-	db.Exec(`INSERT INTO users (id, uuid, username) VALUES (3, 'user-uuid-3', 'testuser3')`)
+	userID := insertUser(t, db, "user-uuid-3", "testuser3", nil)
 
-	// Single shift of 400 minutes
-	db.Exec(`INSERT INTO work_session_active (user_id, clock_in, duration_minutes, status) 
-		VALUES (3, '2026-01-06 09:00:00', 400, 'completed')`)
+	db.Exec(`
+		INSERT INTO work_session_active (uuid, user_id, clock_in, duration_minutes, status)
+		VALUES ('ws-a-1', ?, '2026-01-06 09:00:00', 400, 'completed')
+	`, userID)
 
-	averageTime, totalShifts, totalTime, err := repo.GetUserAverageTimePerShift(3, "2026-01-06 00:00:00", "2026-01-06 23:59:59")
+	averageTime, totalShifts, totalTime, err := repo.GetUserAverageTimePerShift(userID, "2026-01-06 00:00:00", "2026-01-06 23:59:59")
 	assert.NoError(t, err)
 	assert.Equal(t, 400.0, averageTime)
 	assert.Equal(t, 1, totalShifts)
@@ -319,19 +375,26 @@ func TestGetUserAverageTimePerShiftMultipleWeeks(t *testing.T) {
 	db := setupKPITestDB(t)
 	repo := repository.NewKPIRepository(db)
 
-	db.Exec(`INSERT INTO users (id, uuid, username) VALUES (4, 'user-uuid-4', 'testuser4')`)
+	userID := insertUser(t, db, "user-uuid-4", "testuser4", nil)
 
-	// Multiple shifts across different weeks
-	db.Exec(`INSERT INTO work_session_active (user_id, clock_in, duration_minutes, status) 
-		VALUES (4, '2026-01-06 09:00:00', 480, 'completed')`)
-	db.Exec(`INSERT INTO work_session_active (user_id, clock_in, duration_minutes, status) 
-		VALUES (4, '2026-01-13 09:00:00', 460, 'completed')`)
-	db.Exec(`INSERT INTO work_session_archived (user_id, clock_in, duration_minutes) 
-		VALUES (4, '2026-01-20 09:00:00', 440)`)
-	db.Exec(`INSERT INTO work_session_archived (user_id, clock_in, duration_minutes) 
-		VALUES (4, '2026-01-27 09:00:00', 420)`)
+	db.Exec(`
+		INSERT INTO work_session_active (uuid, user_id, clock_in, duration_minutes, status)
+		VALUES ('ws-a-1', ?, '2026-01-06 09:00:00', 480, 'completed')
+	`, userID)
+	db.Exec(`
+		INSERT INTO work_session_active (uuid, user_id, clock_in, duration_minutes, status)
+		VALUES ('ws-a-2', ?, '2026-01-13 09:00:00', 460, 'completed')
+	`, userID)
+	db.Exec(`
+		INSERT INTO work_session_archived (uuid, user_id, clock_in, duration_minutes, status)
+		VALUES ('ws-ar-1', ?, '2026-01-20 09:00:00', 440, 'completed')
+	`, userID)
+	db.Exec(`
+		INSERT INTO work_session_archived (uuid, user_id, clock_in, duration_minutes, status)
+		VALUES ('ws-ar-2', ?, '2026-01-27 09:00:00', 420, 'completed')
+	`, userID)
 
-	averageTime, totalShifts, totalTime, err := repo.GetUserAverageTimePerShift(4, "2026-01-01 00:00:00", "2026-01-31 23:59:59")
+	averageTime, totalShifts, totalTime, err := repo.GetUserAverageTimePerShift(userID, "2026-01-01 00:00:00", "2026-01-31 23:59:59")
 	assert.NoError(t, err)
 	assert.Equal(t, 450.0, averageTime)
 	assert.Equal(t, 4, totalShifts)
