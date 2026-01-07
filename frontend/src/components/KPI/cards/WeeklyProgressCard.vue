@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { WeeklyProgressData } from '@/types/kpi'
+import type { WeeklyProgressData } from '@/types/Kpi'
 
 interface Props {
   data: WeeklyProgressData | null

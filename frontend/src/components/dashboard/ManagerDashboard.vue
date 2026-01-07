@@ -1,49 +1,40 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
-import ManagerLayout from '../layout/ManagerLayout.vue'
-import { useEditModeStore } from '@/store/EditModeStore'
-import ClockWidget from '@/components/widget/ClockWidget.vue'
-import CalendarWidget from '@/components/widget/CalendarWidget.vue'
-import ClockButton from '@/components/ClockButton.vue'
-import { useAuthStore } from '@/store/AuthStore'
+import { useEditModeStore } from '@/store/editModeStore'
+import { useKpiStore } from '@/store/KpiStore'
 import { storeToRefs } from 'pinia'
-import TeamManagementModal from '@/components/Modal/TeamManagementModal.vue'
+import ManagerLayout from '@/components/layout/ManagerLayout.vue'
+import CalendarWidget from '@/components/widget/CalendarWidget.vue'
+import ClockWidget from '@/components/widget/ClockWidget.vue'
+import ClockButton from '@/components/ClockButton.vue'
 import TeamPresenceWidget from '@/components/widget/TeamPresenceWidget.vue'
-
-// Import des KPI cards PERTINENTS pour Manager
-import TeamWorkingTimeCard from '@/components/kpi/cards/TeamWorkingTimeCard.vue'
-import ClockingTimeCard from '@/components/kpi/cards/ClockingTimeCard.vue'
-
-// Import des mock data
-import {
-  mockTeamWorkingTime,
-  mockClockingTime
-} from '@/mocks/kpiMockData'
+import TeamManagementModal from '@/components/Modal/TeamManagementModal.vue'
+import TeamWorkingTimeCard from '@/components/KPI/cards/TeamWorkingTimeCard.vue'
+import { useAuthStore } from '@/store/AuthStore'
 
 const authStore = useAuthStore()
-const { clockInTime, sessionStatus } = storeToRefs(authStore)
 const editModeStore = useEditModeStore()
+const kpiStore = useKpiStore()
+
+const { clockInTime, sessionStatus } = storeToRefs(authStore)
+const { currentTeam, loading, weekDisplayLabel } = storeToRefs(kpiStore)
+
 const isTeamViewModalOpen = ref(false)
 
-onMounted(() => {
+onMounted(async () => {
   editModeStore.setCurrentDashboard('manager')
+  
+  try {
+    await kpiStore.fetchManagerTeams()
+    await kpiStore.fetchWorkingTimeTeam()
+  } catch (error) {
+    console.error('Erreur lors du chargement des KPI:', error)
+  }
 })
 
 onUnmounted(() => {
   editModeStore.reset()
 })
-
-const TeamViewModal = () => {
-  isTeamViewModalOpen.value = true
-}
-
-// Handler pour les KPI
-const handleKpiDetails = (data: any) => {
-  console.log('KPI détails:', data)
-}
-
-// État de chargement des KPI
-const kpiLoading = ref(false)
 </script>
 
 <template>
@@ -57,15 +48,6 @@ const kpiLoading = ref(false)
       <ClockButton />
     </template>
 
-    <!-- KPI: Heures de pointage équipe -->
-    <template #kpi-stats>
-      <ClockingTimeCard 
-        :data="mockClockingTime"
-        :loading="kpiLoading"
-        @view-details="handleKpiDetails"
-      />
-    </template>
-
     <!-- Calendrier -->
     <template #calendar>
       <div class="bg-blue-100 p-6 rounded h-full">
@@ -75,10 +57,10 @@ const kpiLoading = ref(false)
 
     <!-- KPI: Travail hebdomadaire équipe -->
     <template #team-view>
-      <TeamWorkingTimeCard 
-        :data="mockTeamWorkingTime"
-        :loading="kpiLoading"
-        @view-details="handleKpiDetails"
+      <TeamWorkingTimeCard
+        :data="currentTeam"
+        :loading="kpiStore.loading['workingTimeTeam']"
+        :weekLabel="weekDisplayLabel"
       />
     </template>
 
@@ -89,8 +71,10 @@ const kpiLoading = ref(false)
 
     <!-- Bouton: Voir mon équipe -->
     <template #modal-team>
-      <button @click="isTeamViewModalOpen = true"
-        class="brutal-btn brutal-btn-primary h-full w-full flex flex-col items-center justify-center gap-4">
+      <button 
+        @click="isTeamViewModalOpen = true"
+        class="brutal-btn brutal-btn-primary h-full w-full flex flex-col items-center justify-center gap-4"
+      >
         <p class="font-bold text-base">Voir mon équipe</p>
       </button>
     </template>

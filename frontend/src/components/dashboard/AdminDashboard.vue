@@ -1,31 +1,33 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
-import { useEditModeStore } from '@/store/EditModeStore'
+import { useEditModeStore } from '@/store/editModeStore'
+import { useKpiStore } from '@/store/KpiStore'
+import { storeToRefs } from 'pinia'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 import CalendarWidget from '@/components/widget/CalendarWidget.vue'
 import BaseModal from '@/components/Modal/BaseModal.vue'
 import RegisterForm from '@/components/RegisterForm.vue'
 import StaffSettingsModal from '@/components/Modal/StaffSettingsModal.vue'
 import TeamManagementAdminModal from '@/components/Modal/TeamManagementAdminModal.vue'
-
-import ClockingTimeCard from '@/components/kpi/cards/ClockingTimeCard.vue'
-import WeeklyProgressCard from '@/components/kpi/cards/WeeklyProgressCard.vue'
-import ShiftAverageCard from '@/components/kpi/cards/ShiftAverageCard.vue'
-import TeamPauseCard from '@/components/kpi/cards/TeamPauseCard.vue'
-import ShiftPauseCard from '@/components/kpi/cards/ShiftPauseCard.vue'
-
-import {
-  mockWeeklyProgress,
-  mockShiftAverage,
-  mockClockingTime,
-  mockTeamPause,
-  mockShiftPause
-} from '@/mocks/kpiMockData'
+import TeamWorkingTimeCard from '@/components/KPI/cards/TeamWorkingTimeCard.vue'
+import PresenceRateCard from '@/components/KPI/cards/PresenceRateCard.vue'
+import { ArrowDownTrayIcon } from '@heroicons/vue/24/solid'
 
 const editModeStore = useEditModeStore()
+const kpiStore = useKpiStore()
 
-onMounted(() => {
+const { currentTeam, weekDisplayLabel, presenceRate } = storeToRefs(kpiStore)
+
+onMounted(async () => {
   editModeStore.setCurrentDashboard('admin')
+  
+  try {
+    await kpiStore.fetchManagerTeams()
+    await kpiStore.fetchWorkingTimeTeam()
+    await kpiStore.fetchPresenceRate()
+  } catch (error) {
+    console.error('Erreur lors du chargement des KPI:', error)
+  }
 })
 
 onUnmounted(() => {
@@ -54,12 +56,6 @@ const isTeamManagementModalOpen = ref(false)
 const openTeamManagementModal = () => {
   isTeamManagementModalOpen.value = true
 }
-
-const handleKpiDetails = (data: any) => {
-  console.log('KPI détails:', data)
-}
-
-const kpiLoading = ref(false)
 </script>
 
 <template>
@@ -81,19 +77,19 @@ const kpiLoading = ref(false)
     </template>
 
     <!-- Bouton: Gestion des équipes -->
-    <template #kpi-monthly>
+    <template #team-gestion>
       <button @click="openTeamManagementModal" class="brutal-btn brutal-btn-primary w-full h-full flex flex-col items-center justify-center gap-4">
         <div class="text-2xl">=</div>
         <p class="font-bold">Gestion des équipes</p>
       </button>
     </template>
 
-    <!-- KPI: Temps de pointage moyen hebdo -->
+    <!-- KPI: Travail hebdomadaire équipe -->
     <template #kpi-history>
-      <ClockingTimeCard 
-        :data="mockClockingTime"
-        :loading="kpiLoading"
-        @view-details="handleKpiDetails"
+      <TeamWorkingTimeCard
+        :data="currentTeam"
+        :loading="kpiStore.loading['workingTimeTeam']"
+        :weekLabel="weekDisplayLabel"
       />
     </template>
 
@@ -104,49 +100,29 @@ const kpiLoading = ref(false)
       </div>
     </template>
 
-    <!-- KPI: Pause moyenne équipe -->
-    <template #widget-6>
-      <TeamPauseCard 
-        :data="mockTeamPause"
-        :loading="kpiLoading"
-        @view-details="handleKpiDetails"
+    <!-- KPI: Taux de présence -->
+    <template #presence-rate>
+      <PresenceRateCard
+        :data="presenceRate"
+        :loading="kpiStore.loading['presenceRate']"
+        :weekLabel="weekDisplayLabel"
       />
     </template>
 
-    <!-- KPI: Répartition shift (pause) -->
-    <template #widget-7>
-      <ShiftPauseCard 
-        :data="mockShiftPause"
-        :loading="kpiLoading"
-        @view-details="handleKpiDetails"
-      />
-    </template>
 
-    <!-- KPI: Moyenne par shift -->
-    <template #remote-absence>
-      <ShiftAverageCard 
-        :data="mockShiftAverage"
-        :loading="kpiLoading"
-        @view-details="handleKpiDetails"
-      />
-    </template>
-
-    <!-- KPI: Progression hebdo -->
-    <template #manager-report>
-      <WeeklyProgressCard 
-        :data="mockWeeklyProgress"
-        :loading="kpiLoading"
-        @view-details="handleKpiDetails"
-      />
-    </template>
+    <!-- Export: Statistique des KPI-->
+<template #export-button>
+  <button @click="openTeamManagementModal" class="brutal-btn brutal-btn-primary w-full h-full flex flex-col items-center justify-center gap-4">
+    <ArrowDownTrayIcon class="w-5 h-5" />
+    <p class="font-bold">Export des statistiques</p>
+  </button>
+</template>
   </AdminLayout>
 
   <!-- Modals -->
   <BaseModal v-model="isAddEmployeeModalOpen" title="Créer un nouvel employé">
     <RegisterForm @success="handleEmployeeCreated" @cancel="closeAddEmployeeModal" />
   </BaseModal>
-  
   <StaffSettingsModal v-model="isStaffSettingsModalOpen" />
-
   <TeamManagementAdminModal v-model="isTeamManagementModalOpen" />
 </template>

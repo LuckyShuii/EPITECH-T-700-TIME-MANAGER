@@ -1,113 +1,87 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { PresenceRateData } from '@/types/kpi'
-import type { ChartConfiguration } from 'chart.js'
-import DoughnutChart from '../charts/DoughnutChart.vue'
+import { useKpiStore } from '@/store/KpiStore'
+import { storeToRefs } from 'pinia'
 
-interface Props {
-  data: PresenceRateData | null
-  loading?: boolean
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  loading: false,
-  data: null
-})
-
-const emit = defineEmits<{
-  viewDetails: [data: PresenceRateData]
-}>()
-
-const handleClick = () => {
-  if (props.data) {
-    emit('viewDetails', props.data)
-  }
-}
+const kpiStore = useKpiStore()
+const { presenceRate, loading, weekDisplayLabel } = storeToRefs(kpiStore)
 
 const hasValidData = computed(() => {
-  return props.data !== null && props.data.daysExpected > 0
+  return presenceRate.value && Array.isArray(presenceRate.value) && presenceRate.value.length > 0
 })
 
-const chartData = computed<ChartConfiguration['data']>(() => {
-  if (!props.data) {
-    return { labels: [], datasets: [] }
-  }
+const getPresenceColor = (rate: number) => {
+  if (rate >= 90) return 'bg-green-600'
+  if (rate >= 75) return 'bg-yellow-500'
+  if (rate >= 60) return 'bg-orange-500'
+  return 'bg-red-600'
+};
 
-  const absent = props.data.daysExpected - props.data.daysPresent
-
-  return {
-    labels: ['Présent', 'Absent'],
-    datasets: [{
-      data: [props.data.daysPresent, absent],
-      backgroundColor: [
-        'rgb(34, 197, 94)',  // green-500
-        'rgb(239, 68, 68)'   // red-500
-      ],
-      borderWidth: 0
-    }]
-  }
-})
-
-const chartOptions = computed<ChartConfiguration['options']>(() => ({
-  responsive: true,
-  maintainAspectRatio: true,
-  cutout: '70%',
-  plugins: {
-    legend: {
-      display: false
-    },
-    tooltip: {
-      callbacks: {
-        label: (context) => {
-          return `${context.label}: ${context.parsed} jour(s)`
-        }
-      }
-    }
-  }
-}))
+const getPresenceStatusText = (rate: number) => {
+  if (rate >= 90) return 'Excellent'
+  if (rate >= 75) return 'Bon'
+  if (rate >= 60) return 'Moyen'
+  return 'Faible'
+};
 </script>
 
 <template>
-  <div class="card bg-base-100 shadow-xl h-full cursor-pointer hover:shadow-2xl transition-shadow" @click="handleClick">
-    <div class="card-body p-6 flex flex-col h-full">
-      <div class="mb-3">
-        <h2 class="card-title text-lg">Taux de présence</h2>
-        <p class="text-xs text-base-content/70">Semaine S-1</p>
-      </div>
-      
-      <div v-if="loading" class="flex-1 flex justify-center items-center">
-        <span class="loading loading-spinner loading-lg"></span>
-      </div>
+  <div class="bg-white border-2 border-black p-4 h-full flex flex-col dark:bg-white">
+    <!-- Header -->
+    <div class="border-b-2 border-black pb-3 mb-4">
+      <h2 class="text-lg font-bold dark:text-gray-950">TAUX DE PRÉSENCE</h2>
+      <p class="text-xs opacity-75 mt-1 dark:text-gray-500">{{ weekDisplayLabel }}</p>
+    </div>
 
-      <div v-else-if="!hasValidData" class="flex-1 flex flex-col justify-center items-center">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-base-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-        <p class="text-center text-sm text-base-content/70 mt-3">Aucune donnée disponible</p>
-      </div>
+    <!-- Contenu -->
+    <div v-if="loading['presenceRate']" class="flex-1 flex justify-center items-center">
+      <span class="loading loading-spinner loading-lg"></span>
+    </div>
 
-      <div v-else-if="data" class="flex-1 flex flex-col">
-        <div class="relative flex-1 flex items-center justify-center">
-          <div class="w-full max-w-[200px]">
-            <DoughnutChart :data="chartData" :options="chartOptions" />
+    <div v-else-if="!hasValidData" class="flex-1 flex flex-col justify-center items-center opacity-60 dark:text-gray-950">
+      <div class="text-center space-y-2">
+        <p class="text-xs font-bold">Aucune donnée</p>
+      </div>
+    </div>
+
+    <div v-else class="flex-1 overflow-y-auto space-y-3 pr-2">
+      <div
+        v-for="user in presenceRate"
+        :key="user.user_uuid"
+        class="border border-black p-3 space-y-2 dark:border-gray-700 dark:bg-gray-50"
+      >
+        <!-- Nom et pourcentage -->
+        <div class="flex items-center justify-between">
+          <p class="text-xs font-bold dark:text-gray-950">{{ user.first_name }} {{ user.last_name }}</p>
+          <p class="text-sm font-mono font-bold dark:text-gray-950">{{ Math.round(user.presence_rate) }}%</p>
+        </div>
+
+        <!-- Barre de progression -->
+        <div class="w-full bg-gray-300 border border-black h-3 dark:bg-gray-300">
+          <div
+            :class="getPresenceColor(user.presence_rate)"
+            :style="{ width: `${Math.min(user.presence_rate, 100)}%` }"
+            class="h-full border-r border-black transition-all duration-300"
+          ></div>
+        </div>
+
+        <!-- Stats heures -->
+        <div class="grid grid-cols-2 gap-2 text-xs">
+          <div>
+            <p class="opacity-75 dark:text-gray-600">Attendu</p>
+            <p class="font-mono font-bold dark:text-gray-950">{{ Math.round(user.weekly_rate_expected * 10) / 10 }}h</p>
           </div>
-          
-          <div class="absolute inset-0 flex flex-col items-center justify-center">
-            <div class="text-4xl font-bold text-primary">{{ data.presenceRate }}%</div>
-            <div class="text-xs text-base-content/70">présence</div>
+          <div>
+            <p class="opacity-75 dark:text-gray-600">Effectué</p>
+            <p class="font-mono font-bold dark:text-gray-950">{{ Math.round(user.weekly_time_done * 10) / 10 }}h</p>
           </div>
         </div>
 
-        <div class="mt-4 grid grid-cols-2 gap-2">
-          <div class="stat bg-success/10 rounded-lg p-2">
-            <div class="stat-title text-xs">Jours présents</div>
-            <div class="stat-value text-lg text-success">{{ data.daysPresent }}</div>
-          </div>
-          
-          <div class="stat bg-base-200 rounded-lg p-2">
-            <div class="stat-title text-xs">Jours attendus</div>
-            <div class="stat-value text-lg">{{ data.daysExpected }}</div>
-          </div>
+        <!-- Status badge -->
+        <div class="text-center">
+          <span class="inline-block border border-black px-2 py-1 text-xs font-bold dark:bg-gray-200 dark:text-gray-950">
+            {{ getPresenceStatusText(user.presence_rate) }}
+          </span>
         </div>
       </div>
     </div>

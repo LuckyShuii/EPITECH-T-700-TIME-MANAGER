@@ -20,15 +20,13 @@ export type Layout = GridItem[]
 // Layouts par défaut pour chaque dashboard
 const defaultLayouts: Record<string, Layout> = {
   employee: [
-    { i: 'clock', x: 0, y: 0, w: 1, h: 2, minW: 1, minH: 2 },
-    { i: 'team-presence', x: 3, y: 0, w: 1, h: 3, minW: 1, minH: 3, static: true },
-    { i: 'widget-4', x: 3, y: 3, w: 1, h: 1, minW: 1, minH: 1 },
-    { i: 'widget-6', x: 0, y: 2, w: 1, h: 1, minW: 1, minH: 1 },
-    { i: 'extra-widget', x: 0, y: 3, w: 1, h: 1, minW: 1, minH: 1 },
-    { i: 'calendar', x: 1, y: 0, w: 2, h: 2, minW: 2, minH: 2 },
-    { i: 'widget-2', x: 1, y: 2, w: 2, h: 1, minW: 2, minH: 1 },
-    { i: 'widget-3', x: 1, y: 3, w: 2, h: 1, minW: 2, minH: 1 }
-  ],
+  { i: 'clock', x: 0, y: 0, w: 1, h: 2, minW: 1, minH: 2 },
+  { i: 'team-presence', x: 3, y: 0, w: 1, h: 4, minW: 1, minH: 4, static: true },
+  { i: 'calendar', x: 1, y: 0, w: 2, h: 2, minW: 2, minH: 2 },
+  { i: 'widget-2', x: 1, y: 2, w: 1, h: 2, minW: 1, minH: 2 },
+  { i: 'widget-3', x: 2, y: 2, w: 1, h: 2, minW: 1, minH: 2 },
+  { i: 'widget-4', x: 3, y: 3, w: 1, h: 1, minW: 1, minH: 1 }
+],
  manager: [
   { i: 'clock', x: 0, y: 0, w: 1, h: 2, minW: 1, minH: 2 },
   { i: 'kpi-stats', x: 0, y: 2, w: 1, h: 2, minW: 1, minH: 2 },  // ← Agrandi à h: 2
@@ -37,16 +35,14 @@ const defaultLayouts: Record<string, Layout> = {
   { i: 'team-presence', x: 3, y: 0, w: 1, h: 3, minW: 1, minH: 3, static: true },
   { i: 'modal-team', x: 3, y: 3, w: 1, h: 1, minW: 1, minH: 1 }
 ],
-  admin: [
+admin: [
   { i: 'add-employee', x: 0, y: 0, w: 1, h: 1, minW: 1, minH: 1 },
   { i: 'staff-settings', x: 0, y: 1, w: 1, h: 1, minW: 1, minH: 1 },
   { i: 'kpi-monthly', x: 0, y: 2, w: 1, h: 1, minW: 1, minH: 1 },
-  { i: 'kpi-history', x: 0, y: 3, w: 1, h: 1, minW: 1, minH: 1 },
+  { i: 'export-button', x: 0, y: 3, w: 1, h: 1, minW: 1, minH: 1 },
   { i: 'calendar', x: 1, y: 0, w: 2, h: 2, minW: 2, minH: 2 },
-  { i: 'widget-6', x: 1, y: 2, w: 1, h: 2, minW: 1, minH: 2 },
-  { i: 'widget-7', x: 2, y: 2, w: 1, h: 2, minW: 1, minH: 2 },  // ← Celui-ci
-  { i: 'remote-absence', x: 3, y: 0, w: 1, h: 2, minW: 1, minH: 2 },
-  { i: 'manager-report', x: 3, y: 2, w: 1, h: 2, minW: 1, minH: 2 }
+  { i: 'kpi-history', x: 1, y: 2, w: 2, h: 2, minW: 2, minH: 2 },
+  { i: 'presence-rate', x: 3, y: 0, w: 1, h: 4, minW: 1, minH: 4 }
 ]
 }
 

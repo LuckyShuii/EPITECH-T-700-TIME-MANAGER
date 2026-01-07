@@ -13,7 +13,7 @@ import DraggableLayout from './DraggableLayout.vue'
     </template>
 
     <template #kpi-monthly>
-      <slot name="kpi-monthly"></slot>
+      <slot name="team-gestion"></slot>
     </template>
 
     <template #kpi-history>
@@ -24,21 +24,12 @@ import DraggableLayout from './DraggableLayout.vue'
       <slot name="calendar"></slot>
     </template>
 
-    <template #widget-6>
-      <slot name="widget-6"></slot>
+    <template #presence-rate>
+  <slot name="presence-rate"></slot>
     </template>
+    <template #export-button>
+  <slot name="export-button"></slot>
+  </template>
 
-    <!-- ✨ NOUVEAU SLOT -->
-    <template #widget-7>
-      <slot name="widget-7"></slot>
-    </template>
-
-    <template #remote-absence>
-      <slot name="remote-absence"></slot>
-    </template>
-
-    <template #manager-report>
-      <slot name="manager-report"></slot>
-    </template>
   </DraggableLayout>
 </template>

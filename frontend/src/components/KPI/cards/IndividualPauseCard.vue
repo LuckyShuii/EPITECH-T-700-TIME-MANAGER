@@ -1,76 +1,90 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { IndividualPauseData } from '@/types/kpi'
+import type { IndividualPauseData } from '@/types/Kpi'
+import { useKpiStore } from '@/store/KpiStore'
 
 interface Props {
   data: IndividualPauseData | null
   loading?: boolean
+  weekLabel?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
   loading: false,
-  data: null
+  data: null,
+  weekLabel: 'Semaine S-1'
 })
 
-const emit = defineEmits<{
-  viewDetails: [data: IndividualPauseData]
-}>()
-
-const handleClick = () => {
-  if (props.data) {
-    emit('viewDetails', props.data)
-  }
-}
+const kpiStore = useKpiStore()
 
 const hasValidData = computed(() => {
-  return props.data !== null && props.data.byDay.length > 0
+  return props.data !== null && props.data.average_break_time >= 0
 })
+
+const formattedPauseTime = computed(() => {
+  if (!props.data) return '0 min'
+  
+  const minutes = props.data.average_break_time
+  
+  if (minutes < 60) {
+    return `${minutes} min`
+  }
+  
+  const hours = Math.floor(minutes / 60)
+  const mins = minutes % 60
+  
+  if (mins === 0) {
+    return `${hours}h`
+  }
+  
+  return `${hours}h ${mins}m`
+})
+
+const handlePreviousWeek = () => {
+  kpiStore.changeWeek('previous')
+}
+
+const handleCurrentWeek = () => {
+  kpiStore.changeWeek('current')
+}
 </script>
 
 <template>
-  <div class="card bg-gradient-to-br from-cyan-500 to-blue-600 shadow-xl h-full cursor-pointer hover:shadow-2xl transition-all" @click="handleClick">
-    <div class="card-body p-6 flex flex-col h-full text-white">
-      <div class="mb-4">
-        <h2 class="card-title text-xl font-bold">Temps de pause</h2>
-        <p class="text-sm opacity-80">Semaine S-1</p>
-      </div>
-      
-      <div v-if="loading" class="flex-1 flex justify-center items-center">
-        <span class="loading loading-spinner loading-lg"></span>
-      </div>
+  <div class="bg-white border-2 border-black p-6 h-full flex flex-col">
+    <!-- Header avec flèche retour et bouton reset -->
+    <div class="flex items-center justify-between mb-4">
+      <button
+        @click="handlePreviousWeek"
+        class="text-2xl font-bold hover:opacity-70 transition"
+        title="Semaine précédente"
+      >
+        &lt;
+      </button>
+      <h2 class="text-lg font-bold">Temps de pauses</h2>
+      <button
+        @click="handleCurrentWeek"
+        class="px-3 py-1  hover:bg-black hover:text-white transition"
+        title="Revenir à aujourd'hui"
+      >
+        ↻
+      </button>
+    </div>
 
-      <div v-else-if="!hasValidData" class="flex-1 flex flex-col justify-center items-center opacity-70">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-        <p class="text-center mt-3">Aucune donnée disponible</p>
-      </div>
+    <!-- Label de la semaine -->
+    <p class="text-sm mb-4 opacity-75">{{ weekLabel }}</p>
 
-      <div v-else-if="data" class="flex-1 flex flex-col justify-between">
-        <div class="grid grid-cols-2 gap-4 mb-4">
-          <div class="text-center">
-            <div class="text-sm opacity-90 mb-1">Moyenne/jour</div>
-            <div class="text-4xl font-bold">{{ data.averagePausePerDay }}min</div>
-          </div>
-          
-          <div class="text-center">
-            <div class="text-sm opacity-90 mb-1">Total semaine</div>
-            <div class="text-4xl font-bold">{{ Math.floor(data.totalPauseWeek / 60) }}h{{ data.totalPauseWeek % 60 }}m</div>
-          </div>
-        </div>
+    <!-- Contenu -->
+    <div v-if="loading" class="flex-1 flex justify-center items-center">
+      <span class="loading loading-spinner loading-lg"></span>
+    </div>
 
-        <div class="space-y-1 max-h-32 overflow-y-auto">
-          <div class="text-xs opacity-80 mb-2">Détail par jour</div>
-          <div 
-            v-for="day in data.byDay" 
-            :key="day.day"
-            class="flex justify-between items-center px-3 py-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors"
-          >
-            <span class="text-sm font-medium capitalize">{{ day.day }}</span>
-            <span class="text-sm font-bold">{{ day.minutes }}min</span>
-          </div>
-        </div>
-      </div>
+    <div v-else-if="!hasValidData" class="flex-1 flex flex-col justify-center items-center opacity-60">
+      <p class="text-sm">Aucune donnée</p>
+    </div>
+
+    <div v-else class="flex-1 flex flex-col justify-center items-center">
+      <p class="text-sm opacity-75 mb-2">Temps moyen</p>
+      <p class="text-5xl font-bold font-mono">{{ formattedPauseTime }}</p>
     </div>
   </div>
 </template>

@@ -1,114 +1,167 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { TeamWorkingTimeData } from '@/types/kpi'
+import { useKpiStore } from '@/store/KpiStore'
+import { storeToRefs } from 'pinia'
 
-interface Props {
-  data: TeamWorkingTimeData | null
-  loading?: boolean
-}
+const kpiStore = useKpiStore()
+const { currentTeam, loading, weekDisplayLabel } = storeToRefs(kpiStore)
 
-const props = withDefaults(defineProps<Props>(), {
-  loading: false,
-  data: null
-})
-
-const emit = defineEmits<{
-  viewDetails: [data: TeamWorkingTimeData]
-}>()
-
-const handleClick = () => {
-  if (props.data) {
-    emit('viewDetails', props.data)
-  }
-}
-
-// Vérifier si on a des données valides
 const hasValidData = computed(() => {
-  return props.data !== null && 
-         props.data.members.length > 0
+  return currentTeam.value !== null && currentTeam.value.total_time >= 0
 })
 
-// Calculer la moyenne d'heures par membre
-const averageHours = computed(() => {
-  if (!props.data || props.data.members.length === 0) return 0
-  return props.data.totalTeam / props.data.members.length
+// Convertir les minutes en heures
+const totalHours = computed(() => {
+  if (!currentTeam.value) return 0
+  return Math.floor(currentTeam.value.total_time / 60)
 })
 
-// Trouver le membre avec le plus d'heures
-const topMember = computed(() => {
-  if (!props.data || props.data.members.length === 0) return null
-  return props.data.members.reduce((max, member) => 
-    member.hours > max.hours ? member : max
-  )
+const totalMinutes = computed(() => {
+  if (!currentTeam.value) return 0
+  return currentTeam.value.total_time % 60
 })
+
+const formattedTotal = computed(() => {
+  if (totalMinutes.value === 0) {
+    return `${totalHours.value}h`
+  }
+  return `${totalHours.value}h ${totalMinutes.value}m`
+})
+
+// Moyenne par jour (5 jours)
+const averagePerDay = computed(() => {
+  if (!currentTeam.value) return 0
+  return (currentTeam.value.total_time / 60 / 5).toFixed(1)
+})
+
+// Différence avec la semaine précédente
+const differenceHours = computed(() => {
+  if (!currentTeam.value || !(currentTeam.value as any).difference === undefined) return 0
+  return Math.floor((currentTeam.value as any).difference / 60)
+})
+
+const differenceMinutes = computed(() => {
+  if (!currentTeam.value || !(currentTeam.value as any).difference === undefined) return 0
+  return (currentTeam.value as any).difference % 60
+})
+
+const formattedDifference = computed(() => {
+  if (differenceHours.value === 0 && differenceMinutes.value === 0) {
+    return 'Identique'
+  }
+  const sign = ((currentTeam.value as any)?.difference ?? 0) >= 0 ? '+' : ''
+  if (differenceMinutes.value === 0) {
+    return `${sign}${differenceHours.value}h`
+  }
+  return `${sign}${differenceHours.value}h ${differenceMinutes.value}m`
+})
+
+const trendColor = computed(() => {
+  if (!(currentTeam.value as any)?.difference) return 'opacity-60'
+  if ((currentTeam.value as any).difference > 0) return 'text-green-700'
+  if ((currentTeam.value as any).difference < 0) return 'text-red-700'
+  return 'opacity-60'
+})
+
+const handlePreviousTeam = () => {
+  kpiStore.goToPreviousTeam()
+}
+
+const handleNextTeam = () => {
+  kpiStore.goToNextTeam()
+}
+
+const handlePreviousWeek = () => {
+  kpiStore.changeWeek('previous')
+}
+
+const handleCurrentWeek = () => {
+  kpiStore.changeWeek('current')
+}
 </script>
 
 <template>
-  <div class="card bg-base-100 shadow-xl h-full cursor-pointer hover:shadow-2xl transition-shadow" @click="handleClick">
-    <div class="card-body p-4 flex flex-col h-full">
-      <!-- Header -->
-      <div class="mb-3">
-        <h2 class="card-title text-lg">Travail hebdomadaire équipe</h2>
-        <p class="text-xs text-base-content/70">Semaine S-1</p>
+  <div class="bg-white border-2 border-black p-6 h-full flex flex-col">
+    <!-- Header avec navigation équipe et semaine -->
+    <div class="flex items-center justify-between mb-6 pb-4">
+      <button
+        @click="handlePreviousTeam"
+        class="text-2xl font-bold hover:opacity-70 transition  dark:text-gray-500"
+        title="Équipe précédente"
+      >
+        &lt;
+      </button>
+      <div class="text-center flex-1">
+        <h2 class="text-lg font-bold dark:text-gray-950">{{ currentTeam?.team_name || 'Aucune équipe' }}</h2>
+        <p class="text-xs opacity-75 mt-1 dark:text-gray-500">{{ weekDisplayLabel }}</p>
       </div>
-      
-      <!-- État de chargement -->
-      <div v-if="loading" class="flex-1 flex justify-center items-center">
-        <span class="loading loading-spinner loading-lg"></span>
+      <div class="flex items-center gap-2">
+        <button
+          @click="handleCurrentWeek"
+          class="text-lg hover:opacity-70 transition dark:text-gray-500"
+          title="Revenir à aujourd'hui"
+        >
+          ↻
+        </button>
+        <button
+          @click="handleNextTeam"
+          class="text-2xl font-bold hover:opacity-70 transition dark:text-gray-500"
+          title="Équipe suivante"
+        >
+          &gt;
+        </button>
       </div>
+    </div>
 
-      <!-- Pas de données disponibles -->
-      <div v-else-if="!hasValidData" class="flex-1 flex flex-col justify-center items-center space-y-3">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-base-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-        </svg>
-        <p class="text-center text-sm text-base-content/70">
-          Aucune donnée disponible
-        </p>
-      </div>
+    <!-- Contenu -->
+    <div v-if="loading['workingTimeTeam']" class="flex-1 flex justify-center items-center">
+      <span class="loading loading-spinner loading-lg"></span>
+    </div>
 
-      <!-- Données disponibles -->
-      <div v-else-if="data" class="flex-1 flex flex-col space-y-3 overflow-hidden">
-        <!-- Statistiques compactes -->
-        <div class="grid grid-cols-2 gap-2">
-          <div class="stat bg-base-200 rounded-lg p-3">
-            <div class="stat-title text-xs">Total équipe</div>
-            <div class="stat-value text-2xl text-primary">{{ data.totalTeam }}h</div>
-          </div>
-          
-          <div class="stat bg-base-200 rounded-lg p-3">
-            <div class="stat-title text-xs">Moyenne</div>
-            <div class="stat-value text-2xl text-secondary">{{ averageHours.toFixed(1) }}h</div>
-          </div>
+    <div v-else-if="!hasValidData" class="flex-1 flex flex-col justify-center items-center opacity-60  dark:text-gray-500">
+      <p class="text-sm">Aucune donnée</p>
+    </div>
+
+    <div v-else class="flex-1 flex flex-col justify-between  dark:text-gray-500">
+      <!-- Total principal -->
+      <div class="space-y-4">
+        <div class="border-2 border-black p-4">
+          <p class="text-xs opacity-75 mb-2">TOTAL CETTE SEMAINE</p>
+          <p class="text-5xl font-bold font-mono">{{ formattedTotal }}</p>
         </div>
 
-        <!-- Top performer compact -->
-        <div v-if="topMember" class="alert alert-success py-2 px-3">
-          <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-5 w-5" fill="none" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <span class="text-xs">
-            <strong>{{ topMember.name }}</strong> : {{ topMember.hours }}h
-          </span>
-        </div>
+        <!-- Stats -->
+        <div class="grid grid-cols-2 gap-4  dark:text-gray-500">
+          <div class="border border-black p-3">
+            <p class="text-xs opacity-75 mb-1">Moyenne/jour</p>
+            <p class="text-3xl font-bold font-mono">{{ averagePerDay }}h</p>
+          </div>
 
-        <!-- Liste scrollable des membres -->
-        <div class="flex-1 overflow-hidden flex flex-col">
-          <div class="text-xs font-semibold mb-2 text-base-content/70">
-            {{ data.members.length }} membre(s)
-          </div>
-          
-          <div class="flex-1 overflow-y-auto space-y-1 pr-1">
-            <div 
-              v-for="member in data.members" 
-              :key="member.userId"
-              class="flex justify-between items-center p-2 bg-base-200 hover:bg-base-300 rounded-lg transition-colors text-sm"
-            >
-              <span class="font-medium truncate mr-2">{{ member.name }}</span>
-              <span class="badge badge-ghost badge-sm shrink-0">{{ member.hours }}h</span>
-            </div>
+          <div class="border border-black p-3" :class="trendColor">
+            <p class="text-xs opacity-75 mb-1">vs Sem. précédente</p>
+            <p class="text-2xl font-bold font-mono">{{ formattedDifference }}</p>
           </div>
         </div>
+      </div>
+
+      <!-- Liste des membres -->
+      <div class="mt-4 pt-4 border-t-2 border-black">
+        <p class="text-xs opacity-75 mb-2 font-bold">MEMBRES ({{ currentTeam?.members.length }})</p>
+        <div class="space-y-1 max-h-32 overflow-y-auto">
+          <div
+            v-for="member in currentTeam?.members"
+            :key="member.user_uuid"
+            class="flex justify-between items-center text-xs p-2 bg-gray-100"
+          >
+            <span class="font-bold">{{ member.first_name }} {{ member.last_name }}</span>
+            <span class="font-mono">{{ Math.floor(member.total_time / 60) }}h</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer dates -->
+      <div class="text-xs opacity-60 text-center mt-4 pt-4">
+        <p>Du {{ currentTeam?.start_date }} au {{ currentTeam?.end_date }}</p>
       </div>
     </div>
   </div>

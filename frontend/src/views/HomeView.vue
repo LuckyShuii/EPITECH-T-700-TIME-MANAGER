@@ -6,126 +6,160 @@ const router = useRouter()
 const goToLogin = () => {
   router.push('/login')
 }
-
-const features = [
-  {
-    icon: '⚡',
-    title: 'Pointage en un clic',
-    description: 'Clock in/out instantané, où que vous soyez'
-  },
-  {
-    icon: '📅',
-    title: 'Suivez votre temps',
-    description: 'Visualisez votre historique et calendrier de présence'
-  },
-  {
-    icon: '📊',
-    title: 'Rapports en temps réel',
-    description: 'Consultez vos statistiques et totaux automatiquement'
-  }
-]
 </script>
 
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-primary/10 via-base-100 to-secondary/10">
+  <div class="min-h-screen bg-white text-black flex flex-col">
+    <!-- Header/Navbar -->
+    <header class="border-b-2 border-black p-6">
+      <div class="max-w-6xl mx-auto flex justify-between items-center">
+        <h1 class="text-2xl font-bold uppercase tracking-wider">TML</h1>
+        <button @click="goToLogin" class="brutal-btn brutal-btn-primary text-sm">
+          LOGIN
+        </button>
+      </div>
+    </header>
+
     <!-- Hero Section -->
-    <div class="hero min-h-[70vh] px-4">
-      <div class="hero-content text-center max-w-4xl">
-        <div class="space-y-8">
-          <!-- Titre principal -->
-          <h1 class="text-5xl md:text-7xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent animate-fade-in">
-            Gérez votre temps de travail en toute simplicité
-          </h1>
-          
-          <!-- Sous-titre -->
-          <p class="text-xl md:text-2xl text-base-content/70 max-w-2xl mx-auto">
-            TimeTracker vous aide à pointer, suivre et analyser votre temps de travail efficacement
-          </p>
-          
-          <!-- CTA Principal -->
+    <section class="flex-1 flex flex-col items-center justify-center px-6 py-20">
+      <div class="max-w-4xl w-full space-y-12">
+        <!-- Titre Principal -->
+        <div class="border-2 border-black p-12">
+          <h2 class="text-5xl md:text-6xl font-black uppercase tracking-tight leading-tight">
+            Pointage<br/>Temps Réel
+          </h2>
+        </div>
+
+        <!-- Sous-titre -->
+        <div class="space-y-4">
+          <p class="text-xl font-bold uppercase tracking-wide">SYSTÈME SIMPLE ET EFFICACE</p>
+          <div class="border-l-4 border-black pl-6">
+            <p class="text-base leading-relaxed">
+              Clock in. Clock out. Consultez vos stats. C'est tout ce qu'il faut.
+            </p>
+          </div>
+        </div>
+
+        <!-- CTA Principal -->
+        <div class="flex gap-4">
           <button 
             @click="goToLogin"
-            class="btn btn-primary btn-lg text-lg px-8 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+            class="brutal-btn brutal-btn-success flex-1"
           >
             Commencer
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-            </svg>
           </button>
         </div>
       </div>
-    </div>
+    </section>
 
-    <!-- Features Section -->
-    <div class="container mx-auto px-4 py-16 max-w-6xl">
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <div 
-          v-for="(feature, index) in features" 
-          :key="index"
-          class="card bg-base-100 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-2"
-        >
-          <div class="card-body items-center text-center space-y-4">
-            <!-- Icône -->
-            <div class="text-6xl mb-2">
-              {{ feature.icon }}
-            </div>
-            
-            <!-- Titre -->
-            <h3 class="card-title text-2xl">
-              {{ feature.title }}
-            </h3>
-            
-            <!-- Description -->
-            <p class="text-base-content/70">
-              {{ feature.description }}
+    <!-- Features Section - Brutal -->
+    <section class="border-t-2 border-black bg-black text-white">
+      <div class="max-w-6xl mx-auto p-12">
+        <h3 class="text-3xl font-black uppercase tracking-wider mb-12">FONCTIONNALITÉS</h3>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <!-- Feature 1 -->
+          <div class="border-2 border-white p-8">
+            <p class="text-sm font-bold uppercase tracking-widest text-gray-300 mb-4">01</p>
+            <h4 class="text-2xl font-black uppercase mb-4">POINTAGE</h4>
+            <p class="text-sm leading-relaxed">
+              Un seul bouton. Entrez. Sortez. Pas d'excuses, pas de complications.
+            </p>
+          </div>
+
+          <!-- Feature 2 -->
+          <div class="border-2 border-white p-8">
+            <p class="text-sm font-bold uppercase tracking-widest text-gray-300 mb-4">02</p>
+            <h4 class="text-2xl font-black uppercase mb-4">HISTORIQUE</h4>
+            <p class="text-sm leading-relaxed">
+              Visualisez chaque jour. Chaque heure. Chaque pause. Totale transparence.
+            </p>
+          </div>
+
+          <!-- Feature 3 -->
+          <div class="border-2 border-white p-8">
+            <p class="text-sm font-bold uppercase tracking-widest text-gray-300 mb-4">03</p>
+            <h4 class="text-2xl font-black uppercase mb-4">STATISTIQUES</h4>
+            <p class="text-sm leading-relaxed">
+              Vos données en temps réel. Moyennes. Totaux. Sans filtre.
             </p>
           </div>
         </div>
       </div>
-    </div>
+    </section>
+
+    <!-- Features Section - Roles -->
+    <section class="border-t-2 border-black">
+      <div class="max-w-6xl mx-auto p-12">
+        <h3 class="text-3xl font-black uppercase tracking-wider mb-12">POUR CHACUN</h3>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <!-- Employees -->
+          <div class="border-2 border-black p-8">
+            <h4 class="text-xl font-black uppercase mb-6 tracking-wider">EMPLOYÉ</h4>
+            <ul class="space-y-3">
+              <li class="text-sm font-bold uppercase">- Pointage rapide</li>
+              <li class="text-sm font-bold uppercase">- Historique personnel</li>
+              <li class="text-sm font-bold uppercase">- Vue équipe</li>
+            </ul>
+          </div>
+
+          <!-- Managers -->
+          <div class="border-2 border-black p-8">
+            <h4 class="text-xl font-black uppercase mb-6 tracking-wider">MANAGER</h4>
+            <ul class="space-y-3">
+              <li class="text-sm font-bold uppercase">- Dashboard équipe</li>
+              <li class="text-sm font-bold uppercase">- Présence en temps réel</li>
+              <li class="text-sm font-bold uppercase">- Rapports détaillés</li>
+            </ul>
+          </div>
+
+          <!-- Admins -->
+          <div class="border-2 border-black p-8">
+            <h4 class="text-xl font-black uppercase mb-6 tracking-wider">ADMIN</h4>
+            <ul class="space-y-3">
+              <li class="text-sm font-bold uppercase">- Gestion complète</li>
+              <li class="text-sm font-bold uppercase">- Configuration équipes</li>
+              <li class="text-sm font-bold uppercase">- Vue d'ensemble</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
 
     <!-- CTA Final -->
-    <div class="bg-gradient-to-r from-primary to-secondary py-16">
-      <div class="container mx-auto px-4 text-center">
-        <h2 class="text-3xl md:text-4xl font-bold text-white mb-6">
-          Prêt à gagner du temps ?
+    <section class="border-t-2 border-black bg-black text-white">
+      <div class="max-w-6xl mx-auto p-12 flex flex-col items-center justify-center">
+        <h2 class="text-4xl font-black uppercase tracking-wider mb-8 text-center">
+          COMMENCEZ MAINTENANT
         </h2>
         <button 
           @click="goToLogin"
-          class="btn btn-lg bg-white text-primary hover:bg-base-200 border-none shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105"
+          class="brutal-btn brutal-btn-success"
         >
-          Se connecter
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-          </svg>
+          Accéder à TimeTracker
         </button>
       </div>
-    </div>
+    </section>
 
-    <!-- Footer Simple -->
-    <footer class="footer footer-center p-10 bg-base-200 text-base-content">
-      <div>
-        <p class="font-bold text-lg">TimeTracker</p>
-        <p class="text-sm opacity-70">Gestion du temps de travail simplifiée</p>
-        <p class="text-xs opacity-50 mt-4">© 2025 TimeTracker. Tous droits réservés.</p>
+    <!-- Footer -->
+    <footer class="border-t-2 border-black bg-black text-white p-8">
+      <div class="max-w-6xl mx-auto">
+        <div class="flex justify-between items-center">
+          <div>
+            <p class="font-black text-lg uppercase">TML</p>
+            <p class="text-xs text-gray-400 mt-2">TIMETRACKER</p>
+          </div>
+          <p class="text-xs text-gray-400">2025 - TOUS DROITS RÉSERVÉS</p>
+        </div>
       </div>
     </footer>
   </div>
 </template>
 
 <style scoped>
-@keyframes fade-in {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.animate-fade-in {
-  animation: fade-in 0.8s ease-out;
+/* Pas d'animations fluides - juste du brutal */
+button {
+  transition: none;
 }
 </style>
