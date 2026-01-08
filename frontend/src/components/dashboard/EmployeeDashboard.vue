@@ -54,9 +54,7 @@ onUnmounted(() => {
 
     <!-- Calendar -->
     <template #calendar>
-      <div class="bg-blue-100 p-6 rounded h-full">
         <CalendarWidget />
-      </div>
     </template>
 
     <!-- Widget 2 - Individual Pause -->

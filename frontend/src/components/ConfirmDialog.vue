@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { watch } from 'vue'
+
 interface Props {
   modelValue: boolean
   title: string
@@ -20,17 +22,35 @@ const emit = defineEmits<{
   cancel: []
 }>()
 
+const closeModal = () => {
+  emit('update:modelValue', false)
+}
+
 const handleConfirm = () => {
   emit('confirm')
-  emit('update:modelValue', false)
+  closeModal()
 }
 
 const handleCancel = () => {
   emit('cancel')
-  emit('update:modelValue', false)
+  closeModal()
 }
 
-const variantClass = {
+const handleKeydown = (e: KeyboardEvent) => {
+  if (e.key === 'Escape' && props.modelValue) {
+    closeModal()
+  }
+}
+
+watch(() => props.modelValue, (isOpen) => {
+  if (isOpen) {
+    document.addEventListener('keydown', handleKeydown)
+  } else {
+    document.removeEventListener('keydown', handleKeydown)
+  }
+})
+
+const variantButtonClass = {
   error: 'btn-error',
   warning: 'btn-warning',
   info: 'btn-info'
@@ -38,26 +58,67 @@ const variantClass = {
 </script>
 
 <template>
-  <dialog :open="modelValue" class="modal">
-    <div class="modal-box">
-      <h3 class="font-bold text-lg">{{ title }}</h3>
-      <p class="py-4" v-html="message"></p>
-      
-      <div class="modal-action">
-        <button class="btn btn-ghost" @click="handleCancel">
-          {{ cancelText }}
-        </button>
-        <button 
-          class="btn" 
-          :class="variantClass[variant]"
-          @click="handleConfirm"
-        >
-          {{ confirmText }}
-        </button>
+  <Transition name="modal">
+    <div 
+      v-if="modelValue"
+      class="modal modal-open"
+      @click.self="closeModal"
+    >
+      <div class="modal-box border-4 border-black rounded-none bg-base-100">
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-4 pb-4 border-b-2 border-black">
+          <h3 class="font-black text-lg uppercase tracking-wider">{{ title }}</h3>
+          <button 
+            class="border-2 border-black w-8 h-8 flex items-center justify-center font-bold hover:bg-black hover:text-white transition-none"
+            @click="closeModal"
+          >
+            X
+          </button>
+        </div>
+
+        <!-- Content -->
+        <div class="py-6">
+          <p class="text-sm leading-relaxed font-bold" v-html="message"></p>
+        </div>
+
+        <!-- Footer with buttons -->
+        <div class="flex gap-2 justify-end pt-4 border-t-2 border-black">
+          <button 
+            class="brutal-btn"
+            @click="handleCancel"
+          >
+            {{ cancelText }}
+          </button>
+          <button 
+            :class="['brutal-btn', variantButtonClass[variant]]"
+            @click="handleConfirm"
+          >
+            {{ confirmText }}
+          </button>
+        </div>
       </div>
     </div>
-    
-    <!-- Backdrop cliquable pour fermer -->
-    <div class="modal-backdrop" @click="handleCancel"></div>
-  </dialog>
+  </Transition>
 </template>
+
+<style scoped>
+.modal-enter-active,
+.modal-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.modal-enter-from,
+.modal-leave-to {
+  opacity: 0;
+}
+
+.modal-enter-active .modal-box,
+.modal-leave-active .modal-box {
+  transition: transform 0.3s ease;
+}
+
+.modal-enter-from .modal-box,
+.modal-leave-to .modal-box {
+  transform: scale(0.95) translateY(-20px);
+}
+</style>

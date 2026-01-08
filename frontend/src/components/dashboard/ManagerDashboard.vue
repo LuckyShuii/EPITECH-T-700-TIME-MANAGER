@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
-import { useEditModeStore } from '@/store/editModeStore'
+import { useEditModeStore } from '@/store/EditModeStore'
 import { useKpiStore } from '@/store/KpiStore'
 import { storeToRefs } from 'pinia'
 import ManagerLayout from '@/components/layout/ManagerLayout.vue'
@@ -10,6 +10,7 @@ import ClockButton from '@/components/ClockButton.vue'
 import TeamPresenceWidget from '@/components/widget/TeamPresenceWidget.vue'
 import TeamManagementModal from '@/components/Modal/TeamManagementModal.vue'
 import TeamWorkingTimeCard from '@/components/KPI/cards/TeamWorkingTimeCard.vue'
+import AverageTimePerShiftCard from '@/components/KPI/cards/AverageTimePerShiftCard.vue'
 import { useAuthStore } from '@/store/AuthStore'
 
 const authStore = useAuthStore()
@@ -48,11 +49,16 @@ onUnmounted(() => {
       <ClockButton />
     </template>
 
+    <!-- KPI: Moyenne par shift -->
+    <template #kpi-stats>
+      <AverageTimePerShiftCard />
+    </template>
+
     <!-- Calendrier -->
     <template #calendar>
-      <div class="bg-blue-100 p-6 rounded h-full">
+      
         <CalendarWidget />
-      </div>
+      
     </template>
 
     <!-- KPI: Travail hebdomadaire équipe -->

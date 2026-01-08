@@ -2,25 +2,21 @@
 import { computed } from 'vue'
 import { GridLayout, GridItem } from 'vue3-grid-layout'
 import { useLayoutStore } from '@/store/LayoutStore'
-import { useEditModeStore } from '@/store/EditModeStore'  // ← NOUVEAU
+import { useEditModeStore } from '@/store/EditModeStore'
 import type { Layout } from '@/store/LayoutStore'
 
-// Props du composant
 interface Props {
-  dashboardName: string // 'employee', 'manager' ou 'admin'
+  dashboardName: string
 }
 
 const props = defineProps<Props>()
-
-// Stores
 const layoutStore = useLayoutStore()
-const editModeStore = useEditModeStore()  // ← NOUVEAU
+const editModeStore = useEditModeStore()
 
-// Layout actuel (réactif)
 const currentLayout = computed({
   get: () => {
     const layout = layoutStore.getLayout(props.dashboardName)
-    console.log('📊 Layout chargé:', layout)  // ← AJOUTE
+    console.log('📊 Layout chargé:', layout)
     return layout
   },
   set: (newLayout: Layout) => {
@@ -28,10 +24,7 @@ const currentLayout = computed({
   }
 })
 
-// Le mode édition vient maintenant du store
-const isEditMode = computed(() => editModeStore.isEditMode)  // ← MODIFIÉ
-
-
+const isEditMode = computed(() => editModeStore.isEditMode)
 </script>
 
 <template>
@@ -39,9 +32,9 @@ const isEditMode = computed(() => editModeStore.isEditMode)  // ← MODIFIÉ
     <!-- Indicateur visuel du mode édition -->
     <div
       v-if="isEditMode"
-      class="absolute -top-12 left-0 right-0 bg-blue-500 text-white px-4 py-2 rounded-t-lg text-center font-medium z-50"
+      class="absolute -top-9 left-0 right-0 px-4 py-2 border-2 text-center font-black uppercase tracking-wider z-50 edit-mode-indicator"
     >
-      Mode personnalisation activé - Déplacez vos widgets
+      MODE PERSONNALISATION - DÉPLACEZ VOS WIDGETS
     </div>
 
     <!-- La grille draggable -->
@@ -73,7 +66,7 @@ const isEditMode = computed(() => editModeStore.isEditMode)  // ← MODIFIÉ
           'cursor-move': isEditMode && !item.static,
           'ring-2 ring-blue-400': isEditMode && !item.static,
           'opacity-75': isEditMode && item.static
-          }"
+        }"
         class="transition-all"
       >
         <!-- Le slot correspondant au widget -->
@@ -84,6 +77,21 @@ const isEditMode = computed(() => editModeStore.isEditMode)  // ← MODIFIÉ
 </template>
 
 <style scoped>
+/* Indicateur du mode édition */
+.edit-mode-indicator {
+  background-color: white;
+  color: black;
+  border-color: black;
+}
+
+@media (prefers-color-scheme: dark) {
+  .edit-mode-indicator {
+    background-color: black;
+    color: white;
+    border-color: white;
+  }
+}
+
 /* Styles pour vue-grid-layout */
 :deep(.vue-grid-item) {
   transition: all 0.2s ease;

@@ -166,7 +166,7 @@ const weekDaysOptions = [
           <div v-for="employee in employees" :key="employee.uuid" @click="selectEmployee(employee)"
             class="p-2 border-2 border-gray-400 cursor-pointer" :class="{
               'bg-black text-white border-black': selectedEmployee?.uuid === employee.uuid,
-              'hover:bg-gray-500': selectedEmployee?.uuid !== employee.uuid
+              'hover:bg-gray-100': selectedEmployee?.uuid !== employee.uuid
             }">
             <p class="font-bold text-sm">{{ employee.first_name }} {{ employee.last_name }}</p>
             <div class="flex gap-1 mt-1">
@@ -180,22 +180,23 @@ const weekDaysOptions = [
 
       <!-- Droite : Détails et formulaire -->
       <div v-if="selectedEmployee && editForm" class="overflow-y-auto">
-        <h4 class="font-bold text-lg mb-6 uppercase">
-          {{ selectedEmployee.first_name }} {{ selectedEmployee.last_name }}
-        </h4>
+        <div class="flex justify-between items-center mb-6">
+          <h4 class="font-bold text-lg uppercase">
+            {{ selectedEmployee.first_name }} {{ selectedEmployee.last_name }}
+          </h4>
+          <button @click="isEditingNames = !isEditingNames"
+            class="border-2 border-black px-3 py-1 flex items-center justify-center text-xs font-bold hover:bg-gray-100"
+            :class="{ 'bg-black text-white': isEditingNames }">
+            {{ isEditingNames ? 'FAIT' : 'ÉDITER' }}
+          </button>
+        </div>
 
         <div class="space-y-4">
           <!-- Prénom -->
           <div class="grid grid-cols-[150px_1fr] gap-2 items-center">
-            <div class="flex items-center gap-2">
-              <span class="font-bold uppercase text-xs">Prénom</span>
-              <button @click="isEditingNames = !isEditingNames" class="border-2 border-black w-6 h-6 flex items-center justify-center text-xs font-bold"
-                :class="{ 'bg-black text-white': isEditingNames }">
-                E
-              </button>
-            </div>
+            <span class="font-bold uppercase text-xs">Prénom</span>
             <input v-if="isEditingNames" v-model="editForm.first_name" type="text"
-              class="input input-bordered w-full border-2" />
+              class="input input-bordered w-full border-2 border-black rounded-none !bg-white !text-black hover:bg-gray-100" />
             <span v-else class="font-bold">{{ editForm.first_name }}</span>
           </div>
 
@@ -203,7 +204,7 @@ const weekDaysOptions = [
           <div class="grid grid-cols-[150px_1fr] gap-2 items-center">
             <span class="font-bold uppercase text-xs">Nom</span>
             <input v-if="isEditingNames" v-model="editForm.last_name" type="text"
-              class="input input-bordered w-full border-2" />
+              class="input input-bordered w-full border-2 border-black rounded-none !bg-white !text-black hover:bg-gray-100" />
             <span v-else class="font-bold">{{ editForm.last_name }}</span>
           </div>
 
@@ -220,7 +221,8 @@ const weekDaysOptions = [
             <label class="label pt-3">
               <span class="label-text font-bold uppercase text-xs">Email</span>
             </label>
-            <input v-model="editForm.email" type="email" class="input input-bordered w-full border-2" />
+            <input v-model="editForm.email" type="email"
+              class="input input-bordered w-full border-2 border-black rounded-none !bg-white !text-black hover:bg-gray-100" />
           </div>
 
           <!-- Téléphone -->
@@ -228,7 +230,8 @@ const weekDaysOptions = [
             <label class="label pt-3">
               <span class="label-text font-bold uppercase text-xs">Téléphone</span>
             </label>
-            <input v-model="editForm.phone_number" type="tel" maxlength="10" class="input input-bordered w-full border-2" />
+            <input v-model="editForm.phone_number" type="tel" maxlength="10"
+              class="input input-bordered w-full border-2 border-black rounded-none !bg-white !text-black hover:bg-gray-100" />
           </div>
 
           <!-- Rôles -->
@@ -249,7 +252,8 @@ const weekDaysOptions = [
                   <span class="label-text text-xs font-bold">Manager</span>
                 </label>
                 <label class="label cursor-pointer gap-2">
-                  <input v-model="editForm.roles" type="checkbox" value="admin" class="checkbox checkbox-primary border-2" />
+                  <input v-model="editForm.roles" type="checkbox" value="admin"
+                    class="checkbox checkbox-primary border-2" />
                   <span class="label-text text-xs font-bold">Admin</span>
                 </label>
               </div>
@@ -267,7 +271,8 @@ const weekDaysOptions = [
                 <span class="text-xs">Chargement...</span>
               </div>
 
-              <select v-else v-model="editForm.weekly_rate_uuid" class="select select-bordered w-full border-2">
+              <select v-else v-model="editForm.weekly_rate_uuid"
+                class="select select-bordered w-full border-2 border-black rounded-none !bg-white !text-black hover:bg-gray-100">
                 <option value="" disabled>Sélectionner un taux</option>
                 <option v-for="rate in weeklyRates" :key="rate.uuid" :value="rate.uuid">
                   {{ rate.amount }}h/semaine - {{ rate.rate_name }}
@@ -285,7 +290,8 @@ const weekDaysOptions = [
             <label class="label pt-3">
               <span class="label-text font-bold uppercase text-xs">Début</span>
             </label>
-            <select v-model="weekStartDay" class="select select-bordered w-full border-2">
+            <select v-model="weekStartDay"
+              class="select select-bordered w-full border-2 border-black rounded-none !bg-white !text-black hover:bg-gray-100">
               <option v-for="day in weekDaysOptions" :key="day" :value="day">
                 {{ day.toUpperCase() }}
               </option>
@@ -297,7 +303,8 @@ const weekDaysOptions = [
             <label class="label pt-3">
               <span class="label-text font-bold uppercase text-xs">Statut</span>
             </label>
-            <select v-model="editForm.status" class="select select-bordered w-full border-2">
+            <select v-model="editForm.status"
+              class="select select-bordered w-full border-2 border-black rounded-none !bg-white !text-black hover:bg-gray-100">
               <option value="active">ACTIF</option>
               <option value="inactive">INACTIF</option>
             </select>
@@ -326,3 +333,35 @@ const weekDaysOptions = [
     :message="`Êtes-vous sûr de vouloir supprimer <span class='font-bold'>${employeeToDelete?.first_name} ${employeeToDelete?.last_name}</span> ?`"
     confirm-text="Supprimer définitivement" cancel-text="Annuler" variant="error" @confirm="deleteEmployee" />
 </template>
+<style scoped>
+input[type="checkbox"].checkbox-primary:checked {
+  background-color: #16a34a;
+  border-color: #16a34a;
+}
+
+input[type="checkbox"].checkbox-primary:checked::after {
+  content: '✓';
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  color: white;
+}
+
+input[type="checkbox"].checkbox {
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 0;
+  border: 2px solid #000;
+  cursor: pointer;
+}
+
+input[type="checkbox"].checkbox:checked {
+  background-color: #16a34a;
+  border-color: #16a34a;
+}
+
+input[type="checkbox"].checkbox:hover {
+  background-color: #f3f4f6;
+}
+</style>

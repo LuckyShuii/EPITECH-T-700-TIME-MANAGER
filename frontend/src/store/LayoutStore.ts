@@ -21,7 +21,7 @@ export type Layout = GridItem[]
 const defaultLayouts: Record<string, Layout> = {
   employee: [
   { i: 'clock', x: 0, y: 0, w: 1, h: 2, minW: 1, minH: 2 },
-  { i: 'team-presence', x: 3, y: 0, w: 1, h: 4, minW: 1, minH: 4, static: true },
+  { i: 'team-presence', x: 3, y: 0, w: 1, h: 3, minW: 1, minH: 4, static: true },
   { i: 'calendar', x: 1, y: 0, w: 2, h: 2, minW: 2, minH: 2 },
   { i: 'widget-2', x: 1, y: 2, w: 1, h: 2, minW: 1, minH: 2 },
   { i: 'widget-3', x: 2, y: 2, w: 1, h: 2, minW: 1, minH: 2 },
@@ -29,7 +29,7 @@ const defaultLayouts: Record<string, Layout> = {
 ],
  manager: [
   { i: 'clock', x: 0, y: 0, w: 1, h: 2, minW: 1, minH: 2 },
-  { i: 'kpi-stats', x: 0, y: 2, w: 1, h: 2, minW: 1, minH: 2 },  // ← Agrandi à h: 2
+  { i: 'kpi-stats', x: 0, y: 2, w: 1, h: 2, minW: 1, minH: 2 },
   { i: 'calendar', x: 1, y: 0, w: 2, h: 2, minW: 2, minH: 2 },
   { i: 'team-view', x: 1, y: 2, w: 2, h: 2, minW: 2, minH: 2 },
   { i: 'team-presence', x: 3, y: 0, w: 1, h: 3, minW: 1, minH: 3, static: true },

@@ -1,21 +1,16 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { Square3Stack3DIcon, ArrowPathIcon } from '@heroicons/vue/24/outline'
-import { useEditModeStore } from '@/store/editModeStore'
-import { useLayoutStore } from '@/store/layoutStore'
+import { useEditModeStore } from '@/store/EditModeStore'
+import { useLayoutStore } from '@/store/LayoutStore'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
 
-// Stores
 const editModeStore = useEditModeStore()
 const layoutStore = useLayoutStore()
 
-
-
-// État
 const isEditMode = computed(() => editModeStore.isEditMode)
 const showResetConfirm = ref(false)
 
-// Actions
 function toggleEditMode() {
   editModeStore.toggleEditMode()
 }
@@ -37,7 +32,7 @@ function resetLayout() {
   <!-- Bouton reset -->
   <button
     @click="confirmReset"
-    class="btn btn-ghost btn-circle"
+    class="w-10 h-10 flex items-center justify-center font-bold hover:bg-black hover:text-white transition-none rounded-none"
     title="Réinitialiser le dashboard"
   >
     <ArrowPathIcon class="w-5 h-5" />
@@ -47,8 +42,8 @@ function resetLayout() {
   <button
     @click="toggleEditMode"
     :class="[
-      'btn btn-ghost btn-circle',
-      isEditMode ? 'text-green-500' : ''
+      'w-10 h-10 flex items-center justify-center font-bold hover:bg-black hover:text-white transition-none rounded-none',
+      isEditMode ? 'bg-black text-white' : ''
     ]"
     :title="isEditMode ? 'Terminer la personnalisation' : 'Personnaliser le dashboard'"
   >

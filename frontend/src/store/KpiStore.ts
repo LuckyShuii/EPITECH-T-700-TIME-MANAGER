@@ -4,6 +4,7 @@ import { useAuthStore } from './AuthStore'
 import API from '@/services/API'
 import type {
   IndividualPauseData,
+  WorkingTimeIndividualData,
   WorkingTimeIndividualDisplay,
   WorkingTimeTeamData,
   PresenceRateData
@@ -14,41 +15,39 @@ import { fr } from 'date-fns/locale'
 export const useKpiStore = defineStore('kpi', () => {
   const authStore = useAuthStore()
 
-  // État de la semaine courante
+  // === ÉTAT ===
+  
+  // Semaine courante (S-1 par défaut)
   const currentWeekStart = ref<Date>(subWeeks(startOfWeek(new Date(), { weekStartsOn: 1 }), 1))
-
+  
   // États de chargement
   const loading = ref<Record<string, boolean>>({})
-
+  
   // Données KPI
   const individualPause = ref<IndividualPauseData | null>(null)
   const workingTimeIndividual = ref<WorkingTimeIndividualDisplay | null>(null)
   const workingTimeTeam = ref<WorkingTimeTeamData | null>(null)
   const presenceRate = ref<PresenceRateData | null>(null)
-
+  const averageTimePerShift = ref<any>(null)
+  
   // Équipes du manager
-  const managerTeams = ref<WorkingTimeTeamData[]>([])
+  const managerTeams = ref<any[]>([])
   const currentTeamIndex = ref<number>(0)
-
-  // Timestamps pour le cache
+  
+  // Cache
   const lastFetch = ref<Record<string, number>>({})
   const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes
 
-  // === COMPUTED POUR LES DATES ===
+  // === COMPUTED ===
 
   const weekDateRange = computed(() => {
     const start = currentWeekStart.value
-    const end = addDays(start, 4)
+    const end = addDays(start, 4) // Lundi à Vendredi
     return { start, end }
   })
 
-  const weekStartDate = computed(() => {
-    return format(weekDateRange.value.start, 'yyyy-MM-dd')
-  })
-
-  const weekEndDate = computed(() => {
-    return format(weekDateRange.value.end, 'yyyy-MM-dd')
-  })
+  const weekStartDate = computed(() => format(weekDateRange.value.start, 'yyyy-MM-dd'))
+  const weekEndDate = computed(() => format(weekDateRange.value.end, 'yyyy-MM-dd'))
 
   const weekDisplayLabel = computed(() => {
     const start = weekDateRange.value.start
@@ -60,13 +59,11 @@ export const useKpiStore = defineStore('kpi', () => {
     return managerTeams.value[currentTeamIndex.value] ?? null
   })
 
-  // === PERMISSIONS ===
-
   const availableKpis = computed(() => {
     const kpis: string[] = []
     kpis.push('individualPause', 'workingTimeIndividual')
     if (authStore.isManager || authStore.isAdmin) {
-      kpis.push('workingTimeTeam')
+      kpis.push('workingTimeTeam', 'averageTimePerShift')
     }
     if (authStore.isAdmin) {
       kpis.push('presenceRate')
@@ -74,11 +71,11 @@ export const useKpiStore = defineStore('kpi', () => {
     return kpis
   })
 
+  // === HELPERS ===
+
   const canAccessKpi = (kpiName: string): boolean => {
     return availableKpis.value.includes(kpiName)
   }
-
-  // === HELPERS ===
 
   const isCacheValid = (key: string): boolean => {
     const timestamp = lastFetch.value[key]
@@ -104,16 +101,25 @@ export const useKpiStore = defineStore('kpi', () => {
     currentWeekStart.value = subWeeks(startOfWeek(new Date(), { weekStartsOn: 1 }), 1)
   }
 
-  // === NAVIGATION ÉQUIPES ===
-
-  const goToNextTeam = () => {
-    if (managerTeams.value.length === 0) return
-    currentTeamIndex.value = (currentTeamIndex.value + 1) % managerTeams.value.length
+  const changeWeek = async (direction: 'previous' | 'next' | 'current') => {
+    if (direction === 'previous') goToPreviousWeek()
+    else if (direction === 'next') goToNextWeek()
+    else goToCurrentWeek()
+    await refreshAllKpis()
   }
 
-  const goToPreviousTeam = () => {
+  // === NAVIGATION ÉQUIPES ===
+
+  const goToNextTeam = async () => {
+    if (managerTeams.value.length === 0) return
+    currentTeamIndex.value = (currentTeamIndex.value + 1) % managerTeams.value.length
+    await fetchWorkingTimeTeam(true)
+  }
+
+  const goToPreviousTeam = async () => {
     if (managerTeams.value.length === 0) return
     currentTeamIndex.value = (currentTeamIndex.value - 1 + managerTeams.value.length) % managerTeams.value.length
+    await fetchWorkingTimeTeam(true)
   }
 
   // === FONCTIONS FETCH ===
@@ -121,7 +127,6 @@ export const useKpiStore = defineStore('kpi', () => {
   const fetchIndividualPause = async (force = false) => {
     if (!canAccessKpi('individualPause')) return
     if (!force && isCacheValid('individualPause')) return
-
     if (!authStore.user) throw new Error('Utilisateur non authentifié')
 
     setLoading('individualPause', true)
@@ -144,17 +149,18 @@ export const useKpiStore = defineStore('kpi', () => {
   const fetchWorkingTimeIndividual = async (force = false) => {
     if (!canAccessKpi('workingTimeIndividual')) return
     if (!force && isCacheValid('workingTimeIndividual')) return
-
     if (!authStore.user) throw new Error('Utilisateur non authentifié')
 
     setLoading('workingTimeIndividual', true)
     try {
+      // Semaine courante
       const currentWeekResponse = await API.kpiAPI.getWorkingTimeIndividual(
         authStore.user.user_uuid,
         weekStartDate.value,
         weekEndDate.value
       )
 
+      // Semaine précédente pour comparaison
       const previousWeekStart = format(subDays(weekDateRange.value.start, 7), 'yyyy-MM-dd')
       const previousWeekEnd = format(subDays(weekDateRange.value.end, 7), 'yyyy-MM-dd')
 
@@ -171,7 +177,7 @@ export const useKpiStore = defineStore('kpi', () => {
         ...currentData,
         previousTotal: previousData.total_time,
         difference: currentData.total_time - previousData.total_time
-      } as WorkingTimeIndividualDisplay
+      }
 
       lastFetch.value['workingTimeIndividual'] = Date.now()
     } catch (error) {
@@ -189,16 +195,21 @@ export const useKpiStore = defineStore('kpi', () => {
       const allTeams = await API.teamAPI.getAll()
 
       if (authStore.isManager) {
-        managerTeams.value = allTeams.data.filter((team: any) => {
-          return team.team_members.some(
+        managerTeams.value = allTeams.data.filter((team: any) =>
+          team.team_members.some(
             (member: any) => member.user_uuid === authStore.user?.user_uuid && member.is_manager
           )
-        })
+        )
       } else if (authStore.isAdmin) {
         managerTeams.value = allTeams.data
       }
 
       currentTeamIndex.value = 0
+      
+      // Charge directement les données de la première équipe
+      if (managerTeams.value.length > 0) {
+        await fetchWorkingTimeTeam()
+      }
     } catch (error) {
       console.error('Erreur fetch manager teams:', error)
     }
@@ -211,12 +222,14 @@ export const useKpiStore = defineStore('kpi', () => {
 
     setLoading('workingTimeTeam', true)
     try {
+      // Semaine courante
       const currentWeekResponse = await API.kpiAPI.getWorkingTimeTeam(
         currentTeam.value.team_uuid,
         weekStartDate.value,
         weekEndDate.value
       )
 
+      // Semaine précédente pour comparaison
       const previousWeekStart = format(subDays(weekDateRange.value.start, 7), 'yyyy-MM-dd')
       const previousWeekEnd = format(subDays(weekDateRange.value.end, 7), 'yyyy-MM-dd')
 
@@ -247,7 +260,6 @@ export const useKpiStore = defineStore('kpi', () => {
   const fetchPresenceRate = async (force = false) => {
     if (!canAccessKpi('presenceRate')) return
     if (!force && isCacheValid('presenceRate')) return
-
     if (!authStore.user) throw new Error('Utilisateur non authentifié')
 
     setLoading('presenceRate', true)
@@ -267,7 +279,25 @@ export const useKpiStore = defineStore('kpi', () => {
     }
   }
 
-  // === RAFRAÎCHISSEMENT GLOBAL ===
+  const fetchAverageTimePerShift = async (userUuid: string, force = false) => {
+    if (!authStore.user) throw new Error('Utilisateur non authentifié')
+
+    setLoading('averageTimePerShift', true)
+    try {
+      const response = await API.kpiAPI.getAverageTimePerShift(
+        userUuid,
+        weekStartDate.value,
+        weekEndDate.value
+      )
+      averageTimePerShift.value = response.data
+      lastFetch.value['averageTimePerShift'] = Date.now()
+    } catch (error) {
+      console.error('Erreur fetch average time per shift:', error)
+      throw error
+    } finally {
+      setLoading('averageTimePerShift', false)
+    }
+  }
 
   const refreshAllKpis = async () => {
     const promises = []
@@ -288,15 +318,7 @@ export const useKpiStore = defineStore('kpi', () => {
     await Promise.allSettled(promises)
   }
 
-  const changeWeek = async (direction: 'previous' | 'next' | 'current') => {
-    if (direction === 'previous') goToPreviousWeek()
-    else if (direction === 'next') goToNextWeek()
-    else goToCurrentWeek()
-
-    await refreshAllKpis()
-  }
-
-  // === RETURN STORE ===
+  // === RETURN ===
 
   return {
     // States
@@ -305,31 +327,27 @@ export const useKpiStore = defineStore('kpi', () => {
     workingTimeIndividual,
     workingTimeTeam,
     presenceRate,
+    averageTimePerShift,
     managerTeams,
     currentTeam,
 
-    // Computed dates
+    // Computed
     weekStartDate,
     weekEndDate,
     weekDisplayLabel,
-
-    // Computed permissions
     availableKpis,
+
+    // Methods
     canAccessKpi,
-
-    // Actions - Semaines
     changeWeek,
-
-    // Actions - Équipes
     goToNextTeam,
     goToPreviousTeam,
     fetchManagerTeams,
-
-    // Actions - KPI
     fetchIndividualPause,
     fetchWorkingTimeIndividual,
     fetchWorkingTimeTeam,
     fetchPresenceRate,
+    fetchAverageTimePerShift,
     refreshAllKpis
   }
 })

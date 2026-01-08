@@ -1,25 +1,23 @@
 import APIHandler from '../APIHandler'
 
-const resource = 'kpi'
-
 export default {
-  // Temps de pause moyenne individu
-  getAverageBreakTime(userUuid: string, startDate: string, endDate: string) {
-    return APIHandler.get(`${resource}/average-break-time/${userUuid}/${startDate}/${endDate}`)
-  },
+  // Pause moyenne individuelle (average break time)
+  getAverageBreakTime: (userUuid: string, startDate: string, endDate: string) =>
+    APIHandler.get(`/kpi/average-break-time/${userUuid}/${startDate}/${endDate}`),
+
+  // Moyenne par shift
+  getAverageTimePerShift: (userUuid: string, startDate: string, endDate: string) =>
+    APIHandler.get(`/kpi/average-time-per-shift/${userUuid}/${startDate}/${endDate}`),
 
   // Travail hebdomadaire individuel
-  getWorkingTimeIndividual(userUuid: string, startDate: string, endDate: string) {
-    return APIHandler.get(`${resource}/work-session-user-weekly-total/${userUuid}/${startDate}/${endDate}`)
-  },
+  getWorkingTimeIndividual: (userUuid: string, startDate: string, endDate: string) =>
+    APIHandler.get(`/kpi/working-time-individual/${userUuid}/${startDate}/${endDate}`),
 
-  // Travail hebdomadaire par équipe
-  getWorkingTimeTeam(teamUuid: string, startDate: string, endDate: string) {
-    return APIHandler.get(`${resource}/work-session-team-weekly-total/${teamUuid}/${startDate}/${endDate}`)
-  },
+  // Travail hebdomadaire équipe
+  getWorkingTimeTeam: (teamUuid: string, startDate: string, endDate: string) =>
+    APIHandler.get(`/kpi/working-time-team/${teamUuid}/${startDate}/${endDate}`),
 
   // Taux de présence
-  getPresenceRate(userUuid: string, startDate: string, endDate: string) {
-    return APIHandler.get(`${resource}/presence-rate/${userUuid}/${startDate}/${endDate}`)
-  }
+  getPresenceRate: (userUuid: string, startDate: string, endDate: string) =>
+    APIHandler.get(`/kpi/presence-rate/${userUuid}/${startDate}/${endDate}`)
 }

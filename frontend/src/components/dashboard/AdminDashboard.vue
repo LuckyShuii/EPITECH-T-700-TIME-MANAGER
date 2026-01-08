@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
-import { useEditModeStore } from '@/store/editModeStore'
+import { useEditModeStore } from '@/store/EditModeStore'
 import { useKpiStore } from '@/store/KpiStore'
 import { storeToRefs } from 'pinia'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
@@ -12,6 +12,7 @@ import TeamManagementAdminModal from '@/components/Modal/TeamManagementAdminModa
 import TeamWorkingTimeCard from '@/components/KPI/cards/TeamWorkingTimeCard.vue'
 import PresenceRateCard from '@/components/KPI/cards/PresenceRateCard.vue'
 import { ArrowDownTrayIcon } from '@heroicons/vue/24/solid'
+import ExportKpiForm from '@/components/Modal/ExportKpiForm.vue'
 
 const editModeStore = useEditModeStore()
 const kpiStore = useKpiStore()
@@ -33,6 +34,15 @@ onMounted(async () => {
 onUnmounted(() => {
   editModeStore.reset()
 })
+
+const isExportModalOpen = ref(false)
+const openExportModal = () => {
+  isExportModalOpen.value = true
+}
+
+const closeExportModal = () => {
+  isExportModalOpen.value = false
+}
 
 const isAddEmployeeModalOpen = ref(false)
 const openAddEmployeeModal = () => {
@@ -95,9 +105,7 @@ const openTeamManagementModal = () => {
 
     <!-- Calendrier -->
     <template #calendar>
-      <div class="bg-white p-6 rounded h-full">
         <CalendarWidget />
-      </div>
     </template>
 
     <!-- KPI: Taux de présence -->
@@ -112,7 +120,7 @@ const openTeamManagementModal = () => {
 
     <!-- Export: Statistique des KPI-->
 <template #export-button>
-  <button @click="openTeamManagementModal" class="brutal-btn brutal-btn-primary w-full h-full flex flex-col items-center justify-center gap-4">
+  <button @click="openExportModal" class="brutal-btn brutal-btn-primary w-full h-full flex flex-col items-center justify-center gap-4">
     <ArrowDownTrayIcon class="w-5 h-5" />
     <p class="font-bold">Export des statistiques</p>
   </button>
@@ -123,6 +131,9 @@ const openTeamManagementModal = () => {
   <BaseModal v-model="isAddEmployeeModalOpen" title="Créer un nouvel employé">
     <RegisterForm @success="handleEmployeeCreated" @cancel="closeAddEmployeeModal" />
   </BaseModal>
+  <BaseModal v-model="isExportModalOpen" title="Exporter les statistiques KPI">
+  <ExportKpiForm />
+</BaseModal>
   <StaffSettingsModal v-model="isStaffSettingsModalOpen" />
   <TeamManagementAdminModal v-model="isTeamManagementModalOpen" />
 </template>

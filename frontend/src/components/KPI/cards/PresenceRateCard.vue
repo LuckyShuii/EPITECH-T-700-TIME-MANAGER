@@ -28,7 +28,7 @@ const getPresenceStatusText = (rate: number) => {
 <template>
   <div class="bg-white border-2 border-black p-4 h-full flex flex-col dark:bg-white">
     <!-- Header -->
-    <div class="border-b-2 border-black pb-3 mb-4">
+    <div class="flex items-center justify-between mb-6 pb-4">
       <h2 class="text-lg font-bold dark:text-gray-950">TAUX DE PRÉSENCE</h2>
       <p class="text-xs opacity-75 mt-1 dark:text-gray-500">{{ weekDisplayLabel }}</p>
     </div>

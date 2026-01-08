@@ -45,3 +45,9 @@ export interface PresenceRateData {
   first_name: string
   last_name: string
 }
+
+export interface TeamInfo {
+  team_uuid: string
+  team_name: string
+  team_members: any[]
+}
