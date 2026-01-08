@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, defineModel } from 'vue'
+import { ref, watch } from 'vue'
 import type { Employee, EmployeeUpdateData } from '@/types/Employee'
 import userAPI from '@/services/routers/UserAPI'
 import { useNotificationsStore } from '@/store/NotificationsStore'
@@ -8,7 +8,7 @@ import BaseModal from '@/components/Modal/BaseModal.vue'
 import type { WeeklyRate } from '@/types/WeeklyRate'
 import weeklyRateAPI from '@/services/routers/WeeklyRateAPI'
 
-const modelValue = defineModel<boolean>()
+const modelValue = defineModel<boolean>({ default: false })
 const notificationsStore = useNotificationsStore()
 
 const showDeleteConfirm = ref(false)
@@ -152,7 +152,7 @@ const weekDaysOptions = [
 </script>
 
 <template>
-  <BaseModal v-model="modelValue" title="Gestion de l'effectif">
+  <BaseModal :model-value="modelValue" @update:model-value="modelValue = $event" title="Gestion de l'effectif">
     <div class="grid grid-cols-[300px_1fr] gap-6 h-[calc(80vh-240px)]">
       <!-- Gauche : Liste des employés -->
       <div class="border-r-2 border-black pr-4 overflow-y-auto">
@@ -333,6 +333,7 @@ const weekDaysOptions = [
     :message="`Êtes-vous sûr de vouloir supprimer <span class='font-bold'>${employeeToDelete?.first_name} ${employeeToDelete?.last_name}</span> ?`"
     confirm-text="Supprimer définitivement" cancel-text="Annuler" variant="error" @confirm="deleteEmployee" />
 </template>
+
 <style scoped>
 input[type="checkbox"].checkbox-primary:checked {
   background-color: #16a34a;

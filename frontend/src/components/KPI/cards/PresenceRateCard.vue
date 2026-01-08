@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { useKpiStore } from '@/store/KpiStore'
 import { storeToRefs } from 'pinia'
+import type { PresenceRateUser } from '@/types/Kpi'
 
 const kpiStore = useKpiStore()
 const { presenceRate, loading, weekDisplayLabel } = storeToRefs(kpiStore)
@@ -15,14 +16,14 @@ const getPresenceColor = (rate: number) => {
   if (rate >= 75) return 'bg-yellow-500'
   if (rate >= 60) return 'bg-orange-500'
   return 'bg-red-600'
-};
+}
 
 const getPresenceStatusText = (rate: number) => {
   if (rate >= 90) return 'Excellent'
   if (rate >= 75) return 'Bon'
   if (rate >= 60) return 'Moyen'
   return 'Faible'
-};
+}
 </script>
 
 <template>
@@ -46,7 +47,7 @@ const getPresenceStatusText = (rate: number) => {
 
     <div v-else class="flex-1 overflow-y-auto space-y-3 pr-2">
       <div
-        v-for="user in presenceRate"
+        v-for="user in presenceRate as PresenceRateUser[]"
         :key="user.user_uuid"
         class="border border-black p-3 space-y-2 dark:border-gray-700 dark:bg-gray-50"
       >

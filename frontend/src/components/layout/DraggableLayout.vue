@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+// @ts-ignore
 import { GridLayout, GridItem } from 'vue3-grid-layout'
 import { useLayoutStore } from '@/store/LayoutStore'
 import { useEditModeStore } from '@/store/EditModeStore'

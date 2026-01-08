@@ -140,7 +140,7 @@ const handleCurrentWeek = () => {
 
       <!-- Footer dates -->
       <div class="text-xs opacity-60 text-center mt-4 pt-4">
-        <p>Du {{ data.start_date }} au {{ data.end_date }}</p>
+        <p v-if="data">Du {{ data.start_date }} au {{ data.end_date }}</p>
       </div>
     </div>
   </div>
