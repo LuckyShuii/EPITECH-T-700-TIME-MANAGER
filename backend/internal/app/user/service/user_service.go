@@ -3,6 +3,7 @@ package service
 import (
 	"app/internal/app/user/model"
 	"app/internal/app/user/repository"
+	"app/internal/config"
 	"fmt"
 	"log"
 	"strings"
@@ -83,7 +84,7 @@ func (service *userService) RegisterUser(user model.UserCreate) error {
 		user.FirstDayOfWeek = &defaultDay
 	}
 
-	defaultPasswordHash := "$2a$10$FCvYkE0uB54aB/QykpqpOOavA7E4iDjEHeOB2xzW.Yl1b7/ThZuNq"
+	defaultPasswordHash := config.LoadConfig().FixturesPassword
 	user.PasswordHash = &defaultPasswordHash
 
 	err := service.repo.RegisterUser(user)

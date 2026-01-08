@@ -7,7 +7,7 @@ import { useAuthStore } from './store/AuthStore'
 import { useNotificationsStore } from './store/NotificationsStore'
 
 
-const theme = ref('dark')
+const theme = ref('light')
 const authStore = useAuthStore()
 const notificationsStore = useNotificationsStore()
 const route = useRoute()

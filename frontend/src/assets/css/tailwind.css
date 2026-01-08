@@ -73,4 +73,277 @@
   .bg-gradient-dark {
     background-image: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
   }
+
+  /* === SYSTÈME BRUTALISTE === */
+
+/* Conteneur principal des widgets */
+.brutal-container {
+  background-color: hsl(var(--b1));
+  border: 2px solid hsl(var(--bc));
+  padding: 1.5rem;
 }
+
+/* Titre brutaliste */
+.brutal-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: hsl(var(--bc));
+  margin-bottom: 0.5rem;
+}
+
+/* Valeur principale (grande typographie) */
+.brutal-value {
+  font-family: monospace;
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: hsl(var(--bc));
+}
+
+/* Texte secondaire */
+.brutal-text {
+  font-size: 0.875rem;
+  color: hsl(var(--bc));
+  opacity: 0.7;
+}
+
+/* Séparateur horizontal */
+.brutal-divider {
+  height: 2px;
+  background-color: hsl(var(--bc));
+  margin: 1.5rem 0;
+}
+
+/* Indicateur de statut avec couleur */
+.brutal-success {
+  color: hsl(var(--su));
+  font-weight: 600;
+}
+
+.brutal-error {
+  color: hsl(var(--er));
+  font-weight: 600;
+}
+
+.brutal-warning {
+  color: hsl(var(--wa));
+  font-weight: 600;
+}
+/* Boutons brutalistes */
+.brutal-btn {
+  border: 2px solid;
+  background-color: white;
+  color: black;
+  padding: 0.75rem 1.5rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.875rem;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.brutal-btn:hover {
+  background-color: black;
+  color: white;
+}
+
+.brutal-btn:active {
+  transform: scale(0.98);
+}
+
+.brutal-btn-success {
+  border-color: #10b981;
+  color: #10b981;
+}
+
+.brutal-btn-success:hover {
+  background-color: #10b981;
+  color: white;
+}
+
+.brutal-btn-error {
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
+.brutal-btn-error:hover {
+  background-color: #ef4444;
+  color: white;
+}
+
+.brutal-btn-warning {
+  border-color: #f59e0b;
+  color: #f59e0b;
+}
+
+.brutal-btn-warning:hover {
+  background-color: #f59e0b;
+  color: white;
+}
+
+/* === MODALES BRUTALISTES === */
+
+/* Overlay (fond sombre) */
+.brutal-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+
+/* Conteneur du modal */
+.brutal-modal-container {
+  background-color: white;
+  border: 2px solid black;
+  width: 90%;
+  max-width: 48rem;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  color: black;
+}
+
+/* En dark mode, adapter les couleurs */
+@media (prefers-color-scheme: dark) {
+  .brutal-modal-container {
+    background-color: #1a1a1a;
+    border-color: white;
+    color: white;
+  }
+}
+
+/* Header du modal */
+.brutal-modal-header {
+  border-bottom: 2px solid black;
+  padding: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+@media (prefers-color-scheme: dark) {
+  .brutal-modal-header {
+    border-bottom-color: white;
+  }
+}
+
+/* Titre du modal */
+.brutal-modal-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0;
+}
+
+/* Bouton fermer */
+.brutal-modal-close {
+  background: none;
+  border: 2px solid black;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 1rem;
+  padding: 0;
+  transition: none;
+  color: black;
+}
+
+.brutal-modal-close:hover {
+  background-color: black;
+  color: white;
+}
+
+.brutal-modal-close:active {
+  transform: scale(0.95);
+}
+
+@media (prefers-color-scheme: dark) {
+  .brutal-modal-close {
+    border-color: white;
+    color: white;
+  }
+
+  .brutal-modal-close:hover {
+    background-color: white;
+    color: black;
+  }
+}
+
+/* Contenu du modal */
+.brutal-modal-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.5rem;
+}
+
+/* Footer du modal */
+.brutal-modal-footer {
+  border-top: 2px solid black;
+  padding: 1.5rem;
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  flex-shrink: 0;
+}
+
+@media (prefers-color-scheme: dark) {
+  .brutal-modal-footer {
+    border-top-color: white;
+  }
+}
+
+/* Transitions */
+.brutal-modal-enter-active,
+.brutal-modal-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.brutal-modal-enter-from,
+.brutal-modal-leave-to {
+  opacity: 0;
+}
+
+  /* === ADAPTATIONS DARK MODE POUR LES INPUTS === */
+  /* AJOUTE ÇA ICI */
+
+  @media (prefers-color-scheme: dark) {
+    .input,
+    .textarea,
+    .select {
+      background-color: #1a1a1a;
+      border-color: #666;
+      color: #fff;
+    }
+
+    .input::placeholder {
+      color: #999;
+    }
+
+    .input:focus,
+    .textarea:focus,
+    .select:focus {
+      background-color: #1a1a1a;
+      border-color: #999;
+    }
+  }
+
+} 

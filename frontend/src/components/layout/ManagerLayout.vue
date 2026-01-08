@@ -4,7 +4,6 @@ import DraggableLayout from './DraggableLayout.vue'
 
 <template>
   <DraggableLayout dashboard-name="manager">
-    <!-- On passe tous les slots au DraggableLayout -->
     <template #clock>
       <slot name="clock"></slot>
     </template>
@@ -32,5 +31,10 @@ import DraggableLayout from './DraggableLayout.vue'
     <template #modal-team>
       <slot name="modal-team"></slot>
     </template>
+
+    <template #kpi-history>
+      <slot name="kpi-history"></slot>
+    </template>
+
   </DraggableLayout>
 </template>

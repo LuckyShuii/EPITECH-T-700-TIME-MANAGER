@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import FormProfile from '@/components/FormProfile.vue'
+import ChangePasswordForm from '@/components/ChangePasswordForm.vue'
 </script>
 
 <template>
@@ -11,27 +11,27 @@ import FormProfile from '@/components/FormProfile.vue'
       </div>
     </header>
 
-    <!-- Login Container -->
+    <!-- Activation Container -->
     <div class="flex-1 flex items-center justify-center px-6 py-12">
       <div class="w-full max-w-md">
         <!-- Title Section -->
         <div class="border-2 border-black p-8 mb-8">
           <h2 class="text-4xl font-black uppercase tracking-tight mb-2">
-            CONNEXION
+            NOUVEAU MOT DE PASSE
           </h2>
           <p class="text-sm font-bold uppercase tracking-widest text-gray-600">
-            Accédez à votre compte TimeTracker
+            Définissez votre mot de passe pour accéder à TimeTracker
           </p>
         </div>
 
         <!-- Form Section -->
         <div class="border-2 border-black p-8">
-          <FormProfile />
+          <ChangePasswordForm />
         </div>
 
         <!-- Info Footer -->
         <div class="border-2 border-black border-t-0 p-6 text-xs font-bold uppercase tracking-widest text-gray-600">
-          Identifiants oubliés ? Contactez votre administrateur.
+          Vous avez déjà un compte ? Allez à la connexion.
         </div>
       </div>
     </div>
@@ -52,7 +52,6 @@ import FormProfile from '@/components/FormProfile.vue'
 </template>
 
 <style scoped>
-/* Pas de fioritures */
 button {
   transition: none;
 }
