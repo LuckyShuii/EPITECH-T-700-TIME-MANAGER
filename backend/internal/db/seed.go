@@ -15,6 +15,7 @@ func SeedIfEmptyUsersDevOnly(
 	fixturesPath string,
 	minUsers int64,
 	projectStatus string,
+	fixturesPassword string,
 ) error {
 
 	// DEV ONLY
@@ -57,8 +58,11 @@ func SeedIfEmptyUsersDevOnly(
 		return fmt.Errorf("read fixtures: %w", err)
 	}
 
+	// Remplacer le placeholder du mot de passe
+	sqlContent := strings.ReplaceAll(string(b), "${FIXTURES_PASSWORD}", fixturesPassword)
+
 	// Exec fixtures
-	_, err = tx.Exec(ctx, string(b))
+	_, err = tx.Exec(ctx, sqlContent)
 	if err != nil {
 		return fmt.Errorf("exec fixtures: %w", err)
 	}
