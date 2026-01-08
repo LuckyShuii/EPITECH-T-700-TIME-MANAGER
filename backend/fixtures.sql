@@ -1,5 +1,7 @@
 -- Seed Timemanager (idempotent-ish)
--- Objectif: pouvoir relancer sans casser sur des UUID uniques.
+
+-- This fixture file is launched automatically in dev mode to populate the database
+-- with sample data for easier testing.
 
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
@@ -42,6 +44,7 @@ WHERE
 -- ------------------------------------------------------------
 -- 1) Users (10) : 4 employees, 4 managers, 2 admins
 -- ------------------------------------------------------------
+
 
 WITH rates AS (
   SELECT
@@ -430,3 +433,47 @@ AND NOT EXISTS (
   WHERE b.work_session_active_id = w.id
     AND b.status = 'active'::break_status
 );
+-- ------------------------------------------------------------
+-- 5) Massive work sessions generation (50 per user per table)
+-- ------------------------------------------------------------
+
+-- Generate 50 work_session_active per user (last 30 days)
+INSERT INTO work_session_active (uuid, user_id, clock_in, clock_out, duration_minutes, status, breaks_duration_minutes)
+SELECT
+  gen_random_uuid()::text,
+  u.id,
+  NOW() - (i || ' days')::interval - ((8 + (random() * 2)::int) || ' hours')::interval,
+  NOW() - (i || ' days')::interval - ((random() * 2)::int || ' hours')::interval,
+  420 + (random() * 120)::int,
+  'completed'::work_session_status,
+  15 + (random() * 30)::int
+FROM users u
+CROSS JOIN generate_series(1, 50) AS i
+WHERE u.status = 'active';
+
+-- Generate 50 work_session_archived per user (30 days to 2 years ago)
+INSERT INTO work_session_archived (uuid, user_id, clock_in, clock_out, duration_minutes, status, archived_at, breaks_duration_minutes)
+SELECT
+  gen_random_uuid()::text,
+  u.id,
+  NOW() - ((31 + i * 5) || ' days')::interval - ((8 + (random() * 2)::int) || ' hours')::interval,
+  NOW() - ((31 + i * 5) || ' days')::interval - ((random() * 2)::int || ' hours')::interval,
+  400 + (random() * 140)::int,
+  'completed'::work_session_status,
+  NOW() - ((30 + i * 5) || ' days')::interval,
+  10 + (random() * 35)::int
+FROM users u
+CROSS JOIN generate_series(1, 50) AS i
+WHERE u.status = 'active';
+
+-- Generate 50 work_session_history entries (more than 2 years ago, no user_id for RGPD)
+INSERT INTO work_session_history (uuid, clock_in, clock_out, duration_minutes, status, archived_at, breaks_duration_minutes)
+SELECT
+  gen_random_uuid()::text,
+  NOW() - ((730 + i * 7) || ' days')::interval - ((8 + (random() * 2)::int) || ' hours')::interval,
+  NOW() - ((730 + i * 7) || ' days')::interval - ((random() * 2)::int || ' hours')::interval,
+  390 + (random() * 150)::int,
+  'completed'::work_session_status,
+  NOW() - ((729 + i * 7) || ' days')::interval,
+  10 + (random() * 40)::int
+FROM generate_series(1, 500) AS i;
