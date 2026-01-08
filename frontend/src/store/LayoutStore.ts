@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
+import LayoutService from '@/services/routers/LayoutService'
 
 // Type pour un item de la grille
 export interface GridItem {
@@ -50,62 +51,55 @@ const defaultLayouts: Record<string, Layout> = {
 }
 
 export const useLayoutStore = defineStore('layout', () => {
-  // État : layouts actuels pour chaque dashboard
   const layouts = ref<Record<string, Layout>>({})
 
-  // Charge le layout depuis localStorage ou utilise le défaut
-  function loadLayout(dashboardName: string): Layout {
-    const savedLayout = localStorage.getItem(`layout_${dashboardName}`)
-    
-    if (savedLayout) {
-      try {
-        return JSON.parse(savedLayout)
-      } catch (e) {
-        console.error('Erreur lors du chargement du layout:', e)
+  // Charge le layout depuis l'API ou utilise le défaut
+  async function loadLayout(dashboardName: string): Promise<Layout> {
+    try {
+      const response = await LayoutService.getLayout()
+      
+      if (response.data?.layout && response.data.layout.length > 0) {
+        return response.data.layout
       }
+    } catch (error) {
+      console.error('Erreur lors du chargement du layout:', error)
     }
     
     // Si pas de sauvegarde ou erreur, retourne le layout par défaut
     return defaultLayouts[dashboardName] || []
   }
 
-  // Sauvegarde le layout (localStorage pour l'instant, API plus tard)
-  function saveLayout(dashboardName: string, layout: Layout) {
-    // Met à jour l'état local
+  // Sauvegarde le layout via l'API
+  async function saveLayout(dashboardName: string, layout: Layout) {
     layouts.value[dashboardName] = layout
     
-    // Sauvegarde localStorage (temporaire)
-    localStorage.setItem(`layout_${dashboardName}`, JSON.stringify(layout))
-    
-    // TODO: Quand l'API sera prête, décommenter et adapter :
-    /*
     try {
-      await fetch('/api/user/layouts', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        credentials: 'include',
-        body: JSON.stringify({ dashboardName, layout })
-      })
-    } catch (e) {
-      console.error('Erreur lors de la sauvegarde du layout via API:', e)
+      await LayoutService.saveLayout(layout)
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde du layout:', error)
     }
-    */
   }
 
   // Réinitialise le layout aux valeurs par défaut
-  function resetLayout(dashboardName: string) {
+  async function resetLayout(dashboardName: string) {
     const defaultLayout = defaultLayouts[dashboardName]
     if (defaultLayout) {
-      saveLayout(dashboardName, defaultLayout)
+      try {
+        await LayoutService.deleteLayout()
+        layouts.value[dashboardName] = defaultLayout
+      } catch (error) {
+        console.error('Erreur lors de la réinitialisation du layout:', error)
+      }
     }
   }
 
   // Récupère le layout actuel pour un dashboard
   function getLayout(dashboardName: string): Layout {
     if (!layouts.value[dashboardName]) {
-      layouts.value[dashboardName] = loadLayout(dashboardName)
+      loadLayout(dashboardName).then(layout => {
+        layouts.value[dashboardName] = layout
+      })
+      return defaultLayouts[dashboardName] || []
     }
     return layouts.value[dashboardName]
   }

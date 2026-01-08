@@ -26,6 +26,12 @@ import (
 	WeeklyRatesR "app/internal/app/weekly-rate/repository"
 	WeeklyRatesS "app/internal/app/weekly-rate/service"
 
+	KPIH "app/internal/app/kpi/handler"
+	KPIR "app/internal/app/kpi/repository"
+	KPIService "app/internal/app/kpi/service"
+
+	"app/internal/app/mailer"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -39,19 +45,20 @@ func SetupRouter() *gin.Engine {
 	userRepo := repository.NewUserRepository(database)
 	workSessionRepo := workSessionR.NewWorkSessionRepository(database)
 	breakRepo := BreakR.NewBreakRepository(database)
+	kpiRepo := KPIR.NewKPIRepository(database)
 	teamRepo := TeamR.NewTeamRepository(database)
 	weeklyRateRepo := WeeklyRatesR.NewWeeklyRateRepository(database)
 
 	// 2) Services
-	userService := service.NewUserService(userRepo)
+	userService := service.NewUserService(userRepo, mailer.Service)
 	weeklyRateService := WeeklyRatesS.NewWeeklyRateService(weeklyRateRepo, userService)
 
-	// Set the WeeklyRateService in UserService to avoid circular dependency
 	userService.SetWeeklyRateService(weeklyRateService)
 
 	workSessionService := workSessionS.NewWorkSessionService(workSessionRepo, userService, breakRepo)
 	breakService := BreakS.NewBreakService(breakRepo, workSessionRepo)
 	teamService := TeamS.NewTeamService(teamRepo, userService)
+	kpiService := KPIService.NewKPIService(breakService, teamService, userService, weeklyRateService, kpiRepo)
 	authService := authS.NewAuthService(userService)
 
 	// 3) Handlers
@@ -60,6 +67,7 @@ func SetupRouter() *gin.Engine {
 	workSessionHandler := workSessionH.NewWorkSessionHandler(workSessionService)
 	breakHandler := BreakH.NewBreakHandler(breakService)
 	teamHandler := TeamH.NewTeamHandler(teamService, userService)
+	kpiHandler := KPIH.NewKPIHandler(kpiService)
 	authHandler := authH.NewAuthHandler(authService)
 	authMiddleware := &authM.AuthHandler{Service: authService}
 
@@ -67,6 +75,8 @@ func SetupRouter() *gin.Engine {
 	* Public Routes
 	 */
 	r.POST("/api/auth/login", authHandler.LoginHandler)
+	r.POST("/api/users/reset-password", userHandler.ResetPassword)
+	r.POST("/api/users/update-password", userHandler.UpdateCurrentUserPassword)
 
 	/**
 	 * Protected Routes
@@ -123,6 +133,21 @@ func SetupRouter() *gin.Engine {
 
 		protected.PUT("/teams/edit/:uuid", authMiddleware.RequireRoles("admin"), teamHandler.UpdateTeamByUUID)
 		protected.PUT("/teams/:team_uuid/users/:user_uuid/edit-manager-status/:is_manager", authMiddleware.RequireRoles("admin"), teamHandler.UpdateTeamUserManagerStatus)
+
+		/**
+		 * KPI Routes
+		 */
+		// TODO: route to get all the weekly dates from a user where he worked for the frontend filter/dropdown
+
+		protected.GET("/kpi/work-session-user-weekly-total/:user_uuid/:start_date/:end_date", authMiddleware.RequireRoles("all"), kpiHandler.GetWorkSessionUserWeeklyTotal)
+		protected.GET("/kpi/work-session-team-weekly-total/:team_uuid/:start_date/:end_date", authMiddleware.RequireRoles("manager"), kpiHandler.GetWorkSessionTeamWeeklyTotal)
+		protected.GET("/kpi/presence-rate/:user_uuid/:start_date/:end_date", authMiddleware.RequireRoles("manager, admin"), kpiHandler.GetPresenceRate)
+		protected.GET("/kpi/weekly-average-break-time/:user_uuid/:start_date/:end_date", authMiddleware.RequireRoles("manager, admin"), kpiHandler.GetAverageBreakTime)
+		// moyenne par shift par individu
+		protected.GET("/kpi/average-time-per-shift/:user_uuid/:start_date/:end_date", authMiddleware.RequireRoles("manager, admin"), kpiHandler.GetAverageTimePerShift)
+
+		protected.POST("/kpi/export", authMiddleware.RequireRoles("manager, admin"), kpiHandler.ExportKPIData)
+		protected.Static("/kpi/files", "/app/data/kpi")
 	}
 
 	return r

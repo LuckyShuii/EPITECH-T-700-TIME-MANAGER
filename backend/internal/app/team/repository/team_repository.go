@@ -11,6 +11,7 @@ import (
 type TeamRepository interface {
 	FindAll() ([]model.TeamReadAll, error)
 	FindIdByUuid(id string) (teamId int, err error)
+	FindUserIDsByTeamID(teamID int) ([]model.TeamMemberLight, error)
 	FindByID(id int) (model.TeamReadAll, error)
 	DeleteByID(id int) error
 	DeleteUserFromTeam(teamID int, userID int) error
@@ -214,4 +215,13 @@ func (repo *teamRepository) UpdateTeamByID(id int, updatedTeam model.TeamUpdate)
 
 func (repo *teamRepository) UpdateTeamUserManagerStatus(teamID int, userID int, isManager bool) error {
 	return repo.db.Exec("UPDATE teams_members SET is_manager = ? WHERE team_id = ? AND user_id = ?", isManager, teamID, userID).Error
+}
+
+func (repo *teamRepository) FindUserIDsByTeamID(teamID int) ([]model.TeamMemberLight, error) {
+	var users []model.TeamMemberLight
+	err := repo.db.Raw("SELECT user_id, u.uuid AS user_uuid, u.first_name, u.last_name FROM teams_members INNER JOIN users u ON u.id = teams_members.user_id WHERE team_id = ?", teamID).Scan(&users).Error
+	if err != nil {
+		return nil, err
+	}
+	return users, nil
 }

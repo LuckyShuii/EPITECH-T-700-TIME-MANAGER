@@ -4,6 +4,8 @@ import type { Employee, EmployeeUpdateData } from '@/types/Employee'
 import userAPI from '@/services/routers/UserAPI'
 import { useNotificationsStore } from '@/store/NotificationsStore'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
+import type { WeeklyRate } from '@/types/WeeklyRate'
+import weeklyRateAPI from '@/services/routers/WeeklyRateAPI'
 
 const notificationsStore = useNotificationsStore()
 
@@ -27,6 +29,13 @@ const isEditingNames = ref(false)
 // État : liste d'employés (plus de mock data)
 const employees = ref<Employee[]>([])
 const isLoading = ref(false)
+
+// Liste des taux hebdomadaires disponibles
+const weeklyRates = ref<WeeklyRate[]>([])
+const isLoadingRates = ref(false)
+
+// Jour de début de semaine (côté front uniquement pour l'instant)
+const weekStartDay = ref('lundi')
 
 // État : employé sélectionné
 const selectedEmployee = ref<Employee | null>(null)
@@ -52,26 +61,62 @@ const loadEmployees = async () => {
   }
 }
 
+// Charger les taux hebdomadaires depuis l'API
+const loadWeeklyRates = async () => {
+  isLoadingRates.value = true
+  try {
+    const response = await weeklyRateAPI.getAll()
+    console.log('🔍 Réponse API weeklyRates:', response)
+    console.log('📊 Données weeklyRates:', response.data)
+    weeklyRates.value = response.data
+  } catch (error) {
+    console.error('❌ Erreur lors du chargement des taux hebdomadaires:', error)
+    notificationsStore.addNotification({
+      status: 'error',
+      title: 'Erreur de chargement',
+      description: 'Impossible de charger les taux hebdomadaires'
+    })
+  } finally {
+    isLoadingRates.value = false
+  }
+}
+
 // Charger les employés à chaque ouverture de la modale
 watch(() => props.modelValue, (newValue) => {
   if (newValue) {
     loadEmployees()
+    loadWeeklyRates()
   }
 })
 
 // Sélectionner un employé
 const selectEmployee = (employee: Employee) => {
+  console.log('👤 Employé sélectionné:', employee)
+  console.log('📋 Liste des taux disponibles:', weeklyRates.value)
+  
   selectedEmployee.value = employee
   isEditingNames.value = false
+
+  // Trouver l'UUID du weekly_rate correspondant
+  const matchingRate = weeklyRates.value.find(
+    rate => rate.amount === employee.weekly_rate
+  )
+  
+  console.log('🎯 Taux trouvé:', matchingRate)
+  console.log('💰 weekly_rate de l\'employé:', employee.weekly_rate)
+
   editForm.value = {
     first_name: employee.first_name,
     last_name: employee.last_name,
     email: employee.email,
     phone_number: employee.phone_number,
     roles: [...employee.roles],
-    weekly_hours: employee.weekly_hours,
-    status: employee.status
+    weekly_rate_uuid: matchingRate?.uuid || '',
+    status: employee.status,
+    username: employee.username
   }
+  
+  console.log('📝 editForm créé:', editForm.value)
 }
 
 // Sauvegarder les modifications (seulement le statut pour l'instant)
@@ -143,41 +188,16 @@ const closeModal = () => {
   editForm.value = null
 }
 
-// Options pour le dropdown horaires
-const weeklyHoursOptions = [24, 28, 35, 39]
-
-// Changer le statut (active/inactive)
-const toggleStatus = async () => {
-  if (!selectedEmployee.value || !editForm.value) return
-
-  const newStatus = editForm.value.status === 'active' ? 'disabled' : 'active'
-
-  try {
-    await userAPI.updateStatus(selectedEmployee.value.uuid, newStatus)
-
-    // Mettre à jour localement
-    editForm.value.status = newStatus
-    if (selectedEmployee.value) {
-      selectedEmployee.value.status = newStatus
-    }
-
-    notificationsStore.addNotification({
-      status: 'success',
-      title: 'Statut modifié',
-      description: `L'employé est maintenant ${newStatus === 'active' ? 'actif' : 'inactif'}`
-    })
-
-    await loadEmployees()
-  } catch (error) {
-    console.error('Erreur lors du changement de statut:', error)
-    notificationsStore.addNotification({
-      status: 'error',
-      title: 'Erreur de modification',
-      description: 'Impossible de changer le statut'
-    })
-  }
-}
-
+// Options pour le jour de début de semaine
+const weekDaysOptions = [
+  'lundi',
+  'mardi',
+  'mercredi',
+  'jeudi',
+  'vendredi',
+  'samedi',
+  'dimanche'
+]
 
 </script>
 
@@ -260,17 +280,11 @@ const toggleStatus = async () => {
               <div class="divider"></div>
 
               <!-- Champs modifiables -->
-              <div class="grid grid-cols-[150px_1fr] gap-2 items-center">
-                <label class="label">
-                  <span class="label-text">Statut</span>
+              <div class="grid grid-cols-[150px_1fr] gap-2 items-start">
+                <label class="label pt-3">
+                  <span class="label-text">Email</span>
                 </label>
-                <div class="flex items-center gap-3">
-                  <input type="checkbox" class="toggle toggle-success" :checked="editForm.status === 'active'"
-                    @change="toggleStatus" />
-                  <span class="text-sm font-medium">
-                    {{ editForm.status === 'active' ? 'Actif' : 'Inactif' }}
-                  </span>
-                </div>
+                <input v-model="editForm.email" type="email" class="input input-bordered w-full" />
               </div>
 
               <div class="grid grid-cols-[150px_1fr] gap-2 items-start">
@@ -306,11 +320,37 @@ const toggleStatus = async () => {
 
               <div class="grid grid-cols-[150px_1fr] gap-2 items-start">
                 <label class="label pt-3">
-                  <span class="label-text">Horaire hebdo</span>
+                  <span class="label-text">Taux hebdomadaire</span>
                 </label>
-                <select v-model.number="editForm.weekly_hours" class="select select-bordered w-full">
-                  <option v-for="hours in weeklyHoursOptions" :key="hours" :value="hours">
-                    {{ hours }}h / semaine
+                <div class="space-y-2">
+                  <!-- Indicateur de chargement des taux -->
+                  <div v-if="isLoadingRates" class="flex items-center gap-2">
+                    <span class="loading loading-spinner loading-sm"></span>
+                    <span class="text-sm opacity-70">Chargement des taux...</span>
+                  </div>
+
+                  <!-- Dropdown des taux -->
+                  <select v-else v-model="editForm.weekly_rate_uuid" class="select select-bordered w-full">
+                    <option value="" disabled>Sélectionner un taux</option>
+                    <option v-for="rate in weeklyRates" :key="rate.uuid" :value="rate.uuid">
+                      {{ rate.amount }}h/semaine - {{ rate.rate_name }}
+                    </option>
+                  </select>
+
+                  <!-- Affichage du nom du taux actuel (optionnel, pour info) -->
+                  <p v-if="selectedEmployee" class="text-sm opacity-70">
+                    Actuellement : {{ selectedEmployee.weekly_rate }}h - {{ selectedEmployee.weekly_rate_name }}
+                  </p>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-[150px_1fr] gap-2 items-start">
+                <label class="label pt-3">
+                  <span class="label-text">Début de semaine</span>
+                </label>
+                <select v-model="weekStartDay" class="select select-bordered w-full">
+                  <option v-for="day in weekDaysOptions" :key="day" :value="day">
+                    {{ day.charAt(0).toUpperCase() + day.slice(1) }}
                   </option>
                 </select>
               </div>

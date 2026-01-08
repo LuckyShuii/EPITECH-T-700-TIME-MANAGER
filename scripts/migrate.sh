@@ -29,7 +29,7 @@ fi
 
 . ../.env
 
-NETWORK_NAME="t-dev-700-project-par_19_default"
+NETWORK_NAME="timemanager_default"
 
 echo "📡 Using network: $NETWORK_NAME"
 echo "🔗 postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@database:5432/${POSTGRES_DB}?sslmode=disable ($COMMAND)"

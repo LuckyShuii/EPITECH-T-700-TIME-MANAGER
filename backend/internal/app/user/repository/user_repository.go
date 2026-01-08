@@ -20,6 +20,7 @@ type UserRepository interface {
 	UpdateUser(userID int, user model.UserUpdateEntry) error
 	FindByUUID(userUUID string) (*model.UserReadAll, error)
 	FindDashboardLayoutByUUID(userUUID string) (*model.UserDashboardLayout, error)
+	UpdateUserPassword(userID int, newPasswordHash string) error
 }
 
 type userRepository struct {
@@ -70,7 +71,7 @@ func (repo *userRepository) FindIdByUuid(uuid string) (int, error) {
 		return 0, err
 	}
 	if userId == 0 {
-		return 0, fmt.Errorf("record not found")
+		return 0, fmt.Errorf("user not found")
 	}
 	return userId, nil
 }
@@ -282,5 +283,10 @@ func (repo *userRepository) UpdateUserLayout(userUUID string, layout model.UserD
 	}
 
 	err = repo.db.Exec("UPDATE users SET dashboard_layout = ? WHERE uuid = ?", layoutJSON, userUUID).Error
+	return err
+}
+
+func (repo *userRepository) UpdateUserPassword(userID int, newPasswordHash string) error {
+	err := repo.db.Exec("UPDATE users SET password_hash = ? WHERE id = ?", newPasswordHash, userID).Error
 	return err
 }
