@@ -6,8 +6,10 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 	"unicode"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 
@@ -32,7 +34,7 @@ type UserService interface {
 	SetWeeklyRateService(w WeeklyRateService.WeeklyRateService)
 	GetUserDashboardLayout(userUUID string) (*model.UserDashboardLayout, error)
 	UpdateUserDashboardLayout(userUUID string, layout model.UserDashboardLayoutUpdate) error
-	ChangeUserPassword(userUUID string, newPassword string) error
+	ChangeUserPassword(token string, newPassword string) error
 	ResetPassword(userEmail string, userUUID string) error
 }
 
@@ -89,9 +91,22 @@ func (service *userService) RegisterUser(user model.UserCreate) error {
 		return err
 	}
 
+	// create a JWT token for account activation with user uuid as key inside and 15 min
+	secret := Config.LoadConfig().JWTSecret
+	claims := jwt.MapClaims{
+		"user_uuid": user.UUID,
+		"exp":       time.Now().Add(15 * time.Minute).Unix(),
+		"iat":       time.Now().Unix(),
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	activationToken, err := token.SignedString([]byte(secret))
+	if err != nil {
+		return fmt.Errorf("failed to generate activation token: %w", err)
+	}
+
 	subject := "Hi " + user.FirstName + "! Welcome to TimeManager 🙂"
 	body := "Hello " + user.FirstName + ",\n\nWelcome on board! To activate your account, please set your password using the following link:\n\n" +
-		Config.LoadConfig().FrontendURL + "/activate-account?user_public_key=" + user.UUID + "\n\nWe're excited to have you on board!\n\nBest regards,\nThe TimeManager Team"
+		Config.LoadConfig().FrontendURL + "/activate-account?token=" + activationToken + "\n\nWe're excited to have you on board!\n\nBest regards,\nThe TimeManager Team"
 
 	err = service.MailerService.Send(MailModel.Mail{
 		To:      user.Email,
@@ -151,12 +166,31 @@ func (service *userService) UpdateUserDashboardLayout(userUUID string, layout mo
 	return service.repo.UpdateUserLayout(userUUID, layout)
 }
 
-func (service *userService) ChangeUserPassword(userUUID string, newPassword string) error {
-	log.Println("Changing password for user UUID:", userUUID)
+func (service *userService) ChangeUserPassword(token string, newPassword string) error {
+	log.Println("Changing password for user token:", token)
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
 
 	if err != nil {
 		return err
+	}
+
+	secret := Config.LoadConfig().JWTSecret
+	parsedToken, err := jwt.Parse(token, func(t *jwt.Token) (interface{}, error) {
+		return []byte(secret), nil
+	})
+
+	if err != nil || !parsedToken.Valid {
+		return fmt.Errorf("invalid or expired token")
+	}
+
+	claims, ok := parsedToken.Claims.(jwt.MapClaims)
+	if !ok {
+		return fmt.Errorf("invalid token claims")
+	}
+
+	userUUID, ok := claims["user_uuid"].(string)
+	if !ok {
+		return fmt.Errorf("user_uuid not found in token claims")
 	}
 
 	user, err := service.repo.FindByUUID(userUUID)
@@ -186,12 +220,25 @@ func (service *userService) ChangeUserPassword(userUUID string, newPassword stri
 }
 
 func (service *userService) ResetPassword(userEmail string, userUUID string) error {
-	link := Config.LoadConfig().FrontendURL + "/reset-password?user_public_key=" + userUUID
+	// Create JWT token for password reset with 15 min expiration
+	secret := Config.LoadConfig().JWTSecret
+	claims := jwt.MapClaims{
+		"user_uuid": userUUID,
+		"exp":       time.Now().Add(15 * time.Minute).Unix(),
+		"iat":       time.Now().Unix(),
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	resetToken, err := token.SignedString([]byte(secret))
+	if err != nil {
+		return fmt.Errorf("failed to generate reset token: %w", err)
+	}
+
+	link := Config.LoadConfig().FrontendURL + "/reset-password?token=" + resetToken
 
 	subject := "Hi! Reset your TimeManager password 🔐"
 	body := "Hello,\n\nPlease reset your password by clicking the following link:\n" + link + "\n\nBest regards,\nThe TimeManager Team"
 
-	err := service.MailerService.Send(MailModel.Mail{
+	err = service.MailerService.Send(MailModel.Mail{
 		To:      userEmail,
 		Subject: subject,
 		Body:    body,

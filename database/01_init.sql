@@ -1,4 +1,4 @@
-CREATE DATABASE time_manager;
+-- CREATE DATABASE time_manager;
 
 CREATE TYPE work_session_status AS ENUM(
     'active',

@@ -4,7 +4,10 @@ import (
 	"app/internal/app/mailer"
 	"app/internal/app/mailer/provider"
 	"app/internal/config"
+	"app/internal/db"
 	"app/internal/router"
+	"context"
+	"log"
 	"time"
 
 	"app/cmd/server/docs"
@@ -28,6 +31,18 @@ func main() {
 	}
 
 	mailer.Service = mailerservice.NewMailerService(mailerProvider)
+
+	// Seed database with fixtures in DEV mode
+	ctx := context.Background()
+	pool := db.ConnectPostgresPool()
+	defer pool.Close()
+
+	fixturesPath := "/app/fixtures.sql"
+	if err := db.SeedIfEmptyUsersDevOnly(ctx, pool, fixturesPath, 1, cfg.ProjectStatus, cfg.FixturesPassword); err != nil {
+		log.Printf("⚠️  Warning: Failed to seed database: %v", err)
+	} else {
+		log.Println("✅ Database seeding completed successfully")
+	}
 
 	r := router.SetupRouter()
 

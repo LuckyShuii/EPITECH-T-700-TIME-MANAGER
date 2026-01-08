@@ -201,7 +201,7 @@ type UserStatusUpdatePayload struct {
 //
 // swagger:model
 type UpdateUserPassword struct {
-	UserUUID    string `json:"user_uuid" example:"e1234abc-5678-90de-f123-4567890abcde"`
+	Token       string `json:"token" example:"e1234abc-5678-90de-f123-4567890abcde"`
 	NewPassword string `json:"new_password" example:"StrongP@ssw0rd!"`
 }
 

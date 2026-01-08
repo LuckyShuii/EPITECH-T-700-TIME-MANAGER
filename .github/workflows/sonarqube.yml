@@ -24,7 +24,7 @@ jobs:
       TESTCONTAINERS_CHECKS_DISABLE: false
       DOCKER_HOST: unix:///var/run/docker.sock
       SONAR_HOST_URL: https://sonarcloud.io
-      SONAR_TOKEN: ${{ secrets.SONARQUBE_TOKEN }}
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE: /var/run/docker.sock
       TESTCONTAINERS_HOST_OVERRIDE: localhost
 
