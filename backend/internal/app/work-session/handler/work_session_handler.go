@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -12,6 +13,7 @@ import (
 	AuthService "app/internal/app/auth/service"
 
 	Config "app/internal/config"
+	"app/internal/db"
 
 	"github.com/gin-gonic/gin"
 )
@@ -124,6 +126,8 @@ func (handler *WorkSessionHandler) GetWorkSessionStatus(c *gin.Context) {
 // @Success      200   {array}  model.WorkSessionReadHistory  "List of work session history entries"
 // @Router       /work-session/history [get]
 func (handler *WorkSessionHandler) GetWorkSessionHistory(c *gin.Context) {
+	ctx := c.Request.Context()
+
 	userUUID, err := handler.getUserUUIDFromClaims(c)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
@@ -138,6 +142,19 @@ func (handler *WorkSessionHandler) GetWorkSessionHistory(c *gin.Context) {
 
 	limit, offset := handler.parsePaginationParams(c)
 
+	// Build cache key with all parameters
+	cacheKey := fmt.Sprintf("work_session_history:%s:%s:%s:%d:%d", userUUID, startDate, endDate, limit, offset)
+
+	// Try to get history from cache
+	cachedHistory, err := db.RedisClient.Get(ctx, cacheKey).Result()
+	if err == nil && cachedHistory != "" {
+		var history []model.WorkSessionReadHistory
+		if jsonErr := json.Unmarshal([]byte(cachedHistory), &history); jsonErr == nil {
+			c.JSON(http.StatusOK, history)
+			return
+		}
+	}
+
 	history, err := handler.service.GetWorkSessionHistory(userUUID, startDate, endDate, limit, offset)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -146,6 +163,11 @@ func (handler *WorkSessionHandler) GetWorkSessionHistory(c *gin.Context) {
 
 	if history == nil {
 		history = []model.WorkSessionReadHistory{}
+	}
+
+	// Save to cache (5 minutes TTL)
+	if historyJSON, jsonErr := json.Marshal(history); jsonErr == nil {
+		db.RedisClient.Set(ctx, cacheKey, historyJSON, 5*time.Minute)
 	}
 
 	c.JSON(http.StatusOK, history)
