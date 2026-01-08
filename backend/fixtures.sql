@@ -2,6 +2,7 @@
 
 -- This fixture file is launched automatically in dev mode to populate the database
 -- with sample data for easier testing.
+-- every password for each users here is 'lboillot'
 
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
