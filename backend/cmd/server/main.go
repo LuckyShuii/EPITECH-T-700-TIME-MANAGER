@@ -44,6 +44,13 @@ func main() {
 		log.Println("✅ Database seeding completed successfully")
 	}
 
+	// Create root user if not exists
+	if err := db.CreateRootUserIfNotExists(ctx, pool, cfg.RootUsername, cfg.RootPassword); err != nil {
+		log.Printf("⚠️  Warning: Failed to create root user: %v", err)
+	} else {
+		log.Println("✅ Root user created or already exists")
+	}
+
 	r := router.SetupRouter()
 
 	allowedOrigins := []string{
