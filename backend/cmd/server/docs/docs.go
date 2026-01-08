@@ -1493,7 +1493,7 @@ const docTemplate = `{
                         "work_session_team_weekly_total",
                         "presence_rate",
                         "weekly_average_break_time",
-                        "weekly_average_time_per_shift"
+                        "average_time_per_shift"
                     ]
                 },
                 "start_date": {
@@ -1736,7 +1736,7 @@ const docTemplate = `{
                     "type": "string",
                     "example": "StrongP@ssw0rd!"
                 },
-                "user_uuid": {
+                "token": {
                     "type": "string",
                     "example": "e1234abc-5678-90de-f123-4567890abcde"
                 }
