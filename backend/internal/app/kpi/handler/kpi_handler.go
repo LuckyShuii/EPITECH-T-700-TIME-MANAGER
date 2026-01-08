@@ -175,7 +175,7 @@ func (handler *KPIHandler) validateDateRange(startDate string, endDate string) e
 	}
 
 	// check if end date is minimum 3 days from today
-	if endDate > threeDaysBeforeFromNow {
+	if endDate < threeDaysBeforeFromNow {
 		return fmt.Errorf("end_date cannot be less than 3 days from today")
 	}
 
@@ -311,6 +311,50 @@ func (handler *KPIHandler) GetAverageBreakTime(c *gin.Context) {
 		UserUUID:         userUUID,
 		FirstName:        averageBreakTime.FirstName,
 		LastName:         averageBreakTime.LastName,
+	}
+
+	c.JSON(http.StatusOK, kpiResponse)
+}
+
+// GetAverageTimePerShift handles the HTTP request to get the average time per shift for a user within a date range.
+//
+// @Summary Get average time per shift for a user within a date range
+// @Description Retrieves the average time per shift in minutes for a specified user UUID between the provided start and end dates. 🔒 Requires role: **manager, admin**
+// @Tags KPI
+// @Accept json
+// @Security     BearerAuth
+// @Produce json
+// @Param start_date path string true "Start Date in ISO 8601 format"
+// @Param end_date path string true "End Date in ISO 8601 format"
+// @Param user_uuid path string true "User UUID"
+// @Success 200 {object} model.KPIAverageTimePerShiftResponse
+// @Router /kpi/average-time-per-shift/{user_uuid}/{start_date}/{end_date} [get]
+func (handler *KPIHandler) GetAverageTimePerShift(c *gin.Context) {
+	startDate := c.Param("start_date")
+	endDate := c.Param("end_date")
+	userUUID := c.Param("user_uuid")
+
+	err := handler.validateDateRange(startDate, endDate)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid date range: " + err.Error()})
+		return
+	}
+
+	averageTimePerShift, err := handler.service.GetAverageTimePerShift(startDate, endDate, userUUID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve average time per shift: " + err.Error()})
+		return
+	}
+
+	kpiResponse := model.KPIAverageTimePerShiftResponse{
+		AverageTimePerShift: averageTimePerShift.AverageTimePerShift,
+		TotalShifts:         averageTimePerShift.TotalShifts,
+		TotalTime:           averageTimePerShift.TotalTime,
+		StartDate:           startDate,
+		EndDate:             endDate,
+		UserUUID:            userUUID,
+		FirstName:           averageTimePerShift.FirstName,
+		LastName:            averageTimePerShift.LastName,
 	}
 
 	c.JSON(http.StatusOK, kpiResponse)
