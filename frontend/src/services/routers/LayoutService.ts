@@ -1,4 +1,4 @@
-import type { Layout } from '@/store/layoutStore'
+import type { Layout } from '@/store/LayoutStore'
 import APIHandler from '../APIHandler'
 const resource = 'users/current-user-dashboard-layout'
 

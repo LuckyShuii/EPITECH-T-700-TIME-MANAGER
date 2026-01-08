@@ -1,76 +1,56 @@
-// Types pour "Travail hebdomadaire individuel"
-export interface DayWork {
-  day: string
-  hours: number
+export interface PresenceRateUser {
+  user_uuid: string
+  first_name: string
+  last_name: string
+  presence_rate: number
+  weekly_rate_expected: number
+  weekly_time_done: number
 }
 
-export interface WorkingTimeData {
-  totalWeek: number
-  byDay: DayWork[]
-}
-
-// Types pour "Travail hebdomadaire par équipe"
-export interface TeamMember {
-  userId: number
-  name: string
-  hours: number
-}
-
-export interface TeamWorkingTimeData {
-  totalTeam: number
-  members: TeamMember[]
-}
-
-// Types pour "Moyenne par shift par individu"
-export interface ShiftAverageData {
-  userId: number
-  labels: string[]
-  values: number[]
-}
-
-// Types pour "Taux de présence"
-export interface PresenceRateData {
-  userId: number
-  presenceRate: number
-  daysPresent: number
-  daysExpected: number
-}
-
-// Types pour "Heure de pointage moyen hebdo"
-export interface ClockingTimeData {
-  labels: string[]
-  values: number[]
-}
-
-// Types pour "Temps de pause moyenne individu"
-export interface DayPause {
-  day: string
-  minutes: number
-}
+export type PresenceRateData = PresenceRateUser[]
 
 export interface IndividualPauseData {
-  averagePausePerDay: number
-  totalPauseWeek: number
-  byDay: DayPause[]
+  average_break_time: number
+  total_breaks: number
+  user_uuid: string
 }
 
-// Types pour "Temps de pause moyenne équipe"
-export interface TeamPauseData {
-  labels: string[]
-  values: number[]
+export interface WorkingTimeIndividualData {
+  user_uuid: string
+  total_time: number
+  start_date: string
+  end_date: string
 }
 
-// Types pour "Progression hebdomadaire"
-export interface WeeklyProgressData {
-  weekStartDate: string // Format ISO: '2025-10-21'
-  contractHours: number
-  workedHours: number
-  remainingHours: number
-  percentageComplete: number
+export interface WorkingTimeIndividualDisplay extends WorkingTimeIndividualData {
+  previousTotal?: number
+  difference?: number
 }
 
-// Types pour "Temps de pause par shift"
-export interface ShiftPauseData {
-  effectiveWork: number
-  pause: number
+export interface WorkingTimeTeamMember {
+  user_uuid: string
+  first_name: string
+  last_name: string
+  total_time: number
+}
+
+export interface WorkingTimeTeamData {
+  team_uuid: string
+  team_name: string
+  total_time: number
+  start_date: string
+  end_date: string
+  members: WorkingTimeTeamMember[]
+  previousTotal?: number
+  difference?: number
+}
+
+export interface AverageTimePerShiftData {
+  user_uuid: string
+  average_time: number
+  shift_count: number
+  date_range: {
+    start_date: string
+    end_date: string
+  }
 }

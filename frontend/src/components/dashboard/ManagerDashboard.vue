@@ -1,37 +1,41 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
-import ManagerLayout from '../layout/ManagerLayout.vue'
 import { useEditModeStore } from '@/store/EditModeStore'
-import ClockWidget from '@/components/widget/ClockWidget.vue'
-import CalendarWidget from '@/components/widget/CalendarWidget.vue'
-import ClockButton from '@/components/ClockButton.vue'
-import { useAuthStore } from '@/store/AuthStore'
+import { useKpiStore } from '@/store/KpiStore'
 import { storeToRefs } from 'pinia'
-import TeamManagementModal from '@/components/Modal/TeamManagementModal.vue'
-
+import ManagerLayout from '@/components/layout/ManagerLayout.vue'
+import CalendarWidget from '@/components/widget/CalendarWidget.vue'
+import ClockWidget from '@/components/widget/ClockWidget.vue'
+import ClockButton from '@/components/ClockButton.vue'
 import TeamPresenceWidget from '@/components/widget/TeamPresenceWidget.vue'
+import TeamManagementModal from '@/components/Modal/TeamManagementModal.vue'
+import TeamWorkingTimeCard from '@/components/KPI/cards/TeamWorkingTimeCard.vue'
+import AverageTimePerShiftCard from '@/components/KPI/cards/AverageTimePerShiftCard.vue'
+import { useAuthStore } from '@/store/AuthStore'
 
 const authStore = useAuthStore()
-const { clockInTime, sessionStatus } = storeToRefs(authStore)
-
-
 const editModeStore = useEditModeStore()
+const kpiStore = useKpiStore()
+
+const { clockInTime, sessionStatus } = storeToRefs(authStore)
+const { currentTeam, loading, weekDisplayLabel } = storeToRefs(kpiStore)
+
 const isTeamViewModalOpen = ref(false)
 
-// Enregistre que ce dashboard est actif
-onMounted(() => {
+onMounted(async () => {
   editModeStore.setCurrentDashboard('manager')
+  
+  try {
+    await kpiStore.fetchManagerTeams()
+    await kpiStore.fetchWorkingTimeTeam()
+  } catch (error) {
+    console.error('Erreur lors du chargement des KPI:', error)
+  }
 })
 
-// Nettoie quand on quitte le dashboard
 onUnmounted(() => {
   editModeStore.reset()
 })
-
-const TeamViewModal = () => {
-  isTeamViewModalOpen.value = true
-}
-
 </script>
 
 <template>
@@ -45,45 +49,40 @@ const TeamViewModal = () => {
       <ClockButton />
     </template>
 
-    <!-- KPI Stats -->
+    <!-- KPI: Moyenne par shift -->
     <template #kpi-stats>
-      <div class="bg-green-100 p-6 rounded h-full">
-        <button class="btn btn-primary w-full">📊 Rapport</button>
-      </div>
-    </template>
-
-    <template #team-view>
-      <div class="bg-orange-100 p-6 rounded h-full"></div>
-
+      <AverageTimePerShiftCard />
     </template>
 
     <!-- Calendrier -->
     <template #calendar>
-      <div class="bg-blue-100 p-6 rounded h-full">
+      
         <CalendarWidget />
-      </div>
+      
     </template>
 
-    <!-- Présence équipe -->
-    <template #modal-team>
-      <button 
-        @click="isTeamViewModalOpen = true"
-        class="h-full w-full bg-gradient-to-br from-primary-500 to-secondary-500 hover:shadow-card-hover text-white rounded-3xl shadow-card transition-all duration-300 flex flex-col items-center justify-center gap-4 group cursor-pointer"
-      >
-        <div class="text-4xl group-hover:scale-110 transition-transform duration-300">👥</div>
-        <p class="font-bold text-base">Voir mon équipe</p>
-      </button>
+    <!-- KPI: Travail hebdomadaire équipe -->
+    <template #team-view>
+      <TeamWorkingTimeCard
+        :data="currentTeam"
+        :loading="kpiStore.loading['workingTimeTeam']"
+        :weekLabel="weekDisplayLabel"
+      />
     </template>
 
-    <!-- KPI Carousel -->
+    <!-- Widget présence équipe temps réel -->
     <template #team-presence>
       <TeamPresenceWidget />
     </template>
 
-    <!-- Bouton rapport -->
-    <template #report-button>
-      <div class="bg-orange-100 p-6 rounded h-full">
-      </div>
+    <!-- Bouton: Voir mon équipe -->
+    <template #modal-team>
+      <button 
+        @click="isTeamViewModalOpen = true"
+        class="brutal-btn brutal-btn-primary h-full w-full flex flex-col items-center justify-center gap-4"
+      >
+        <p class="font-bold text-base">Voir mon équipe</p>
+      </button>
     </template>
   </ManagerLayout>
 
