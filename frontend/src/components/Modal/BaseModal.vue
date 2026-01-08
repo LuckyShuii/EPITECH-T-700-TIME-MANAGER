@@ -2,12 +2,13 @@
 import { watch } from 'vue'
 
 interface Props {
-  modelValue: boolean  // v-model pour ouvrir/fermer
+  modelValue?: boolean
   title?: string
   size?: 'sm' | 'md' | 'lg' | 'xl'
 }
 
 const props = withDefaults(defineProps<Props>(), {
+  modelValue: false,
   title: '',
   size: 'lg'
 })
@@ -16,19 +17,16 @@ const emit = defineEmits<{
   'update:modelValue': [value: boolean]
 }>()
 
-// Fonction pour fermer le modal
 const closeModal = () => {
   emit('update:modelValue', false)
 }
 
-// Gérer la touche ESC
 const handleKeydown = (e: KeyboardEvent) => {
   if (e.key === 'Escape' && props.modelValue) {
     closeModal()
   }
 }
 
-// Ajouter/retirer l'event listener
 watch(() => props.modelValue, (isOpen) => {
   if (isOpen) {
     document.addEventListener('keydown', handleKeydown)
@@ -46,7 +44,7 @@ watch(() => props.modelValue, (isOpen) => {
       @click.self="closeModal"
     >
       <div 
-        class="modal-box"
+        class="modal-box border-2 border-black rounded-none"
         :class="{
           'max-w-sm': size === 'sm',
           'max-w-2xl': size === 'md',
@@ -55,10 +53,10 @@ watch(() => props.modelValue, (isOpen) => {
         }"
       >
         <!-- Header avec titre et bouton fermer -->
-        <div class="flex justify-between items-center mb-4">
-          <h3 class="font-bold text-lg">{{ title }}</h3>
+        <div class="flex justify-between items-center mb-4 pb-2 border-b-2 border-black">
+          <h3 class="font-bold text-lg uppercase">{{ title }}</h3>
           <button 
-            class="btn btn-sm btn-circle btn-ghost"
+            class="border-2 border-black w-6 h-6 flex items-center justify-center text-sm font-bold hover:bg-black hover:text-white"
             @click="closeModal"
           >
             ✕
@@ -71,7 +69,7 @@ watch(() => props.modelValue, (isOpen) => {
         </div>
 
         <!-- Footer optionnel (slot) -->
-        <div v-if="$slots.footer" class="modal-action">
+        <div v-if="$slots.footer" class="modal-action border-t-2 border-black pt-4 mt-4 flex gap-2 justify-end">
           <slot name="footer"></slot>
         </div>
       </div>
@@ -80,7 +78,6 @@ watch(() => props.modelValue, (isOpen) => {
 </template>
 
 <style scoped>
-/* Animations pour le modal */
 .modal-enter-active,
 .modal-leave-active {
   transition: opacity 0.3s ease;

@@ -391,15 +391,7 @@ func (handler *UserHandler) UpdateCurrentUserPassword(c *gin.Context) {
 		return
 	}
 
-	claims, exists := c.Get("userClaims")
-	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": Config.ErrorMessages()["NO_CLAIMS"]})
-		return
-	}
-
-	authClaims := claims.(*AuthService.Claims)
-
-	changeErr := handler.service.ChangeUserPassword(authClaims.UUID, req.NewPassword)
+	changeErr := handler.service.ChangeUserPassword(req.Token, req.NewPassword)
 	if changeErr != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": changeErr.Error()})
 		return

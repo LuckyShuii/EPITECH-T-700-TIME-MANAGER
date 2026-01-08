@@ -18,4 +18,7 @@ touch "$PWD/../logs/database.log"
 touch "$PWD/../logs/apigateway.log"
 
 # Create empty folder for KPI exports csv files
-mkdir "$PWD/../backend/data/kpi
+mkdir "$PWD/../backend/data"
+mkdir "$PWD/../backend/data/kpi"
+mkdir "$PWD/../backend/tmp"
+mkdir "$PWD/../backend/tmp/kpi"

@@ -25,18 +25,14 @@ const handleSubmit = async () => {
   loading.value = true
   try {
     await AuthStore.login(getPayload())
-    
-    // Notification de succès uniquement si login réussi
     notificationsStore.addNotification({
       status: 'success',
       title: 'Connexion réussie',
       description: 'Vous êtes maintenant connecté'
     })
-    
     router.push('/dashboard')
   }
   catch (error) {
-    // Notification d'erreur uniquement si login échoué
     notificationsStore.addNotification({
       status: 'error',
       title: 'Erreur de connexion',
@@ -50,35 +46,71 @@ const handleSubmit = async () => {
 </script>
 
 <template>
-  <form @submit.prevent="handleSubmit">
-    <label class="input validator w-full">
-      <svg class="h-[1em] opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-        <g stroke-linejoin="round" stroke-linecap="round" stroke-width="2.5" fill="none" stroke="currentColor">
-          <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
-          <circle cx="12" cy="7" r="4"></circle>
-        </g>
-      </svg>
-      <input v-model="form.username" type="text" required placeholder="Username" pattern="[A-Za-z][A-Za-z0-9\-]*"
-        minlength="3" maxlength="30" title="Only letters, numbers or dash" :disabled="loading" />
-    </label>
-    <p class="validator-hint">
-      Must be 3 to 30 characters
-      <br />containing only letters, numbers or dash
-    </p>
+  <form @submit.prevent="handleSubmit" class="space-y-6">
+    <!-- Username Input -->
+    <div>
+      <label class="block text-xs font-bold uppercase tracking-widest mb-3">
+        USERNAME
+      </label>
+      <input 
+        v-model="form.username" 
+        type="text" 
+        required 
+        placeholder="Username" 
+        pattern="[A-Za-z][A-Za-z0-9\-]*"
+        minlength="3" 
+        maxlength="30" 
+        title="Only letters, numbers or dash"
+        :disabled="loading"
+        class="w-full border-2 border-black p-3 font-bold uppercase text-sm focus:outline-none focus:border-black bg-white"
+      />
+      <p class="text-xs text-gray-600 mt-2 font-bold uppercase">
+        3-30 caractères, lettres/chiffres/tiret
+      </p>
+    </div>
 
-    <input v-model="form.password" type="password" class="input validator w-full" required placeholder="Password" minlength="8"
-      title="Must be more than 8 characters, including number, lowercase letter, uppercase letter"
-      :disabled="loading" />
-    <p class="validator-hint">
-      Must be more than 8 characters, including
-      <br />At least one number
-      <br />At least one lowercase letter
-      <br />At least one uppercase letter
-    </p>
+    <!-- Password Input -->
+    <div>
+      <label class="block text-xs font-bold uppercase tracking-widest mb-3">
+        PASSWORD
+      </label>
+      <input 
+        v-model="form.password" 
+        type="password" 
+        required 
+        placeholder="Password" 
+        minlength="8"
+        title="Must be more than 8 characters, including number, lowercase letter, uppercase letter"
+        :disabled="loading"
+        class="w-full border-2 border-black p-3 font-bold uppercase text-sm focus:outline-none focus:border-black bg-white"
+      />
+      <p class="text-xs text-gray-600 mt-2 font-bold uppercase">
+        Minimum 8 caractères<br/>
+        Au moins 1 chiffre<br/>
+        Au moins 1 minuscule<br/>
+        Au moins 1 majuscule
+      </p>
+    </div>
 
-    <button @click.prevent="handleSubmit" class="btn btn-primary w-full" :disabled="loading" >
-      <span v-if="!loading">Valider</span>
+    <!-- Submit Button -->
+    <button 
+      @click.prevent="handleSubmit" 
+      class="brutal-btn brutal-btn-primary w-full mt-8"
+      :disabled="loading"
+    >
+      <span v-if="!loading">CONNEXION</span>
       <span v-else class="loading loading-spinner"></span>
     </button>
   </form>
 </template>
+
+<style scoped>
+input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+input:focus {
+  box-shadow: none;
+}
+</style>

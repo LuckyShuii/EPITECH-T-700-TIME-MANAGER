@@ -156,6 +156,57 @@ const docTemplate = `{
                 }
             }
         },
+        "/kpi/average-time-per-shift/{user_uuid}/{start_date}/{end_date}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieves the average time per shift in minutes for a specified user UUID between the provided start and end dates. 🔒 Requires role: **manager, admin**",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "KPI"
+                ],
+                "summary": "Get average time per shift for a user within a date range",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Start Date in ISO 8601 format",
+                        "name": "start_date",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "End Date in ISO 8601 format",
+                        "name": "end_date",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "User UUID",
+                        "name": "user_uuid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.KPIAverageTimePerShiftResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/kpi/export": {
             "post": {
                 "security": [
@@ -1395,6 +1446,35 @@ const docTemplate = `{
                 }
             }
         },
+        "model.KPIAverageTimePerShiftResponse": {
+            "type": "object",
+            "properties": {
+                "average_time_per_shift": {
+                    "type": "number"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                },
+                "total_shifts": {
+                    "type": "integer"
+                },
+                "total_time": {
+                    "type": "integer"
+                },
+                "user_uuid": {
+                    "type": "string"
+                }
+            }
+        },
         "model.KPIExportRequest": {
             "type": "object",
             "required": [
@@ -1412,7 +1492,8 @@ const docTemplate = `{
                         "work_session_user_weekly_total",
                         "work_session_team_weekly_total",
                         "presence_rate",
-                        "weekly_average_break_time"
+                        "weekly_average_break_time",
+                        "average_time_per_shift"
                     ]
                 },
                 "start_date": {
@@ -1655,7 +1736,7 @@ const docTemplate = `{
                     "type": "string",
                     "example": "StrongP@ssw0rd!"
                 },
-                "user_uuid": {
+                "token": {
                     "type": "string",
                     "example": "e1234abc-5678-90de-f123-4567890abcde"
                 }

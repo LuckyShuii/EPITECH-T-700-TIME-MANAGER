@@ -73,35 +73,29 @@ onUnmounted(() => {
 </script>
 
 <template>
-<div class="bg-gradient-dark rounded-2xl p-8 shadow-2xl">
+<div class="brutal-container">
   <!-- Temps travaillé -->
   <div class="text-center">
-    <div class="text-gray-500 text-sm uppercase tracking-[0.15em] mb-2">
-      Temps travaillé
-    </div>
-    <div class="font-mono text-[2rem] lg:text-[3rem] font-bold text-green-500 drop-shadow-[0_0_150px_rgba(0,255,0,0.3)] tracking-[0.1em]">
+    <div class="brutal-title">Temps travaillé</div>
+    <div class="brutal-value brutal-success">
       {{ workedTime }}
     </div>
-    <div class="text-gray-400 text-sm mt-4">
+    <div class="brutal-text mt-4">
       Début : {{ startTime }}
     </div>
     <!-- Indicateur de pause (optionnel) -->
     <div v-if="status === 'paused'" class="mt-2">
-      <span class="text-yellow-500 text-sm uppercase tracking-wider">⏸️ En pause</span>
+      <span class="brutal-warning text-sm uppercase tracking-wider">En pause</span>
     </div>
   </div>
-
   <!-- Séparateur -->
-  <div class="h-px bg-gradient-to-r from-transparent via-gray-600 to-transparent my-6"></div>
-
+  <div class="brutal-divider"></div>
   <!-- Horloge actuelle -->
   <div class="text-center mb-8">
-    <div class="font-mono text-2xl lg:text-[2.5rem] font-bold text-red-500 drop-shadow-[0_0_100px_rgba(255,0,0,0.5)] tracking-[0.1em] leading-none">
+    <div class="brutal-value brutal-error">
       {{ currentTime }}
     </div>
-    <div class="text-gray-500 text-sm mt-2 uppercase tracking-[0.15em]">
-      Heure actuelle
-    </div>
+    <div class="brutal-text mt-2">Heure actuelle</div>
   </div>
 </div>
 </template>

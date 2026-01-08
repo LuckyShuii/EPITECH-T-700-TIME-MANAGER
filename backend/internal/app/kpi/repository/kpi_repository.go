@@ -10,6 +10,7 @@ type KPIRepository interface {
 	GetWeeklyRatesByUserIDAndDateRange(userID int, startDate string, endDate string) (int, error)
 	GetUserAverageBreakTime(userID int, startDate, endDate string) (float64, error)
 	GetUserPresenceRate(userID int, startDate, endDate string) (float64, float64, float64, error)
+	GetUserAverageTimePerShift(userID int, startDate, endDate string) (float64, int, int, error)
 }
 
 type kpiRepository struct {
@@ -123,4 +124,42 @@ func (repo *kpiRepository) GetUserAverageBreakTime(userID int, startDate, endDat
 	days := 5
 
 	return totalBreakMinutes / float64(days), nil
+}
+
+func (repo *kpiRepository) GetUserAverageTimePerShift(userID int, startDate, endDate string) (float64, int, int, error) {
+	var result struct {
+		TotalMinutes int `gorm:"column:total_minutes"`
+		TotalShifts  int `gorm:"column:total_shifts"`
+	}
+
+	err := repo.db.Raw(`
+		SELECT 
+			COALESCE(SUM(duration_minutes), 0) AS total_minutes,
+			COUNT(*) AS total_shifts
+		FROM (
+			SELECT duration_minutes, clock_in
+			FROM work_session_active
+			WHERE user_id = ? AND clock_in BETWEEN ? AND ?
+
+			UNION ALL
+
+			SELECT duration_minutes, clock_in
+			FROM work_session_archived
+			WHERE user_id = ? AND clock_in BETWEEN ? AND ?
+		) AS all_sessions;
+	`, userID, startDate, endDate, userID, startDate, endDate).Scan(&result).Error
+
+	if err != nil {
+		return 0, 0, 0, err
+	}
+
+	var averageTimePerShift float64
+	if result.TotalShifts > 0 {
+		averageTimePerShift = float64(result.TotalMinutes) / float64(result.TotalShifts)
+	}
+
+	// Round to 2 decimal places
+	averageTimePerShift = math.Round(averageTimePerShift*100) / 100
+
+	return averageTimePerShift, result.TotalShifts, result.TotalMinutes, nil
 }

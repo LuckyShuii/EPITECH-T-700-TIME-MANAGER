@@ -6,7 +6,6 @@ import (
 	UserService "app/internal/app/user/service"
 	WeeklyRateService "app/internal/app/weekly-rate/service"
 	"fmt"
-	"log"
 	"os"
 
 	"app/internal/app/kpi/model"
@@ -21,6 +20,7 @@ type KPIService interface {
 	GetPresenceRate(startDate string, endDate string, userUUID string) (model.KPIPresenceRateResponse, error)
 	ExportKPIData(startDate string, endDate string, requestedByUUID string, kpiType string, uuidToSearch string) (model.KPIExportResponse, error)
 	GetAverageBreakTime(startDate string, endDate string, userUUID string) (model.KPIAverageBreakTimeResponse, error)
+	GetAverageTimePerShift(startDate string, endDate string, userUUID string) (model.KPIAverageTimePerShiftResponse, error)
 }
 
 type kpiService struct {
@@ -189,7 +189,6 @@ func (service *kpiService) ExportKPIData(startDate string, endDate string, reque
 		}
 
 	case "weekly_average_break_time":
-		log.Println("Exporting weekly average break time")
 		data, err := service.GetAverageBreakTime(startDate, endDate, uuidToSearch)
 		if err != nil {
 			return model.KPIExportResponse{}, err
@@ -204,6 +203,26 @@ func (service *kpiService) ExportKPIData(startDate string, endDate string, reque
 				startDate,
 				endDate,
 				fmt.Sprintf("%.2f", data.AverageBreakTime),
+			},
+		}
+
+	case "average_time_per_shift":
+		data, err := service.GetAverageTimePerShift(startDate, endDate, uuidToSearch)
+		if err != nil {
+			return model.KPIExportResponse{}, err
+		}
+
+		headers = []string{"user uuid", "firstname", "lastname", "start date", "end date", "average time per shift (minutes)", "total shifts", "total time (minutes)"}
+		rows = [][]string{
+			{
+				data.UserUUID,
+				data.FirstName,
+				data.LastName,
+				startDate,
+				endDate,
+				fmt.Sprintf("%.2f", data.AverageTimePerShift),
+				fmt.Sprint(data.TotalShifts),
+				fmt.Sprint(data.TotalTime),
 			},
 		}
 
@@ -261,5 +280,33 @@ func (service *kpiService) GetAverageBreakTime(startDate string, endDate string,
 		AverageBreakTime: averageBreakTime,
 		StartDate:        startDate,
 		EndDate:          endDate,
+	}, nil
+}
+
+func (service *kpiService) GetAverageTimePerShift(startDate string, endDate string, userUUID string) (model.KPIAverageTimePerShiftResponse, error) {
+	userID, err := service.UserService.GetIdByUuid(userUUID)
+	if err != nil {
+		return model.KPIAverageTimePerShiftResponse{}, err
+	}
+
+	averageTimePerShift, totalShifts, totalTime, err := service.KPIRepository.GetUserAverageTimePerShift(userID, startDate, endDate)
+	if err != nil {
+		return model.KPIAverageTimePerShiftResponse{}, err
+	}
+
+	data, err := service.UserService.GetUserByUUID(userUUID)
+	if err != nil {
+		return model.KPIAverageTimePerShiftResponse{}, err
+	}
+
+	return model.KPIAverageTimePerShiftResponse{
+		FirstName:           data.FirstName,
+		LastName:            data.LastName,
+		UserUUID:            userUUID,
+		AverageTimePerShift: averageTimePerShift,
+		TotalShifts:         totalShifts,
+		TotalTime:           totalTime,
+		StartDate:           startDate,
+		EndDate:             endDate,
 	}, nil
 }
