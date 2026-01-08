@@ -2,7 +2,7 @@
 
 -- This fixture file is launched automatically in dev mode to populate the database
 -- with sample data for easier testing.
--- every password for each users here is 'lboillot'
+-- Password for each user is set via the FIXTURES_PASSWORD environment variable (default: ${FIXTURES_PASSWORD} in ./backend/.env).
 
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
@@ -58,7 +58,7 @@ data AS (
     'a0000000-0000-0000-0000-000000000001'::varchar AS uuid,
     'employee1'::varchar AS username,
     'employee1@timemanager.local'::varchar AS email,
-    '$2a$10$0OpjORV/S0JSyM71GKAcyufumggyocR52rBmM5QgTrUc0EwEGIVKK'::varchar AS password_hash,
+    crypt('${FIXTURES_PASSWORD}', gen_salt('bf'))::varchar AS password_hash,
     'Alice'::varchar AS first_name,
     'Martin'::varchar AS last_name,
     '0600000001'::varchar AS phone_number,
@@ -69,55 +69,55 @@ data AS (
 
   UNION ALL SELECT
     'a0000000-0000-0000-0000-000000000002','employee2','employee2@timemanager.local',
-    '$2a$10$0OpjORV/S0JSyM71GKAcyufumggyocR52rBmM5QgTrUc0EwEGIVKK',
+    crypt('${FIXTURES_PASSWORD}', gen_salt('bf'))::varchar,
     'Bruno','Petit','0600000002',
     ARRAY['employee'],'active',(SELECT full_time_id FROM rates),1
 
   UNION ALL SELECT
     'a0000000-0000-0000-0000-000000000003','employee3','employee3@timemanager.local',
-    '$2a$10$0OpjORV/S0JSyM71GKAcyufumggyocR52rBmM5QgTrUc0EwEGIVKK',
+    crypt('${FIXTURES_PASSWORD}', gen_salt('bf'))::varchar,
     'Chloé','Durand','0600000003',
     ARRAY['employee'],'pending',(SELECT part_time_id FROM rates),1
 
   UNION ALL SELECT
     'a0000000-0000-0000-0000-000000000004','employee4','employee4@timemanager.local',
-    '$2a$10$0OpjORV/S0JSyM71GKAcyufumggyocR52rBmM5QgTrUc0EwEGIVKK',
+    crypt('${FIXTURES_PASSWORD}', gen_salt('bf'))::varchar,
     'David','Moreau','0600000004',
     ARRAY['employee'],'active',(SELECT full_time_rtt_id FROM rates),1
 
   UNION ALL SELECT
     'b0000000-0000-0000-0000-000000000001','manager1','manager1@timemanager.local',
-    '$2a$10$0OpjORV/S0JSyM71GKAcyufumggyocR52rBmM5QgTrUc0EwEGIVKK',
+    crypt('${FIXTURES_PASSWORD}', gen_salt('bf'))::varchar,
     'Emma','Leroy','0600000011',
     ARRAY['employee','manager'],'active',(SELECT full_time_id FROM rates),1
 
   UNION ALL SELECT
     'b0000000-0000-0000-0000-000000000002','manager2','manager2@timemanager.local',
-    '$2a$10$0OpjORV/S0JSyM71GKAcyufumggyocR52rBmM5QgTrUc0EwEGIVKK',
+    crypt('${FIXTURES_PASSWORD}', gen_salt('bf'))::varchar,
     'Félix','Roux','0600000012',
     ARRAY['employee','manager'],'active',(SELECT full_time_rtt_id FROM rates),1
 
   UNION ALL SELECT
     'b0000000-0000-0000-0000-000000000003','manager3','manager3@timemanager.local',
-    '$2a$10$0OpjORV/S0JSyM71GKAcyufumggyocR52rBmM5QgTrUc0EwEGIVKK',
+    crypt('${FIXTURES_PASSWORD}', gen_salt('bf'))::varchar,
     'Gaëlle','Fontaine','0600000013',
     ARRAY['employee','manager'],'disabled',(SELECT full_time_id FROM rates),1
 
   UNION ALL SELECT
     'b0000000-0000-0000-0000-000000000004','manager4','manager4@timemanager.local',
-    '$2a$10$0OpjORV/S0JSyM71GKAcyufumggyocR52rBmM5QgTrUc0EwEGIVKK',
+    crypt('${FIXTURES_PASSWORD}', gen_salt('bf'))::varchar,
     'Hugo','Lambert','0600000014',
     ARRAY['employee','manager'],'active',(SELECT part_time_id FROM rates),1
 
   UNION ALL SELECT
     'c0000000-0000-0000-0000-000000000001','admin1','admin1@timemanager.local',
-    '$2a$10$0OpjORV/S0JSyM71GKAcyufumggyocR52rBmM5QgTrUc0EwEGIVKK',
+    crypt('${FIXTURES_PASSWORD}', gen_salt('bf'))::varchar,
     'Inès','Faure','0600000021',
     ARRAY['employee','admin'],'active',(SELECT full_time_id FROM rates),1
 
   UNION ALL SELECT
     'c0000000-0000-0000-0000-000000000002','admin2','admin2@timemanager.local',
-    '$2a$10$0OpjORV/S0JSyM71GKAcyufumggyocR52rBmM5QgTrUc0EwEGIVKK',
+    crypt('${FIXTURES_PASSWORD}', gen_salt('bf'))::varchar,
     'Jules','Garnier','0600000022',
     ARRAY['employee','admin'],'active',(SELECT full_time_rtt_id FROM rates),1
 )

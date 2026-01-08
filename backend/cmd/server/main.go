@@ -38,7 +38,7 @@ func main() {
 	defer pool.Close()
 
 	fixturesPath := "/app/fixtures.sql"
-	if err := db.SeedIfEmptyUsersDevOnly(ctx, pool, fixturesPath, 1, cfg.ProjectStatus); err != nil {
+	if err := db.SeedIfEmptyUsersDevOnly(ctx, pool, fixturesPath, 1, cfg.ProjectStatus, cfg.FixturesPassword); err != nil {
 		log.Printf("⚠️  Warning: Failed to seed database: %v", err)
 	} else {
 		log.Println("✅ Database seeding completed successfully")
