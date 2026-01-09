@@ -5,6 +5,14 @@ Managers can also monitor their team's productivity through aggregated KPIs and 
 
 This application is built using a modern tech stack, including Vue.js for the frontend, Go with the Gin framework for the backend, and PostgreSQL for data storage. The application is containerized using Docker and orchestrated with Docker Compose for easy deployment and scalability.
 
+## Found it online!
+
+This school project is accessible on: https://wildtransfer.fr/
+You can log in with the following admin credentials:
+
+- username: `admin1` | `manager1` | `employee1`
+- password: `user`
+
 # Technical Stack & Justifications
 
 ## Stack

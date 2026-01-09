@@ -175,7 +175,7 @@ func (handler *KPIHandler) validateDateRange(startDate string, endDate string) e
 	// check if end date is in the future
 	if endDate > now {
 		return fmt.Errorf("end_date cannot be in the future")
-	}	
+	}
 	return nil
 }
 
@@ -256,7 +256,7 @@ func (handler *KPIHandler) ExportKPIData(c *gin.Context) {
 // GetAverageBreakTime handles the HTTP request to get the average break time for a user within a date range.
 //
 // @Summary Get average break time for a user within a date range
-// @Description Retrieves the average break time in minutes for a specified user UUID between the provided start and end dates. These dates must be 5 days! (work days) Not less, not more 🔒 Requires role: **manager, admin**
+// @Description Retrieves the average break time in minutes for a specified user UUID between the provided start and end dates. These dates must be 5 days! (work days) Not less, not more 🔒 Requires role: **all**
 // @Tags KPI
 // @Accept json
 // @Security     BearerAuth
@@ -265,7 +265,7 @@ func (handler *KPIHandler) ExportKPIData(c *gin.Context) {
 // @Param end_date path string true "End Date in ISO 8601 format"
 // @Param user_uuid path string true "User UUID"
 // @Success 200 {object} model.KPIAverageBreakTimeResponse
-// @Router /kpi/average-break-time/{user_uuid}/{start_date}/{end_date} [get]
+// @Router /kpi/weekly-average-break-time/{user_uuid}/{start_date}/{end_date} [get]
 func (handler *KPIHandler) GetAverageBreakTime(c *gin.Context) {
 	startDate := c.Param("start_date")
 	endDate := c.Param("end_date")
