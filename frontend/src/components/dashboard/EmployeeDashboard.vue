@@ -48,8 +48,11 @@ onUnmounted(() => {
 
     <!-- Clock -->
     <template #clock>
-      <ClockWidget :clockInTime="clockInTime" :status="sessionStatus" />
-      <ClockButton />
+      <!-- center horizontally -->
+      <div class="flex justify-center flex-col items-center mb-4 h-full border-2 border-black p-4">
+        <ClockWidget :clockInTime="clockInTime" :status="sessionStatus" />
+        <ClockButton />
+      </div>
     </template>
 
     <!-- Calendar -->

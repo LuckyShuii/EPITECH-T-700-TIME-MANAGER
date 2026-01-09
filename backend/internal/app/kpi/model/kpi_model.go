@@ -11,7 +11,7 @@ type KPIWorkSessionUserWeeklyTotalResponse struct {
 // swagger:model KPIWorkSessionTeamWeeklyTotalResponse
 type KPIWorkSessionTeamWeeklyTotalResponse struct {
 	TotalTime int                                   `json:"total_time"`
-	TeamUUID  string                                `json:"team_uuid"`
+	TeamUUID  string                                `json:"team_uuid" binding:"required,uuid"`
 	TeamName  string                                `json:"team_name"`
 	StartDate string                                `json:"start_date"`
 	EndDate   string                                `json:"end_date"`
