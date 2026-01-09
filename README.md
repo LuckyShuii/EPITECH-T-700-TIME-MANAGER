@@ -28,14 +28,15 @@ Go in the scripts directory to create all the logs files
 cd scripts/
 ```
 
-Execture this script
+Execute this script
 
 ```bash
 ./init_log_files.sh
 ```
 
-Don't forget to create `.env` files in the following services: `frontend`, `backend` and at the root of the project.
-Use the `.env.sample` in each of these directories as model and change the values accordingly to your needs.
+### ⚠️ Don't forget to create `.env` files in the following services: `frontend`, `backend` and at the root of the project.
+
+### Use the `.env.sample` in each of these directories as model and change the values accordingly to your needs.
 
 ## To launch the project in development mode:
 
@@ -67,4 +68,36 @@ docker compose -f dev.docker-compose.yml down
 
 `init_migration.sh`: usage - `./ini_migration [migration name]`: Initialize a migration file with the given name in the CLI. This will init an empty SQL file in the proper directory, to fill yourself so the migration can be made.
 
-`migration.sh`: usage - `./migrate.sh `
+`migration.sh`: usage - `./migrate.sh [up | down | down all | version | force $number]` this file handles the migrations based on the version stored in the db.
+
+- `./migrate.sh up`: runs all the migration from the current version found in the db
+- `./migrate.sh down`: revert the last migration based on the current version in the db
+- `./migration.sh down all`: revert all the migrations ran before
+- `./migration.sh version`: get the current migration version in the db for debug purpose
+- `./migration.sh force 2`: force the migration version in the db to version 2 ⚠️ use with caution ⚠️
+
+## ./logs
+
+This directory holds all the logs from the different containers, to ensure persistence of data even if the containers are destroyed.
+
+## ./backend
+
+### ./backend/data/kpi
+
+This directory holds all the .csv export files for the KPI data exports.
+
+### ./backend/migrations
+
+This directory holds all the migration files for the backend database. Each file is named with a version number and a description of the migration with two files: one for the "up" migration and one for the "down" migration.
+
+### ./backend/fixtures.sql
+
+This file holds all the initial data to populate the database with default values. This is useful for development and testing purposes. This file is executed after the migrations are done when the database is created for the first time in DEV mode.
+
+### ./backend/internal/config/config.go
+
+This file holds all the configuration settings for the backend application. It reads from environment variables and provides a structured way to access these settings throughout the application.
+
+## ./database/init.sql
+
+This file is executed when the PostgreSQL container is created for the first time. It sets up the initial database schema and any required extensions.
