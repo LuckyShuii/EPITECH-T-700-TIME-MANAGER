@@ -85,9 +85,15 @@ func (service *userService) RegisterUser(user model.UserCreate) error {
 	}
 
 	defaultPasswordHash := config.LoadConfig().FixturesPassword
-	user.PasswordHash = &defaultPasswordHash
 
-	err := service.repo.RegisterUser(user)
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(defaultPasswordHash), bcrypt.DefaultCost)
+	if err != nil {
+		return fmt.Errorf("failed to hash default password: %w", err)
+	}
+	hashedPasswordStr := string(hashedPassword)
+	user.PasswordHash = &hashedPasswordStr
+
+	err = service.repo.RegisterUser(user)
 	if err != nil {
 		return err
 	}
