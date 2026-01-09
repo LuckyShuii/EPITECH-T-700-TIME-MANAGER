@@ -3,6 +3,9 @@ package handler
 import (
 	"fmt"
 	"net/http"
+	"os"
+	"path/filepath"
+	"strings"
 	"time"
 
 	AuthService "app/internal/app/auth/service"
@@ -353,4 +356,41 @@ func (handler *KPIHandler) GetAverageTimePerShift(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, kpiResponse)
+}
+
+// DownloadKPIFile handles the HTTP request to download a KPI CSV file.
+//
+// @Summary Download a KPI CSV file
+// @Description Downloads a specific KPI CSV file by filename. 🔒 Requires role: **manager, admin**
+// @Tags KPI
+// @Security     BearerAuth
+// @Produce text/csv
+// @Param filename path string true "Filename of the CSV to download"
+// @Success 200 {file} csv
+// @Router /kpi/files/{filename} [get]
+func (handler *KPIHandler) DownloadKPIFile(c *gin.Context) {
+	filename := c.Param("filename")
+
+	if strings.Contains(filename, "..") || strings.Contains(filename, "/") || strings.Contains(filename, "\\") {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid filename"})
+		return
+	}
+
+	if !strings.HasSuffix(strings.ToLower(filename), ".csv") {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Only CSV files are allowed"})
+		return
+	}
+
+	filePath := filepath.Join("/app/data/kpi", filename)
+
+	if _, err := os.Stat(filePath); os.IsNotExist(err) {
+		c.JSON(http.StatusNotFound, gin.H{"error": "File not found"})
+		return
+	}
+
+	c.Header("Content-Type", "text/csv")
+	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", filename))
+	c.Header("Content-Transfer-Encoding", "binary")
+
+	c.File(filePath)
 }
