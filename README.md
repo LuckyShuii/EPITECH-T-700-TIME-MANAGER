@@ -1,3 +1,10 @@
+# Project Overview [Time Manager]
+
+This project is a time management, HR application designed to help users track and analyze their work sessions. It provides features such as starting and stopping work sessions, viewing active sessions, and generating key performance indicators (KPIs) based on the recorded data.
+Managers can also monitor their team's productivity through aggregated KPIs and Admins have the ability to manage users and view overall system statistics.
+
+This application is built using a modern tech stack, including Vue.js for the frontend, Go with the Gin framework for the backend, and PostgreSQL for data storage. The application is containerized using Docker and orchestrated with Docker Compose for easy deployment and scalability.
+
 # Technical Stack & Justifications
 
 ## Stack
@@ -34,9 +41,8 @@ Execute this script
 ./init_log_files.sh
 ```
 
-### ⚠️ Don't forget to create `.env` files in the following services: `frontend`, `backend` and at the root of the project.
-
-### Use the `.env.sample` in each of these directories as model and change the values accordingly to your needs.
+⚠️ Don't forget to create `.env` files in the following services: `frontend`, `backend` and at the root of the project.
+⚠️ Use the `.env.sample` in each of these directories as model and change the values accordingly to your needs.
 
 ## To launch the project in development mode:
 
@@ -98,6 +104,6 @@ This file holds all the initial data to populate the database with default value
 
 This file holds all the configuration settings for the backend application. It reads from environment variables and provides a structured way to access these settings throughout the application.
 
-## ./database/init.sql
+### ./database/init.sql
 
 This file is executed when the PostgreSQL container is created for the first time. It sets up the initial database schema and any required extensions.
