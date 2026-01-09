@@ -147,7 +147,7 @@ func SetupRouter() *gin.Engine {
 		protected.GET("/kpi/average-time-per-shift/:user_uuid/:start_date/:end_date", authMiddleware.RequireRoles("manager, admin"), kpiHandler.GetAverageTimePerShift)
 
 		protected.POST("/kpi/export", authMiddleware.RequireRoles("manager, admin"), kpiHandler.ExportKPIData)
-		protected.Static("/kpi/files", "/app/data/kpi")
+		protected.GET("/kpi/files/:filename", authMiddleware.RequireRoles("all"), kpiHandler.DownloadKPIFile)
 	}
 
 	return r
