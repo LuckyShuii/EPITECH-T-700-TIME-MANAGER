@@ -52,6 +52,20 @@ Don't forget to copy the `.env.sample` file into a `.env` file and change the va
 docker compose -f dev.docker-compose.yml up --build
 ```
 
+⚠️ 🛑 You will not be able to create a new user unless you get a proper BREVO API KEY into the ./backend/.env
+
+✅ If you started the application in DEV mode, you can access the application at: `http://localhost:8081`
+With the following default admin credentials:
+
+- username: `admin1`
+- password: `user` (if you changed the `FIXTURES_PASSWORD` variable in the `./backend/.env`, use that one instead)
+
+✅ If you started the application in PROD mode, you can access the application at: `http://localhost:8081`
+With the following default admin credentials:
+
+- username: `root` (ROOT_USERNAME in the ./backend/.env)
+- password: `changeme` (ROOT_PASSWORD in the ./backend/.env)
+
 ## To stop the containers
 
 ```bash
