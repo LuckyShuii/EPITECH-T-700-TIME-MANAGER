@@ -12,9 +12,6 @@ const authStore = useAuthStore()
 const notificationsStore = useNotificationsStore()
 const route = useRoute()
 
-const toggleTheme = () => {
-  theme.value = theme.value === 'dark' ? 'light' : 'dark'
-}
 
 onMounted(() => {
   authStore.fetchUserProfile()
@@ -24,7 +21,6 @@ onMounted(() => {
 <template>
   <main>
     <div :data-theme="theme" class="min-h-screen">
-      <TopNavBar v-if="!route.meta.hideTopBar" :currentTheme="theme" @toggle-theme="toggleTheme" />
       <RouterView />
       
       <!-- Conteneur des notifications -->

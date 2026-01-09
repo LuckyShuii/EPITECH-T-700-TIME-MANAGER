@@ -3,7 +3,7 @@ import APIHandler from '../APIHandler'
 export default {
   // Pause moyenne individuelle (average break time)
   getAverageBreakTime: (userUuid: string, startDate: string, endDate: string) =>
-    APIHandler.get(`/kpi/average-break-time/${userUuid}/${startDate}/${endDate}`),
+    APIHandler.get(`/kpi/weekly-average-break-time/${userUuid}/${startDate}/${endDate}`),
 
   // Moyenne par shift
   getAverageTimePerShift: (userUuid: string, startDate: string, endDate: string) =>

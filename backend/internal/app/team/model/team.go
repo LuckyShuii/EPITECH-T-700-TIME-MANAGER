@@ -61,7 +61,7 @@ type TeamReadAll struct {
 
 // swagger:model NewTeamMember
 type NewTeamMember struct {
-	UserUUID  string `json:"user_uuid" binding:"required,uuid4"`
+	UserUUID  string `json:"user_uuid" binding:"required,uuid"`
 	IsManager bool   `json:"is_manager"`
 }
 
@@ -78,7 +78,7 @@ type TeamMemberCreate struct {
 }
 
 type TeamAddUsers struct {
-	TeamUUID    string          `json:"team_uuid" binding:"required,uuid4"`
+	TeamUUID    string          `json:"team_uuid" binding:"required,uuid"`
 	MemberUUIDs []NewTeamMember `json:"member_uuids" binding:"required,dive,required"`
 }
 
