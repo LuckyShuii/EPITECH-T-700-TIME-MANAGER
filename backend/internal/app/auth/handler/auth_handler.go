@@ -74,6 +74,8 @@ func (handler *AuthHandler) LoginHandler(c *gin.Context) {
 	}
 	expiration := jwtExpirationHours * 3600
 
+	c.SetSameSite(http.SameSiteStrictMode)
+
 	c.SetCookie(
 		"token",
 		token,
