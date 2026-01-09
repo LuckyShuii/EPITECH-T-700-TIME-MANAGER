@@ -21,11 +21,10 @@ const { currentTeam, weekDisplayLabel, presenceRate } = storeToRefs(kpiStore)
 
 onMounted(async () => {
   editModeStore.setCurrentDashboard('admin')
-  
   try {
     await kpiStore.fetchManagerTeams()
     await kpiStore.fetchWorkingTimeTeam()
-    await kpiStore.fetchPresenceRate()
+    await kpiStore.fetchPresenceRate()  // ← Décommente ça !
   } catch (error) {
     console.error('Erreur lors du chargement des KPI:', error)
   }
