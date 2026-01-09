@@ -44,7 +44,7 @@ Execute this script
 ⚠️ Don't forget to create `.env` files in the following services: `frontend`, `backend` and at the root of the project.
 ⚠️ Use the `.env.sample` in each of these directories as model and change the values accordingly to your needs.
 
-## To launch the project in development mode:
+## To launch the project in development mode (fully working):
 
 Don't forget to copy the `.env.sample` file into a `.env` file and change the values. Then you can use the following command to startup & build the project.
 
@@ -53,6 +53,16 @@ docker compose -f dev.docker-compose.yml up --build
 ```
 
 ⚠️ 🛑 You will not be able to create a new user unless you get a proper BREVO API KEY into the ./backend/.env
+
+## To launch the project in production mode (almost fully working):
+
+```bash
+docker compose -f prod.docker-compose.yml up --build
+```
+
+⚠️ Make sure you change the PROJECT_STATUS in the ./backend/.env to "PROD" and the VITE_PROJECT_STATUS in ./frontend/.env to "PROD"
+
+---
 
 ✅ If you started the application in DEV mode, you can access the application at: `http://localhost:8081`
 With the following default admin credentials:
@@ -75,6 +85,11 @@ docker compose -f dev.docker-compose.yml down
 > For more commands about usual usage of Docker CLI: https://docs.docker.com/get-started/docker_cheatsheet.pdf
 
 # Project Architecture
+
+## Tests end-to-end
+
+The structure is work in progress through `e2e.docker-compose.yml` file and `./e2e` directory.
+It does not work fully yet, but the idea is to have a separate environment to run the e2e tests with Playwright, using a separate database and backend instance.
 
 ## ./scripts
 

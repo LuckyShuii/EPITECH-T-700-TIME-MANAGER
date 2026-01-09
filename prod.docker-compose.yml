@@ -14,7 +14,6 @@ services:
       context: ./frontend
       dockerfile: Dockerfile.prod
     volumes:
-      - ./logs/frontend:/var/log/nginx
       - frontend_dist:/usr/share/nginx/html:ro
 
   database:
@@ -26,7 +25,6 @@ services:
     volumes:
       - db_data:/var/lib/postgresql/data
       - ./database:/docker-entrypoint-initdb.d
-      - ./logs/database:/var/log/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s
@@ -41,7 +39,6 @@ services:
     volumes:
       - ./nginx.prod.conf:/etc/nginx/nginx.conf:ro
       - frontend_dist:/usr/share/nginx/html:ro
-      - ./logs/apigateway:/var/log/nginx
     ports:
       - "8081:80"
     depends_on:
