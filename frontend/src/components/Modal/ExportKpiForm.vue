@@ -68,21 +68,27 @@ const handleExport = async () => {
   isLoading.value = true
   try {
     const response = await API.exportAPI.exportKpiData(formData.value)
-
-try {
-  const fileResponse = await fetch(response.url)
-  const blob = await fileResponse.blob()
-  
-  const link = document.createElement('a')
-  link.href = URL.createObjectURL(blob)
-  link.download = response.file
-  link.click()
-  
-  URL.revokeObjectURL(link.href)
-} catch (error) {
-  console.error('Erreur téléchargement:', error)
-}
-
+    
+    const fileUrl = response.data.url.startsWith('http') 
+      ? response.data.url 
+      : `${window.location.origin}${response.data.url}`
+    
+    const fetchResponse = await fetch(fileUrl)
+    
+    if (!fetchResponse.ok) {
+      throw new Error(`Erreur HTTP ${fetchResponse.status}`)
+    }
+    
+    const blob = await fetchResponse.blob()
+    
+    const link = document.createElement('a')
+    link.href = URL.createObjectURL(blob)
+    link.download = response.data.file
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(link.href)
+    
     notificationsStore.addNotification({
       status: 'success',
       title: 'Export réussi',
@@ -98,9 +104,8 @@ try {
   } finally {
     isLoading.value = false
   }
-
-
 }
+
 </script>
 
 <template>
