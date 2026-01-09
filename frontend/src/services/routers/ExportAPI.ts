@@ -4,7 +4,7 @@ const resource = 'kpi';
 
 export interface KpiExportRequest {
   end_date: string;
-  kpi_type: string;
+  KPIType: string;
   start_date: string;
   uuid_to_search: string;
 }

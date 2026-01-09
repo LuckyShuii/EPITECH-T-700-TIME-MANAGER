@@ -15,7 +15,7 @@ const teams = ref<any[]>([])
 const formData = ref<KpiExportRequest>({
   start_date: '',
   end_date: '',
-  kpi_type: 'work_session_user_weekly_total',
+  KPIType: 'work_session_user_weekly_total',
   uuid_to_search: ''
 })
 
@@ -28,7 +28,7 @@ const kpiOptions = [
 ]
 
 const needsTeam = computed(() => {
-  return formData.value.kpi_type === 'work_session_team_weekly_total'
+  return formData.value.KPIType === 'work_session_team_weekly_total'
 })
 
 const loadData = async () => {
@@ -118,7 +118,7 @@ const handleExport = async () => {
         <label class="label pt-0">
           <span class="label-text font-bold uppercase text-xs tracking-widest">Type de KPI</span>
         </label>
-        <select v-model="formData.kpi_type" class="select select-bordered w-full border-2 border-black rounded-none !bg-white !text-black hover:bg-gray-100">
+        <select v-model="formData.KPIType" class="select select-bordered w-full border-2 border-black rounded-none !bg-white !text-black hover:bg-gray-100">
           <option v-for="kpi in kpiOptions" :key="kpi.value" :value="kpi.value">
             {{ kpi.label }}
           </option>
