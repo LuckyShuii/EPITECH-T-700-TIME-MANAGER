@@ -9,7 +9,7 @@ const router = useRouter()
 const route = useRoute()
 const notificationsStore = useNotificationsStore()
 
-const userUuid = ref<string>('')
+const token = ref<string>('')
 const formData = ref({
   password: '',
   passwordConfirm: ''
@@ -31,9 +31,9 @@ const isPasswordValid = computed(() => {
 })
 
 onMounted(() => {
-  // Extraire l'UUID de l'URL
-  const publicKey = route.query.user_public_key as string
-  if (!publicKey) {
+  // Extraire le token de l'URL
+  const urlToken = route.query.token as string
+  if (!urlToken) {
     notificationsStore.addNotification({
       status: 'error',
       title: 'Lien invalide',
@@ -45,7 +45,7 @@ onMounted(() => {
     }, 2000)
     return
   }
-  userUuid.value = publicKey
+  token.value = urlToken
 })
 
 const handleSubmit = async () => {
@@ -65,8 +65,8 @@ const handleSubmit = async () => {
 
   try {
     const payload: PasswordChangePayload = {
-      new_password: formData.value.password,
-      user_uuid: userUuid.value
+      token: token.value,
+      new_password: formData.value.password
     }
     await API.userAPI.changePassword(payload)
     

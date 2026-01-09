@@ -4,6 +4,7 @@ import UserProfileview from '@/views/UserProfileview.vue';
 import LoginView from '@/views/LoginView.vue';
 import NotFoundView from '@/views/NotFoundView.vue';
 import DashBoardView from '@/views/DashboardView.vue'
+import ActivateAccountView from '@/views/ActivateAccountView.vue'
 
 import { useAuthStore } from '@/store/AuthStore';
 
@@ -22,6 +23,12 @@ const router = createRouter({
       path: '/login',
       name: 'login',
       component: LoginView,
+      meta: { hideTopBar: true }
+    },
+    {
+      path: '/reset-password',
+      name: 'reset-password',
+      component: ActivateAccountView,
       meta: { hideTopBar: true }
     },
     {
@@ -45,7 +52,7 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   const authStore = useAuthStore()
   // Pages publiques (accessibles sans auth)
-  const publicPages = ['/', '/login']
+  const publicPages = ['/', '/login,/reset-password']
   const isPublicRoute = publicPages.includes(to.path) || to.name === 'not-found'
   const authRequired = !isPublicRoute
   if (authRequired && !authStore.isAuthenticated) {

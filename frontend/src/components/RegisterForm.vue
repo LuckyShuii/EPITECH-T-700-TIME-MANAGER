@@ -17,8 +17,7 @@ const formData = ref<RegisterFormData>({
     email: '',
     username: '',
     phone_number: '',
-    roles: [],
-    password: ''
+    roles: []
 })
 
 const errors = ref<RegisterFormErrors>({})
@@ -83,12 +82,6 @@ const validateForm = (): boolean => {
         errors.value.roles = 'Sélectionnez au moins un rôle'
         isValid = false
     }
-
-    if (!formData.value.password) {
-        errors.value.password = 'Le mot de passe est requis'
-        isValid = false
-    }
-
     return isValid
 }
 
@@ -144,8 +137,7 @@ const resetForm = () => {
         email: '',
         username: '',
         phone_number: '',
-        roles: [],
-        password: ''
+        roles: []
     }
     errors.value = {}
 }
@@ -267,22 +259,6 @@ const handleCancel = () => {
                 </label>
             </div>
         </div>
-
-        <!-- Mot de passe -->
-        <div class="grid grid-cols-[150px_1fr] gap-2 items-start">
-            <label class="label pt-3">
-                <span class="label-text font-bold uppercase text-xs">Mot de passe</span>
-            </label>
-            <div>
-                <input v-model="formData.password" type="password" placeholder="••••••••"
-                    class="input input-bordered w-full border-2 border-black rounded-none !bg-white !text-black hover:bg-gray-100" 
-                    :class="{ 'border-red-700': errors.password }" />
-                <label v-if="errors.password" class="label">
-                    <span class="label-text-alt text-red-700 font-bold text-xs">{{ errors.password }}</span>
-                </label>
-            </div>
-        </div>
-
         <!-- Boutons -->
         <div class="flex gap-2 justify-end pt-4">
             <button type="button" class="brutal-btn" @click="handleCancel" :disabled="isSubmitting">

@@ -8,8 +8,8 @@ export interface PasswordResetResponse {
 }
 
 export interface PasswordChangePayload {
+  token: string
   new_password: string
-  user_uuid: string
 }
 
 export interface PasswordChangeResponse {
