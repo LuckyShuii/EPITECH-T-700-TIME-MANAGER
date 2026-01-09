@@ -145,7 +145,6 @@ func (handler *KPIHandler) validateDateRange(startDate string, endDate string) e
 	end, _ := time.Parse(time.RFC3339, endDate)
 	now := time.Now().Format(time.RFC3339Nano)
 	twoYearsAgo := time.Now().AddDate(-2, 0, 0).Format(time.RFC3339Nano)
-	threeDaysBeforeFromNow := time.Now().AddDate(0, 0, -3).Format(time.RFC3339Nano)
 
 	// check if start date is before end date
 	if start.After(end) {
