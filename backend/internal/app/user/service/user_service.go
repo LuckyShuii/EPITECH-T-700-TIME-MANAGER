@@ -14,6 +14,8 @@ import (
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 
+	MailTemplate "app/internal/app/mailer/template"
+
 	MailModel "app/internal/app/mailer/model"
 	MailerService "app/internal/app/mailer/service"
 
@@ -112,8 +114,16 @@ func (service *userService) RegisterUser(user model.UserCreate) error {
 	}
 
 	subject := "Hi " + user.FirstName + "! Welcome to TimeManager 🙂"
-	body := "Hello " + user.FirstName + ",\n\nWelcome on board! To activate your account, please set your password using the following link:\n\n" +
-		Config.LoadConfig().FrontendURL + "/activate-account?token=" + activationToken + "\n\nWe're excited to have you on board!\n\nBest regards,\nThe TimeManager Team"
+
+	body := MailTemplate.BaseMailTemplate(
+		"Welcome to TimeManager",
+		fmt.Sprintf(
+			"Hello %s,<br><br>Welcome on board! To activate your account, please set your password by clicking the button below.",
+			user.FirstName,
+		),
+		"Activate my account",
+		Config.LoadConfig().FrontendURL+"/activate-account?token="+activationToken,
+	)
 
 	err = service.MailerService.Send(MailModel.Mail{
 		To:      user.Email,
@@ -206,7 +216,17 @@ func (service *userService) ChangeUserPassword(token string, newPassword string)
 	}
 
 	subject := "Hi " + user.FirstName + "! Your password has been changed 👍🏻"
-	body := "Hello " + user.FirstName + ",\n\nThis is a confirmation that the password for your account " + user.Email + " has just been changed.\n\nIf you did not make this change, please contact our support team immediately."
+
+	body := MailTemplate.BaseMailTemplate(
+		"Password Changed Successfully",
+		fmt.Sprintf(
+			"Hello %s,<br><br>This is a confirmation that the password for your account %s has just been changed.<br><br>If you did not make this change, please contact our support team immediately.",
+			user.FirstName,
+			user.Email,
+		),
+		"",
+		"",
+	)
 
 	err = service.MailerService.Send(MailModel.Mail{
 		To:      user.Email,
@@ -243,7 +263,13 @@ func (service *userService) ResetPassword(userEmail string, userUUID string) err
 	link := Config.LoadConfig().FrontendURL + "/reset-password?token=" + resetToken
 
 	subject := "Hi! Reset your TimeManager password 🔐"
-	body := "Hello,\n\nPlease reset your password by clicking the following link:\n" + link + "\n\nBest regards,\nThe TimeManager Team"
+
+	body := MailTemplate.BaseMailTemplate(
+		"Reset Your Password",
+		"Hello,<br><br>We received a request to reset the password for your account associated with this email address.<br><br>To reset your password please click the button below.",
+		"Reset my password",
+		link,
+	)
 
 	err = service.MailerService.Send(MailModel.Mail{
 		To:      userEmail,
