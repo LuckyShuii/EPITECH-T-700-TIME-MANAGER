@@ -15,20 +15,20 @@ const teams = ref<any[]>([])
 const formData = ref<KpiExportRequest>({
   start_date: '',
   end_date: '',
-  KPIType: 'work_session_user_weekly_total',
+  kpi_type: 'work_session_user_weekly_total',
   uuid_to_search: ''
 })
 
 const kpiOptions = [
   { value: 'work_session_user_weekly_total', label: 'Total heures hebdomadaires par utilisateur' },
-  { value: 'average_break_time', label: 'Temps de pause moyen' },
+  { value: 'weekly_average_break_time', label: 'Temps de pause moyen' },
   { value: 'average_time_per_shift', label: 'Temps moyen par shift' },
   { value: 'presence_rate', label: 'Taux de présence' },
   { value: 'work_session_team_weekly_total', label: 'Total heures hebdomadaires par équipe' }
 ]
 
 const needsTeam = computed(() => {
-  return formData.value.KPIType === 'work_session_team_weekly_total'
+  return formData.value.kpi_type === 'work_session_team_weekly_total'
 })
 
 const loadData = async () => {
@@ -36,7 +36,7 @@ const loadData = async () => {
   try {
     const usersResponse = await API.userAPI.getAll()
     users.value = usersResponse.data || []
-    
+
     const teamsResponse = await API.teamAPI.getAll()
     teams.value = teamsResponse.data || []
   } catch (error) {
@@ -68,9 +68,21 @@ const handleExport = async () => {
   isLoading.value = true
   try {
     const response = await API.exportAPI.exportKpiData(formData.value)
-    
-    window.open(response.url, '_blank')
-    
+
+try {
+  const fileResponse = await fetch(response.url)
+  const blob = await fileResponse.blob()
+  
+  const link = document.createElement('a')
+  link.href = URL.createObjectURL(blob)
+  link.download = response.file
+  link.click()
+  
+  URL.revokeObjectURL(link.href)
+} catch (error) {
+  console.error('Erreur téléchargement:', error)
+}
+
     notificationsStore.addNotification({
       status: 'success',
       title: 'Export réussi',
@@ -86,6 +98,8 @@ const handleExport = async () => {
   } finally {
     isLoading.value = false
   }
+
+
 }
 </script>
 
@@ -103,13 +117,15 @@ const handleExport = async () => {
           <label class="label pt-0">
             <span class="label-text font-bold uppercase text-xs tracking-widest">Date de début</span>
           </label>
-          <input v-model="formData.start_date" type="date" class="input input-bordered w-full border-2 border-black rounded-none !bg-white !text-black hover:bg-gray-100" />
+          <input v-model="formData.start_date" type="date"
+            class="input input-bordered w-full border-2 border-black rounded-none !bg-white !text-black hover:bg-gray-100" />
         </div>
         <div>
           <label class="label pt-0">
             <span class="label-text font-bold uppercase text-xs tracking-widest">Date de fin</span>
           </label>
-          <input v-model="formData.end_date" type="date" class="input input-bordered w-full border-2 border-black rounded-none !bg-white !text-black hover:bg-gray-100" />
+          <input v-model="formData.end_date" type="date"
+            class="input input-bordered w-full border-2 border-black rounded-none !bg-white !text-black hover:bg-gray-100" />
         </div>
       </div>
 
@@ -118,7 +134,8 @@ const handleExport = async () => {
         <label class="label pt-0">
           <span class="label-text font-bold uppercase text-xs tracking-widest">Type de KPI</span>
         </label>
-        <select v-model="formData.KPIType" class="select select-bordered w-full border-2 border-black rounded-none !bg-white !text-black hover:bg-gray-100">
+        <select v-model="formData.kpi_type"
+          class="select select-bordered w-full border-2 border-black rounded-none !bg-white !text-black hover:bg-gray-100">
           <option v-for="kpi in kpiOptions" :key="kpi.value" :value="kpi.value">
             {{ kpi.label }}
           </option>
@@ -130,7 +147,8 @@ const handleExport = async () => {
         <label class="label pt-0">
           <span class="label-text font-bold uppercase text-xs tracking-widest">Sélectionner un utilisateur</span>
         </label>
-        <select v-model="formData.uuid_to_search" class="select select-bordered w-full border-2 border-black rounded-none !bg-white !text-black hover:bg-gray-100">
+        <select v-model="formData.uuid_to_search"
+          class="select select-bordered w-full border-2 border-black rounded-none !bg-white !text-black hover:bg-gray-100">
           <option value="">-- Choisir un utilisateur --</option>
           <option v-for="user in users" :key="user.uuid" :value="user.uuid">
             {{ user.first_name }} {{ user.last_name }} ({{ user.username }})
@@ -143,7 +161,8 @@ const handleExport = async () => {
         <label class="label pt-0">
           <span class="label-text font-bold uppercase text-xs tracking-widest">Sélectionner une équipe</span>
         </label>
-        <select v-model="formData.uuid_to_search" class="select select-bordered w-full border-2 border-black rounded-none !bg-white !text-black hover:bg-gray-100">
+        <select v-model="formData.uuid_to_search"
+          class="select select-bordered w-full border-2 border-black rounded-none !bg-white !text-black hover:bg-gray-100">
           <option value="">-- Choisir une équipe --</option>
           <option v-for="team in teams" :key="team.uuid" :value="team.uuid">
             {{ team.name }}

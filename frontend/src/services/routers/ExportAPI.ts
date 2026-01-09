@@ -4,7 +4,7 @@ const resource = 'kpi';
 
 export interface KpiExportRequest {
   end_date: string;
-  KPIType: string;
+  kpi_type: string;
   start_date: string;
   uuid_to_search: string;
 }
@@ -17,5 +17,5 @@ export interface KpiExportResponse {
 export default {
   exportKpiData(payload: KpiExportRequest): Promise<KpiExportResponse> {
     return APIHandler.post(`${resource}/export`, payload);
-  }
+    }
 };
