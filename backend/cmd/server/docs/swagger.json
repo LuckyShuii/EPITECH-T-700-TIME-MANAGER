@@ -235,6 +235,40 @@
                 }
             }
         },
+        "/kpi/files/{filename}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Downloads a specific KPI CSV file by filename. 🔒 Requires role: **manager, admin**",
+                "produces": [
+                    "text/csv"
+                ],
+                "tags": [
+                    "KPI"
+                ],
+                "summary": "Download a KPI CSV file",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filename of the CSV to download",
+                        "name": "filename",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "file"
+                        }
+                    }
+                }
+            }
+        },
         "/kpi/presence-rate/{user_uuid}/{start_date}/{end_date}": {
             "get": {
                 "security": [
