@@ -11,13 +11,6 @@ services:
       DB_PASSWORD: ${DB_PASSWORD}
       PROJECT_STATUS: ${PROJECT_STATUS}
       JWT_SECRET: ${JWT_SECRET}
-    # volumes:
-    # healthcheck:
-    #   test: 'curl --fail --request POST --header ''content-type: application/json'' --url ''http://localhost:8002/api'' --data ''{"query":"query { __typename }"}'' || exit 1'
-    #   interval: 1s
-    #   timeout: 2s
-    #   retries: 5
-    #   start_period: 2s
     depends_on:
       database:
         condition: service_healthy

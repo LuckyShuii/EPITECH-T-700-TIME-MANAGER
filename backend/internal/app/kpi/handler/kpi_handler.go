@@ -3,6 +3,9 @@ package handler
 import (
 	"fmt"
 	"net/http"
+	"os"
+	"path/filepath"
+	"strings"
 	"time"
 
 	AuthService "app/internal/app/auth/service"
@@ -25,6 +28,7 @@ func (handler *KPIHandler) isValidISO8601(date string) bool {
 	layouts := []string{
 		time.RFC3339,
 		time.RFC3339Nano,
+		"2006-01-02",
 		"2006-01-02 15:04:05",
 		"2006-01-02 15:04:05.999999",
 	}
@@ -144,7 +148,6 @@ func (handler *KPIHandler) validateDateRange(startDate string, endDate string) e
 	end, _ := time.Parse(time.RFC3339, endDate)
 	now := time.Now().Format(time.RFC3339Nano)
 	twoYearsAgo := time.Now().AddDate(-2, 0, 0).Format(time.RFC3339Nano)
-	threeDaysBeforeFromNow := time.Now().AddDate(0, 0, -3).Format(time.RFC3339Nano)
 
 	// check if start date is before end date
 	if start.After(end) {
@@ -172,11 +175,6 @@ func (handler *KPIHandler) validateDateRange(startDate string, endDate string) e
 	// check if end date is in the future
 	if endDate > now {
 		return fmt.Errorf("end_date cannot be in the future")
-	}
-
-	// check if end date is minimum 3 days from today
-	if endDate < threeDaysBeforeFromNow {
-		return fmt.Errorf("end_date cannot be less than 3 days from today")
 	}
 
 	return nil
@@ -358,4 +356,41 @@ func (handler *KPIHandler) GetAverageTimePerShift(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, kpiResponse)
+}
+
+// DownloadKPIFile handles the HTTP request to download a KPI CSV file.
+//
+// @Summary Download a KPI CSV file
+// @Description Downloads a specific KPI CSV file by filename. 🔒 Requires role: **manager, admin**
+// @Tags KPI
+// @Security     BearerAuth
+// @Produce text/csv
+// @Param filename path string true "Filename of the CSV to download"
+// @Success 200 {file} csv
+// @Router /kpi/files/{filename} [get]
+func (handler *KPIHandler) DownloadKPIFile(c *gin.Context) {
+	filename := c.Param("filename")
+
+	if strings.Contains(filename, "..") || strings.Contains(filename, "/") || strings.Contains(filename, "\\") {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid filename"})
+		return
+	}
+
+	if !strings.HasSuffix(strings.ToLower(filename), ".csv") {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Only CSV files are allowed"})
+		return
+	}
+
+	filePath := filepath.Join("/app/data/kpi", filename)
+
+	if _, err := os.Stat(filePath); os.IsNotExist(err) {
+		c.JSON(http.StatusNotFound, gin.H{"error": "File not found"})
+		return
+	}
+
+	c.Header("Content-Type", "text/csv")
+	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", filename))
+	c.Header("Content-Transfer-Encoding", "binary")
+
+	c.File(filePath)
 }

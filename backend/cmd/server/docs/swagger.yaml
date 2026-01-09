@@ -698,6 +698,28 @@ paths:
       summary: Export KPI data within a date range
       tags:
       - KPI
+  /kpi/files/{filename}:
+    get:
+      description: "Downloads a specific KPI CSV file by filename. \U0001F512 Requires
+        role: **manager, admin**"
+      parameters:
+      - description: Filename of the CSV to download
+        in: path
+        name: filename
+        required: true
+        type: string
+      produces:
+      - text/csv
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+      security:
+      - BearerAuth: []
+      summary: Download a KPI CSV file
+      tags:
+      - KPI
   /kpi/presence-rate/{user_uuid}/{start_date}/{end_date}:
     get:
       consumes:
