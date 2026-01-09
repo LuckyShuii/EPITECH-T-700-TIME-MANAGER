@@ -58,7 +58,7 @@ docker compose -f dev.docker-compose.yml up --build
 docker compose -f dev.docker-compose.yml down
 ```
 
-### For more commands about usual usage of Docker CLI: https://docs.docker.com/get-started/docker_cheatsheet.pdf
+> For more commands about usual usage of Docker CLI: https://docs.docker.com/get-started/docker_cheatsheet.pdf
 
 # Project Architecture
 
@@ -107,3 +107,12 @@ This file holds all the configuration settings for the backend application. It r
 ### ./database/init.sql
 
 This file is executed when the PostgreSQL container is created for the first time. It sets up the initial database schema and any required extensions.
+
+# Useful Links
+
+- [Github Project - Backlog](https://github.com/orgs/EpitechMscProPromo2027/projects/158/views/1)
+- [Swagger Documentation](http://localhost:8081/api/swagger/index.html) (when the project is running)
+- [Database MLD](https://app.diagrams.net/#G1BNLfQfv4mWb3HOw3CycKxpYVYmbaP2zb#%7B%22pageId%22%3A%229Q_FTJikAci536onxmBX%22%7D)
+- [Notion Documentaton](https://www.notion.so/284b7b530843801d85d1c78275c809aa?v=284b7b53084381ef994d000cbb8e2988)
+- [Application Architecture](https://miro.com/app/board/uXjVN3RIUgE=/)
+- [SonarCloud Report](https://sonarcloud.io/project/overview?id=LuckyShuii_EPITECH-T-700-TIME-MANAGER)
