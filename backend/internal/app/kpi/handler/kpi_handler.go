@@ -175,11 +175,6 @@ func (handler *KPIHandler) validateDateRange(startDate string, endDate string) e
 		return fmt.Errorf("end_date cannot be in the future")
 	}
 
-	// check if end date is minimum 3 days from today
-	if endDate > threeDaysBeforeFromNow {
-		return fmt.Errorf("end_date cannot be less than 3 days from today")
-	}
-
 	return nil
 }
 
