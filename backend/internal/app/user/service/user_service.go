@@ -118,8 +118,10 @@ func (service *userService) RegisterUser(user model.UserCreate) error {
 	body := MailTemplate.BaseMailTemplate(
 		"Welcome to TimeManager",
 		fmt.Sprintf(
-			"Hello %s,<br><br>Welcome on board! To activate your account, please set your password by clicking the button below.",
+			"Hello %s %s,<br><br>Welcome on board! To activate your account, please set your password by clicking the button below.<br><br>Your username is: <span style=\"font-weight:bold;\">%s</span><br><br>We are excited to have you with us!<br><br>Best regards,<br>The TimeManager Team",
 			user.FirstName,
+			user.LastName,
+			user.Username,
 		),
 		"Activate my account",
 		Config.LoadConfig().FrontendURL+"/activate-account?token="+activationToken,
