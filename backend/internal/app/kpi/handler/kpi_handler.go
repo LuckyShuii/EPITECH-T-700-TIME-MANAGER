@@ -25,6 +25,7 @@ func (handler *KPIHandler) isValidISO8601(date string) bool {
 	layouts := []string{
 		time.RFC3339,
 		time.RFC3339Nano,
+		"2006-01-02",
 		"2006-01-02 15:04:05",
 		"2006-01-02 15:04:05.999999",
 	}
@@ -175,7 +176,7 @@ func (handler *KPIHandler) validateDateRange(startDate string, endDate string) e
 	}
 
 	// check if end date is minimum 3 days from today
-	if endDate < threeDaysBeforeFromNow {
+	if endDate > threeDaysBeforeFromNow {
 		return fmt.Errorf("end_date cannot be less than 3 days from today")
 	}
 
