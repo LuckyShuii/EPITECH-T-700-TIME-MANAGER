@@ -11,11 +11,11 @@ export default {
 
   // Travail hebdomadaire individuel
   getWorkingTimeIndividual: (userUuid: string, startDate: string, endDate: string) =>
-    APIHandler.get(`/kpi/working-time-individual/${userUuid}/${startDate}/${endDate}`),
+    APIHandler.get(`/kpi/work-session-user-weekly-total/${userUuid}/${startDate}/${endDate}`),
 
-  // Travail hebdomadaire équipe
+  // Travail hebdomadaire équipe - CORRIGÉ avec /kpi/
   getWorkingTimeTeam: (teamUuid: string, startDate: string, endDate: string) =>
-    APIHandler.get(`/kpi/working-time-team/${teamUuid}/${startDate}/${endDate}`),
+    APIHandler.get(`/kpi/work-session-team-weekly-total/${teamUuid}/${startDate}/${endDate}`),
 
   // Taux de présence
   getPresenceRate: (userUuid: string, startDate: string, endDate: string) =>

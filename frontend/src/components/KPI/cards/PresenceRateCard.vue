@@ -5,7 +5,7 @@ import { storeToRefs } from 'pinia'
 import type { PresenceRateUser } from '@/types/Kpi'
 
 const kpiStore = useKpiStore()
-const { presenceRate, loading, weekDisplayLabel } = storeToRefs(kpiStore)
+const { presenceRate, loading, weekDisplayLabel,currentTeam } = storeToRefs(kpiStore)
 
 const hasValidData = computed(() => {
   return presenceRate.value && Array.isArray(presenceRate.value) && presenceRate.value.length > 0
@@ -24,6 +24,15 @@ const getPresenceStatusText = (rate: number) => {
   if (rate >= 60) return 'Moyen'
   return 'Faible'
 }
+
+
+const handlePreviousTeam = () => {
+  kpiStore.goToPreviousTeam()
+}
+
+const handleNextTeam = () => {
+  kpiStore.goToNextTeam()
+}
 </script>
 
 <template>
@@ -33,6 +42,28 @@ const getPresenceStatusText = (rate: number) => {
       <h2 class="text-lg font-bold dark:text-gray-950">TAUX DE PRÉSENCE</h2>
       <p class="text-xs opacity-75 mt-1 dark:text-gray-500">{{ weekDisplayLabel }}</p>
     </div>
+
+    <!-- Header avec navigation équipe -->
+<div class="flex items-center justify-between mb-6 pb-4">
+  <button
+    @click="handlePreviousTeam"
+    class="text-2xl font-bold hover:opacity-70 transition dark:text-gray-500"
+    title="Équipe précédente"
+  >
+    &lt;
+  </button>
+  <div class="text-center flex-1">
+    <h2 class="text-lg font-bold dark:text-gray-950">{{ currentTeam?.name || 'Aucune équipe' }}</h2>
+    <p class="text-xs opacity-75 mt-1 dark:text-gray-500">{{ weekDisplayLabel }}</p>
+  </div>
+  <button
+    @click="handleNextTeam"
+    class="text-2xl font-bold hover:opacity-70 transition dark:text-gray-500"
+    title="Équipe suivante"
+  >
+    &gt;
+  </button>
+</div>
 
     <!-- Contenu -->
     <div v-if="loading['presenceRate']" class="flex-1 flex justify-center items-center">

@@ -8,36 +8,51 @@ const goBack = () => router.back()
 </script>
 
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gradient-primary p-8">
-    <div class="text-center bg-white rounded-3xl p-12 shadow-card-hover max-w-2xl">
-      <!-- Illustration -->
-      <div class="mb-8">
-        <span class="text-8xl animate-float inline-block">🔍</span>
-        <h1 class="text-9xl font-black bg-gradient-primary bg-clip-text text-transparent mt-4">
+  <div class="min-h-screen bg-white text-black flex items-center justify-center p-8">
+    <div class="text-center border-4 border-black p-12 max-w-2xl">
+      <!-- Titre 404 -->
+      <div class="mb-12">
+        <h1 class="text-9xl font-black tracking-wider mb-4">
           404
         </h1>
+        <div class="border-2 border-black p-4">
+          <p class="font-black uppercase tracking-widest text-lg">
+            PAGE INTROUVABLE
+          </p>
+        </div>
       </div>
-      
+
       <!-- Message -->
-      <div class="mb-10">
-        <h2 class="text-3xl font-bold text-gray-800 mb-4">Page introuvable</h2>
-        <p class="text-lg text-gray-600 leading-relaxed">
-          Oups ! On dirait que cette page s'est perdue dans l'espace-temps.
-          <br />
+      <div class="mb-12">
+        <p class="text-base font-bold leading-relaxed mb-4">
+          Cette page s'est perdue dans l'espace-temps.
+        </p>
+        <p class="text-sm font-bold">
           Elle est peut-être en pause café... ou elle n'a jamais existé.
         </p>
       </div>
-      
+
       <!-- Actions -->
-      <div class="flex gap-4 justify-center flex-wrap mb-8">
+      <div class="flex gap-4 justify-center flex-wrap">
+        <button 
+          @click="goBack"
+          class="brutal-btn brutal-btn-primary"
+        >
+          Retour
+        </button>
         <button 
           @click="goHome" 
-          class="btn bg-gradient-primary text-white border-none hover:shadow-glow hover:-translate-y-1 transition-all px-8"
+          class="brutal-btn brutal-btn-success"
         >
-          <span class="text-xl">🏠</span>
-          Retour à l'accueil
+          Accueil
         </button>
       </div>
     </div>
   </div>
 </template>
+
+<style scoped>
+button {
+  transition: none;
+}
+</style>

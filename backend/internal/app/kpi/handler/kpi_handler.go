@@ -175,8 +175,7 @@ func (handler *KPIHandler) validateDateRange(startDate string, endDate string) e
 	// check if end date is in the future
 	if endDate > now {
 		return fmt.Errorf("end_date cannot be in the future")
-	}
-
+	}	
 	return nil
 }
 
