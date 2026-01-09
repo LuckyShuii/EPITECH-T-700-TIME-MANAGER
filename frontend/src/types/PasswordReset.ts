@@ -15,3 +15,11 @@ export interface PasswordChangePayload {
 export interface PasswordChangeResponse {
   message: string
 }
+
+export interface ForgotPasswordPayload {
+  user_email: string
+}
+
+export interface ForgotPasswordResponse {
+  message: string
+}

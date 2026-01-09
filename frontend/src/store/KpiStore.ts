@@ -55,9 +55,14 @@ export const useKpiStore = defineStore('kpi', () => {
   })
 
   const currentTeam = computed(() => {
-    if (managerTeams.value.length === 0) return null
-    return managerTeams.value[currentTeamIndex.value] ?? null
-  })
+  if (managerTeams.value.length === 0) return null
+  const team = managerTeams.value[currentTeamIndex.value] ?? null
+  
+  // ✅ AJOUTE CE LOG
+  console.log('🎯 currentTeam computed:', team)
+  
+  return team
+})
 
   const availableKpis = computed(() => {
     const kpis: string[] = []
@@ -189,73 +194,78 @@ export const useKpiStore = defineStore('kpi', () => {
   }
 
   const fetchManagerTeams = async () => {
-    if (!authStore.isManager && !authStore.isAdmin) return
+  if (!authStore.isManager && !authStore.isAdmin) return
 
-    try {
-      const allTeams = await API.teamAPI.getAll()
+  try {
+    const allTeams = await API.teamAPI.getAll()
 
-      if (authStore.isManager) {
-        managerTeams.value = allTeams.data.filter((team: any) =>
-          team.team_members.some(
-            (member: any) => member.user_uuid === authStore.user?.user_uuid && member.is_manager
-          )
+    if (authStore.isManager) {
+      managerTeams.value = allTeams.data.filter((team: any) =>
+        team.team_members.some(
+          (member: any) => member.user_uuid === authStore.user?.user_uuid && member.is_manager
         )
-      } else if (authStore.isAdmin) {
-        managerTeams.value = allTeams.data
-      }
-
-      currentTeamIndex.value = 0
-      
-      // Charge directement les données de la première équipe
-      if (managerTeams.value.length > 0) {
-        await fetchWorkingTimeTeam()
-      }
-    } catch (error) {
-      console.error('Erreur fetch manager teams:', error)
+      )
+    } else if (authStore.isAdmin) {
+      managerTeams.value = allTeams.data
     }
+
+    // ✅ AJOUTE CE LOG POUR DEBUG
+    console.log('🔍 Teams chargées:', managerTeams.value)
+    console.log('🔍 Première team:', managerTeams.value[0])
+
+    currentTeamIndex.value = 0
+    
+  } catch (error) {
+    console.error('Erreur fetch manager teams:', error)
   }
+}
 
   const fetchWorkingTimeTeam = async (force = false) => {
-    if (!canAccessKpi('workingTimeTeam')) return
-    if (!currentTeam.value) return
-    if (!force && isCacheValid('workingTimeTeam')) return
+  if (!canAccessKpi('workingTimeTeam')) return
+  if (!currentTeam.value) return
+  if (!force && isCacheValid('workingTimeTeam')) return
 
-    setLoading('workingTimeTeam', true)
-    try {
-      // Semaine courante
-      const currentWeekResponse = await API.kpiAPI.getWorkingTimeTeam(
-        currentTeam.value.team_uuid,
-        weekStartDate.value,
-        weekEndDate.value
-      )
+  setLoading('workingTimeTeam', true)
+  try {
+    // ✅ Change team_uuid en uuid
+    const teamUuid = currentTeam.value.uuid  // ← ICI
 
-      // Semaine précédente pour comparaison
-      const previousWeekStart = format(subDays(weekDateRange.value.start, 7), 'yyyy-MM-dd')
-      const previousWeekEnd = format(subDays(weekDateRange.value.end, 7), 'yyyy-MM-dd')
+    console.log('🔍 Fetching KPI pour team:', teamUuid)
 
-      const previousWeekResponse = await API.kpiAPI.getWorkingTimeTeam(
-        currentTeam.value.team_uuid,
-        previousWeekStart,
-        previousWeekEnd
-      )
+    // Semaine courante
+    const currentWeekResponse = await API.kpiAPI.getWorkingTimeTeam(
+      teamUuid,  // ← Et ICI
+      weekStartDate.value,
+      weekEndDate.value
+    )
 
-      const currentData = currentWeekResponse.data
-      const previousData = previousWeekResponse.data
+    // Semaine précédente
+    const previousWeekStart = format(subDays(weekDateRange.value.start, 7), 'yyyy-MM-dd')
+    const previousWeekEnd = format(subDays(weekDateRange.value.end, 7), 'yyyy-MM-dd')
 
-      workingTimeTeam.value = {
-        ...currentData,
-        previousTotal: previousData.total_time,
-        difference: currentData.total_time - previousData.total_time
-      } as any
+    const previousWeekResponse = await API.kpiAPI.getWorkingTimeTeam(
+      teamUuid,  // ← Et ICI
+      previousWeekStart,
+      previousWeekEnd
+    )
 
-      lastFetch.value['workingTimeTeam'] = Date.now()
-    } catch (error) {
-      console.error('Erreur fetch working time team:', error)
-      throw error
-    } finally {
-      setLoading('workingTimeTeam', false)
-    }
+    const currentData = currentWeekResponse.data
+    const previousData = previousWeekResponse.data
+
+    workingTimeTeam.value = {
+      ...currentData,
+      previousTotal: previousData.total_time,
+      difference: currentData.total_time - previousData.total_time
+    } as any
+
+    lastFetch.value['workingTimeTeam'] = Date.now()
+  } catch (error) {
+    console.error('Erreur fetch working time team:', error)
+    throw error
+  } finally {
+    setLoading('workingTimeTeam', false)
   }
+}
 
   const fetchPresenceRate = async (force = false) => {
     if (!canAccessKpi('presenceRate')) return

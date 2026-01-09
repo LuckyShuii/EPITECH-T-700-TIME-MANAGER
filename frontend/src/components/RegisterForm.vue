@@ -86,48 +86,37 @@ const validateForm = (): boolean => {
 }
 
 const handleSubmit = async () => {
-  if (!validateForm()) {
-    return
-  }
-
-  isSubmitting.value = true
-  errors.value = {}
-
-  try {
-    // Étape 1 : Créer l'utilisateur
-    await API.userAPI.register(formData.value)
-    
-    // Étape 2 : Envoyer l'email de réinitialisation
-    try {
-      await API.userAPI.sendPasswordResetEmail(formData.value.email)
-      notificationsStore.addNotification({
-        status: 'success',
-        title: 'Employé créé',
-        description: 'Le nouvel employé a été ajouté avec succès et un email de réinitialisation a été envoyé'
-      })
-    } catch (emailError: any) {
-      // L'utilisateur est créé mais l'email n'a pas pu être envoyé
-      notificationsStore.addNotification({
-        status: 'warning',
-        title: 'Employé créé, mais erreur email',
-        description: 'L\'utilisateur a été créé mais l\'email de réinitialisation n\'a pas pu être envoyé'
-      })
+    if (!validateForm()) {
+        return
     }
-    
-    emit('success')
-    resetForm()
-  } catch (error: any) {
-    // L'utilisateur n'a pas pu être créé
-    const errorMessage = error.response?.data?.message || 'Erreur lors de la création'
-    notificationsStore.addNotification({
-      status: 'error',
-      title: 'Erreur de création',
-      description: errorMessage
-    })
-    errors.value.general = errorMessage
-  } finally {
-    isSubmitting.value = false
-  }
+
+    isSubmitting.value = true
+    errors.value = {}
+
+    try {
+        // Étape 1 : Créer l'utilisateur
+        await API.userAPI.register(formData.value)
+
+        notificationsStore.addNotification({
+            status: 'success',
+            title: 'Employé créé',
+            description: 'Le nouvel employé a été ajouté avec succès'
+        })
+
+        emit('success')
+        resetForm()
+    } catch (error: any) {
+        // L'utilisateur n'a pas pu être créé
+        const errorMessage = error.response?.data?.message || 'Erreur lors de la création'
+        notificationsStore.addNotification({
+            status: 'error',
+            title: 'Erreur de création',
+            description: errorMessage
+        })
+        errors.value.general = errorMessage
+    } finally {
+        isSubmitting.value = false
+    }
 }
 
 const resetForm = () => {
@@ -162,8 +151,8 @@ const handleCancel = () => {
                 <span class="label-text font-bold uppercase text-xs">Prénom</span>
             </label>
             <div>
-                <input v-model="formData.first_name" type="text" placeholder="Max" 
-                    class="input input-bordered w-full border-2 border-black rounded-none !bg-white !text-black hover:bg-gray-100" 
+                <input v-model="formData.first_name" type="text" placeholder="Max"
+                    class="input input-bordered w-full border-2 border-black rounded-none !bg-white !text-black hover:bg-gray-100"
                     :class="{ 'border-red-700': errors.first_name }" />
                 <label v-if="errors.first_name" class="label">
                     <span class="label-text-alt text-red-700 font-bold text-xs">{{ errors.first_name }}</span>
@@ -177,7 +166,7 @@ const handleCancel = () => {
                 <span class="label-text font-bold uppercase text-xs">Nom</span>
             </label>
             <div>
-                <input v-model="formData.last_name" type="text" placeholder="Loris" 
+                <input v-model="formData.last_name" type="text" placeholder="Loris"
                     class="input input-bordered w-full border-2 border-black rounded-none !bg-white !text-black hover:bg-gray-100"
                     :class="{ 'border-red-700': errors.last_name }" />
                 <label v-if="errors.last_name" class="label">
@@ -193,7 +182,7 @@ const handleCancel = () => {
             </label>
             <div>
                 <input v-model="formData.email" type="email" placeholder="email@example.com"
-                    class="input input-bordered w-full border-2 border-black rounded-none !bg-white !text-black hover:bg-gray-100" 
+                    class="input input-bordered w-full border-2 border-black rounded-none !bg-white !text-black hover:bg-gray-100"
                     :class="{ 'border-red-700': errors.email }" />
                 <label v-if="errors.email" class="label">
                     <span class="label-text-alt text-red-700 font-bold text-xs">{{ errors.email }}</span>
@@ -207,7 +196,7 @@ const handleCancel = () => {
                 <span class="label-text font-bold uppercase text-xs">Username</span>
             </label>
             <div>
-                <input disabled v-model="formData.username" type="text" 
+                <input disabled v-model="formData.username" type="text"
                     class="input input-bordered w-full border-2 border-black rounded-none opacity-50 !bg-white !text-black"
                     :class="{ 'border-red-700': errors.username }" />
                 <label v-if="errors.username" class="label">
@@ -223,7 +212,7 @@ const handleCancel = () => {
             </label>
             <div>
                 <input v-model="formData.phone_number" type="tel" placeholder="0123456789" maxlength="10"
-                    class="input input-bordered w-full border-2 border-black rounded-none !bg-white !text-black hover:bg-gray-100" 
+                    class="input input-bordered w-full border-2 border-black rounded-none !bg-white !text-black hover:bg-gray-100"
                     :class="{ 'border-red-700': errors.phone_number }" />
                 <label v-if="errors.phone_number" class="label">
                     <span class="label-text-alt text-red-700 font-bold text-xs">{{ errors.phone_number }}</span>
@@ -249,7 +238,7 @@ const handleCancel = () => {
                         <span class="label-text">Manager</span>
                     </label>
                     <label class="label cursor-pointer gap-2">
-                        <input v-model="formData.roles" type="checkbox" value="admin" 
+                        <input v-model="formData.roles" type="checkbox" value="admin"
                             class="checkbox checkbox-primary border-2" />
                         <span class="label-text">Admin</span>
                     </label>

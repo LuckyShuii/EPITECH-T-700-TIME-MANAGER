@@ -1,5 +1,11 @@
 <script setup lang="ts">
 import FormProfile from '@/components/FormProfile.vue'
+
+import { ref } from 'vue'
+import ForgotPasswordModal from '@/components/Modal/ForgotPasswordModal.vue'
+
+const showForgotPasswordModal = ref(false)
+
 </script>
 
 <template>
@@ -30,24 +36,19 @@ import FormProfile from '@/components/FormProfile.vue'
         </div>
 
         <!-- Info Footer -->
-        <div class="border-2 border-black border-t-0 p-6 text-xs font-bold uppercase tracking-widest text-gray-600">
-          Identifiants oubliés ? Contactez votre administrateur.
+        <div class="border-2 border-black border-t-0 p-6 text-xs font-bold uppercase tracking-widest">
+          <button @click="showForgotPasswordModal = true"
+            class="text-red-600 hover:text-red-700 cursor-pointer underline">
+            Mot de passe oublié ?
+          </button>
         </div>
+
+        
+
+        <!-- Modal Mot de passe oublié -->
+        <ForgotPasswordModal v-if="showForgotPasswordModal" @close="showForgotPasswordModal = false" />
       </div>
     </div>
-
-    <!-- Footer -->
-    <footer class="border-t-2 border-black bg-black text-white p-8">
-      <div class="max-w-6xl mx-auto">
-        <div class="flex justify-between items-center">
-          <div>
-            <p class="font-black text-lg uppercase">TML</p>
-            <p class="text-xs text-gray-400 mt-2">TIMETRACKER</p>
-          </div>
-          <p class="text-xs text-gray-400">2025</p>
-        </div>
-      </div>
-    </footer>
   </div>
 </template>
 

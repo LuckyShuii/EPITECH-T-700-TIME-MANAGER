@@ -32,6 +32,12 @@ const router = createRouter({
       meta: { hideTopBar: true }
     },
     {
+      path: '/activate-account',
+      name: 'activate-account',
+      component: ActivateAccountView,
+      meta: { hideTopBar: true }
+    },
+    {
       path: '/profile',
       name: 'profile',
       component: UserProfileview
@@ -52,7 +58,7 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   const authStore = useAuthStore()
   // Pages publiques (accessibles sans auth)
-  const publicPages = ['/', '/login,/reset-password']
+  const publicPages = ['/', '/login','/reset-password','/activate-account']
   const isPublicRoute = publicPages.includes(to.path) || to.name === 'not-found'
   const authRequired = !isPublicRoute
   if (authRequired && !authStore.isAuthenticated) {
