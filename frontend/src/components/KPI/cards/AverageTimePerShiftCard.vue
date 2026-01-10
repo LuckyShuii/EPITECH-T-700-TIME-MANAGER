@@ -9,7 +9,7 @@ const { currentTeam, loading, weekDisplayLabel, averageTimePerShift } = storeToR
 const selectedEmployeeUuid = ref<string>('')
 
 const employees = computed(() => {
-  return currentTeam.value?.members ?? []
+  return currentTeam.value?.team_members ?? []
 })
 
 const hasValidData = computed(() => {
@@ -18,12 +18,12 @@ const hasValidData = computed(() => {
 
 const averageHours = computed(() => {
   if (!hasValidData.value) return 0
-  return Math.floor(averageTimePerShift.value.average_time_per_shift / 60)
+  return Math.floor(averageTimePerShift.value.average_time / 60)
 })
 
 const averageMinutes = computed(() => {
   if (!hasValidData.value) return 0
-  return averageTimePerShift.value.average_time_per_shift % 60
+  return averageTimePerShift.value.average_time % 60
 })
 
 const formattedAverage = computed(() => {
@@ -72,17 +72,16 @@ const handleCurrentWeek = () => {
   kpiStore.changeWeek('current')
 }
 
-onMounted(() => {
+onMounted(async () => {
   if (employees.value.length > 0) {
     selectedEmployeeUuid.value = employees.value[0].user_uuid
-    handleEmployeeSelect()
+    await handleEmployeeSelect()
   }
 })
 </script>
 
 <template>
   <div class="bg-white border-2 border-black p-4 h-full flex flex-col dark:bg-white">
-    <!-- Header avec navigation semaine -->
     <div class="flex items-center justify-between mb-4">
       <button
         @click="handlePreviousWeek"
@@ -113,7 +112,6 @@ onMounted(() => {
       </div>
     </div>
 
-    <!-- Dropdown sélection employé -->
     <div class="mb-4">
       <label class="text-xs font-bold opacity-75 dark:text-gray-950 block mb-2">EMPLOYÉ</label>
       <select
@@ -127,7 +125,6 @@ onMounted(() => {
       </select>
     </div>
 
-    <!-- Contenu -->
     <div v-if="loading['averageTimePerShift']" class="flex-1 flex justify-center items-center">
       <span class="loading loading-spinner loading-lg"></span>
     </div>
@@ -139,30 +136,25 @@ onMounted(() => {
     </div>
 
     <div v-else class="flex-1 flex flex-col justify-between">
-      <!-- Stats principales -->
-      <div class="space-y-3">
-        <!-- Moyenne par shift -->
-        <div class="border-2 border-black p-3">
-          <p class="text-xs opacity-75 mb-2 dark:text-gray-500">MOYENNE PAR SHIFT</p>
-          <p class="text-4xl font-bold font-mono dark:text-gray-950">{{ formattedAverage }}</p>
+      <div class="space-y-2">
+        <div class="border-2 border-black p-2">
+          <p class="text-xs opacity-75 mb-1 dark:text-gray-500">MOYENNE PAR SHIFT</p>
+          <p class="text-3xl font-bold font-mono dark:text-gray-950">{{ formattedAverage }}</p>
         </div>
 
-        <!-- Nombre de shifts -->
-        <div class="border border-black p-3">
+        <div class="border border-black p-2">
           <p class="text-xs opacity-75 mb-1 dark:text-gray-500">Nombre de shifts</p>
-          <p class="text-2xl font-bold font-mono dark:text-gray-950">{{ averageTimePerShift.total_shifts }}</p>
+          <p class="text-xl font-bold font-mono dark:text-gray-950">{{ averageTimePerShift?.shift_count ?? 0 }}</p>
         </div>
 
-        <!-- Total heures -->
-        <div class="border border-black p-3">
-          <p class="text-xs opacity-75 mb-1 dark:text-gray-500">Total heures travaillées</p>
-          <p class="text-2xl font-bold font-mono dark:text-gray-950">{{ formattedTotal }}</p>
+        <div class="border border-black p-2">
+          <p class="text-xs opacity-75 mb-1 dark:text-gray-500">Total heures</p>
+          <p class="text-xl font-bold font-mono dark:text-gray-950">{{ formattedTotal }}</p>
         </div>
       </div>
 
-      <!-- Footer -->
-      <div class="text-xs opacity-60 text-center mt-4 pt-4 dark:text-gray-500">
-        <p>Du {{ averageTimePerShift.start_date }} au {{ averageTimePerShift.end_date }}</p>
+      <div class="text-xs opacity-60 text-center mt-2 pt-2 dark:text-gray-500">
+        <p v-if="averageTimePerShift?.date_range">Du {{ averageTimePerShift.date_range.start_date }} au {{ averageTimePerShift.date_range.end_date }}</p>
       </div>
     </div>
   </div>

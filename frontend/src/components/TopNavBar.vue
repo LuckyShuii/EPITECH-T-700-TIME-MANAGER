@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { RouterLink, useRouter } from 'vue-router';
-import ThemeToggle from './ThemeToggle.vue';
 import CustomizeLayoutButton from '@/components/CustomizeLayoutButton.vue'
 import { useAuthStore } from '@/store/AuthStore';
 import { storeToRefs } from 'pinia';
@@ -49,8 +48,7 @@ const handleLogout = async () => {
         <!-- Customize Layout Button (si on est sur un dashboard) -->
         <CustomizeLayoutButton v-if="editModeStore.currentDashboard" />
 
-        <!-- Theme Toggle -->
-        <ThemeToggle :currentTheme="props.currentTheme" @toggle-theme="emit('toggle-theme')" />
+        
 
         <!-- Avatar Dropdown -->
 <div class="dropdown dropdown-end">
