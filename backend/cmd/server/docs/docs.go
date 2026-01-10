@@ -105,57 +105,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/kpi/average-break-time/{user_uuid}/{start_date}/{end_date}": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Retrieves the average break time in minutes for a specified user UUID between the provided start and end dates. These dates must be 5 days! (work days) Not less, not more 🔒 Requires role: **manager, admin**",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "KPI"
-                ],
-                "summary": "Get average break time for a user within a date range",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Start Date in ISO 8601 format",
-                        "name": "start_date",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "End Date in ISO 8601 format",
-                        "name": "end_date",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "User UUID",
-                        "name": "user_uuid",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/model.KPIAverageBreakTimeResponse"
-                        }
-                    }
-                }
-            }
-        },
         "/kpi/average-time-per-shift/{user_uuid}/{start_date}/{end_date}": {
             "get": {
                 "security": [
@@ -326,6 +275,57 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/model.KPIPresenceRateResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/kpi/weekly-average-break-time/{user_uuid}/{start_date}/{end_date}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieves the average break time in minutes for a specified user UUID between the provided start and end dates. These dates must be 5 days! (work days) Not less, not more 🔒 Requires role: **all**",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "KPI"
+                ],
+                "summary": "Get average break time for a user within a date range",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Start Date in ISO 8601 format",
+                        "name": "start_date",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "End Date in ISO 8601 format",
+                        "name": "end_date",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "User UUID",
+                        "name": "user_uuid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.KPIAverageBreakTimeResponse"
                         }
                     }
                 }

@@ -34,7 +34,7 @@ services:
     image: postgres
     container_name: time-manager-database
     volumes:
-      - db_data:/var/lib/postgresql/data
+      - db_data:/var/lib/postgresql
       - ./database:/docker-entrypoint-initdb.d
       - ./logs/database.log:/var/log/app.log
     ports:

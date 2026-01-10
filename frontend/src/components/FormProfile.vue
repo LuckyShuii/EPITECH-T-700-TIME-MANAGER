@@ -64,9 +64,7 @@ const handleSubmit = async () => {
         :disabled="loading"
         class="w-full border-2 border-black p-3 font-bold uppercase text-sm focus:outline-none focus:border-black bg-white"
       />
-      <p class="text-xs text-gray-600 mt-2 font-bold uppercase">
-        3-30 caractères, lettres/chiffres/tiret
-      </p>
+      
     </div>
 
     <!-- Password Input -->
@@ -84,12 +82,7 @@ const handleSubmit = async () => {
         :disabled="loading"
         class="w-full border-2 border-black p-3 font-bold uppercase text-sm focus:outline-none focus:border-black bg-white"
       />
-      <p class="text-xs text-gray-600 mt-2 font-bold uppercase">
-        Minimum 8 caractères<br/>
-        Au moins 1 chiffre<br/>
-        Au moins 1 minuscule<br/>
-        Au moins 1 majuscule
-      </p>
+      
     </div>
 
     <!-- Submit Button -->

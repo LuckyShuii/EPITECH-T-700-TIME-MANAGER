@@ -100,7 +100,7 @@ func SetupRouter() *gin.Engine {
 		protected.PUT("/users/weekly-rates/:uuid/update", authMiddleware.RequireRoles("admin"), weeklyRateHandler.Update)
 		protected.PUT("/users/current-user-dashboard-layout/edit", authMiddleware.RequireRoles("all"), userHandler.UpdateCurrentUserDashboardLayout)
 
-		protected.GET("/users", authMiddleware.RequireRoles("admin"), userHandler.GetUsers)
+		protected.GET("/users", authMiddleware.RequireRoles("admin","manager"), userHandler.GetUsers)
 		protected.GET("/users/:uuid", authMiddleware.RequireRoles("all"), userHandler.GetUserByUUID)
 		protected.GET("/users/weekly-rates", authMiddleware.RequireRoles("all"), weeklyRateHandler.GetAll)
 		protected.GET("/users/current-user-dashboard-layout", authMiddleware.RequireRoles("all"), userHandler.GetCurrentUserDashboardLayout)
@@ -122,7 +122,7 @@ func SetupRouter() *gin.Engine {
 		/**
 		 * Teams Routes
 		 */
-		protected.GET("/teams", authMiddleware.RequireRoles("admin"), teamHandler.GetTeams)
+		protected.GET("/teams", authMiddleware.RequireRoles("admin", "manager"), teamHandler.GetTeams)
 		protected.GET("/teams/:uuid", authMiddleware.RequireRoles("all"), teamHandler.GetTeamByUUID)
 
 		protected.DELETE("/teams/:uuid", authMiddleware.RequireRoles("admin"), teamHandler.DeleteTeamByUUID)
@@ -141,10 +141,10 @@ func SetupRouter() *gin.Engine {
 
 		protected.GET("/kpi/work-session-user-weekly-total/:user_uuid/:start_date/:end_date", authMiddleware.RequireRoles("all"), kpiHandler.GetWorkSessionUserWeeklyTotal)
 		protected.GET("/kpi/work-session-team-weekly-total/:team_uuid/:start_date/:end_date", authMiddleware.RequireRoles("manager"), kpiHandler.GetWorkSessionTeamWeeklyTotal)
-		protected.GET("/kpi/presence-rate/:user_uuid/:start_date/:end_date", authMiddleware.RequireRoles("manager, admin"), kpiHandler.GetPresenceRate)
-		protected.GET("/kpi/weekly-average-break-time/:user_uuid/:start_date/:end_date", authMiddleware.RequireRoles("manager, admin"), kpiHandler.GetAverageBreakTime)
+		protected.GET("/kpi/presence-rate/:user_uuid/:start_date/:end_date", authMiddleware.RequireRoles("manager", "admin"), kpiHandler.GetPresenceRate)
+		protected.GET("/kpi/weekly-average-break-time/:user_uuid/:start_date/:end_date", authMiddleware.RequireRoles("all"), kpiHandler.GetAverageBreakTime)
 		// moyenne par shift par individu
-		protected.GET("/kpi/average-time-per-shift/:user_uuid/:start_date/:end_date", authMiddleware.RequireRoles("manager, admin"), kpiHandler.GetAverageTimePerShift)
+		protected.GET("/kpi/average-time-per-shift/:user_uuid/:start_date/:end_date", authMiddleware.RequireRoles("manager", "admin"), kpiHandler.GetAverageTimePerShift)
 
 		protected.POST("/kpi/export", authMiddleware.RequireRoles("manager, admin"), kpiHandler.ExportKPIData)
 		protected.GET("/kpi/files/:filename", authMiddleware.RequireRoles("all"), kpiHandler.DownloadKPIFile)

@@ -1,4 +1,5 @@
 import APIHandler from '../APIHandler';
+import type { AxiosResponse } from 'axios'
 
 const resource = 'kpi';
 
@@ -15,7 +16,7 @@ export interface KpiExportResponse {
 }
 
 export default {
-  exportKpiData(payload: KpiExportRequest): Promise<KpiExportResponse> {
-    return APIHandler.post(`${resource}/export`, payload);
+  exportKpiData(payload: KpiExportRequest): Promise<AxiosResponse<KpiExportResponse>> {
+    return APIHandler.post(`${resource}/export`, payload)
   }
-};
+}

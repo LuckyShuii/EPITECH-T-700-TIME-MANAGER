@@ -20,7 +20,7 @@ export type Layout = GridItem[]
 // Layouts par défaut pour chaque dashboard
 const defaultLayouts: Record<string, Layout> = {
   employee: [
-  { i: 'clock', x: 0, y: 0, w: 1, h: 2, minW: 1, minH: 2 },
+  { i: 'clock', x: 0, y: 0, w: 1, h: 4, minW: 1, minH: 2 },
   { i: 'team-presence', x: 3, y: 0, w: 1, h: 3, minW: 1, minH: 4, static: true },
   { i: 'calendar', x: 1, y: 0, w: 2, h: 2, minW: 2, minH: 2 },
   { i: 'widget-2', x: 1, y: 2, w: 1, h: 2, minW: 1, minH: 2 },
