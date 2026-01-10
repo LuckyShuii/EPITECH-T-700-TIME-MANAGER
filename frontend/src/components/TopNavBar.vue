@@ -1,10 +1,9 @@
 <script setup lang="ts">
 import { RouterLink, useRouter } from 'vue-router';
-import ThemeToggle from './ThemeToggle.vue';
 import CustomizeLayoutButton from '@/components/CustomizeLayoutButton.vue'
 import { useAuthStore } from '@/store/AuthStore';
 import { storeToRefs } from 'pinia';
-import { computed, inject } from 'vue'; 
+import { computed } from 'vue'; 
 import { useEditModeStore } from '@/store/EditModeStore'
 
 const props = defineProps<{
@@ -18,11 +17,7 @@ const emit = defineEmits<{
 const authStore = useAuthStore()
 const { isAuthenticated, user, avatarColor } = storeToRefs(authStore);
 const router = useRouter();
-
-// AJOUTE CES LIGNES ↓
 const editModeStore = useEditModeStore()
-
-console.log('🔍 Dans NavBar - Dashboard actif:', editModeStore.currentDashboard)
 
 const userInitials = computed(() => {
   if (!user.value?.first_name || !user.value?.last_name) return '';
@@ -36,58 +31,91 @@ const handleLogout = async () => {
 </script>
 
 <template>
-  <div class="navbar shadow-sm sticky top-0 z-50 base-content">
-    <div class="flex-1">
-      <RouterLink :to="isAuthenticated ? '/dashboard' : '/'" class="btn btn-ghost text-xl">
-        TML
+  <nav class="sticky top-0 z-50">
+    <div class="flex justify-between items-center px-6 py-4 max-w-full">
+      <!-- Logo avec couleur d'avatar -->
+      <RouterLink :to="isAuthenticated ? '/dashboard' : ''" class="font-black text-2xl uppercase tracking-wider hover:opacity-70">
+        <span v-if="isAuthenticated" :class="avatarColor" class="text-white px-2 py-1">
+          TML
+        </span>
+        <span v-else>
+          TML
+        </span>
       </RouterLink>
-    </div>
-    
-    <div class="flex-none gap-2">
-      <CustomizeLayoutButton v-if="editModeStore.currentDashboard" />
-      
-      <ThemeToggle :currentTheme="props.currentTheme" @toggle-theme="emit('toggle-theme')" />
-      
-      <div class="dropdown dropdown-end">
-        <div tabindex="0" class="btn btn-ghost btn-circle avatar">
-          <div class="w-10 rounded-full">
-            <!-- Si connecté : Initiales -->
-            <div v-if="isAuthenticated" :class="[avatarColor, 'w-full h-full flex items-center justify-center']">
-              <span class="text-primary-content font-semibold text-sm">{{ userInitials }}</span>
-            </div>
-            <!-- Si NON connecté : Icône utilisateur générique -->
-            <div v-else class="w-full h-full bg-base-300 flex items-center justify-center">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-base-content/50" fill="none"
-                viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
-            </div>
-          </div>
+
+      <!-- Right side: Theme + Customize + Avatar -->
+      <div class="flex items-center gap-4">
+        <!-- Customize Layout Button (si on est sur un dashboard) -->
+        <CustomizeLayoutButton v-if="editModeStore.currentDashboard" />
+
+        
+
+        <!-- Avatar Dropdown -->
+<div class="dropdown dropdown-end">
+  <!-- Avatar Button -->
+  <button 
+tabindex="0"
+:class="[isAuthenticated ? avatarColor : 'bg-gray-300', 'border-2 border-black w-10 h-10 flex items-center justify-center font-bold uppercase text-xs text-white hover:opacity-70 transition-none rounded-none']"
+>
+    <!-- Si connecté : Initiales -->
+    <span v-if="isAuthenticated">
+      {{ userInitials }}
+    </span>
+    <!-- Si NON connecté : U pour User -->
+    <span v-else>
+      U
+    </span>
+  </button>
+          <!-- Dropdown Menu -->
+          <ul 
+            tabindex="0" 
+            class="dropdown-content menu border-2 border-black bg-white z-40 w-48 p-0 shadow-lg"
+          >
+            <!-- Profile -->
+            <li class="border-b-2 border-black">
+              <RouterLink to="/profile" class="p-4 font-bold uppercase text-sm hover:bg-black hover:text-white transition-none rounded-none">
+                PROFIL
+              </RouterLink>
+            </li>
+
+            <!-- Login (si non authentifié) -->
+            <li v-if="!isAuthenticated" class="border-b-2 border-black">
+              <RouterLink to="/login" class="p-4 font-bold uppercase text-sm hover:bg-black hover:text-white transition-none rounded-none">
+                LOGIN
+              </RouterLink>
+            </li>
+
+            <!-- Dashboard (si authentifié) -->
+            <li v-if="isAuthenticated" class="border-b-2 border-black">
+              <RouterLink to="/dashboard" class="p-4 font-bold uppercase text-sm hover:bg-black hover:text-white transition-none rounded-none">
+                DASHBOARD
+              </RouterLink>
+            </li>
+
+            <!-- Logout (si authentifié) -->
+            <li v-if="isAuthenticated">
+              <a 
+                @click="handleLogout" 
+                class="p-4 font-bold uppercase text-sm hover:bg-black hover:text-white transition-none rounded-none cursor-pointer"
+              >
+                LOGOUT
+              </a>
+            </li>
+          </ul>
         </div>
-        <ul tabindex="0" class="menu menu-sm dropdown-content bg-base-100 rounded-box z-1 mt-3 w-52 p-2 shadow">
-          <li>
-            <RouterLink to="profile" class="justify-between">
-              Profile
-            </RouterLink>
-          </li>
-          <li v-if="!isAuthenticated">
-            <RouterLink to="login" class="justify-between">
-              Login
-            </RouterLink>
-          </li>
-          <li v-if="isAuthenticated">
-            <RouterLink to="dashboard" class="justify-between">
-              Dashboard
-            </RouterLink>
-          </li>
-          <li v-if="isAuthenticated">
-            <a @click="handleLogout" class="justify-between">
-              Logout
-            </a>
-          </li>
-        </ul>
       </div>
     </div>
-  </div>
+  </nav>
 </template>
+
+<style scoped>
+/* Pas d'animations fluides */
+* {
+  transition: none;
+}
+
+button:hover,
+a:hover {
+  transition: none;
+}
+</style>

@@ -94,6 +94,334 @@
                 }
             }
         },
+        "/kpi/average-time-per-shift/{user_uuid}/{start_date}/{end_date}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieves the average time per shift in minutes for a specified user UUID between the provided start and end dates. 🔒 Requires role: **manager, admin**",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "KPI"
+                ],
+                "summary": "Get average time per shift for a user within a date range",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Start Date in ISO 8601 format",
+                        "name": "start_date",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "End Date in ISO 8601 format",
+                        "name": "end_date",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "User UUID",
+                        "name": "user_uuid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.KPIAverageTimePerShiftResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/kpi/export": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Exports KPI data for the specified date range. 🔒 Requires role: **manager, admin**",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "KPI"
+                ],
+                "summary": "Export KPI data within a date range",
+                "parameters": [
+                    {
+                        "description": "KPI Export Request",
+                        "name": "kpi_export_request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.KPIExportRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.KPIExportResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/kpi/files/{filename}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Downloads a specific KPI CSV file by filename. 🔒 Requires role: **manager, admin**",
+                "produces": [
+                    "text/csv"
+                ],
+                "tags": [
+                    "KPI"
+                ],
+                "summary": "Download a KPI CSV file",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filename of the CSV to download",
+                        "name": "filename",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "file"
+                        }
+                    }
+                }
+            }
+        },
+        "/kpi/presence-rate/{user_uuid}/{start_date}/{end_date}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieves the presence rate percentage for a specified user UUID between the provided start and end dates. 🔒 Requires role: **any**",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "KPI"
+                ],
+                "summary": "Get presence rate for a user within a date range",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Start Date in ISO 8601 format",
+                        "name": "start_date",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "End Date in ISO 8601 format",
+                        "name": "end_date",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "User UUID",
+                        "name": "user_uuid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.KPIPresenceRateResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/kpi/weekly-average-break-time/{user_uuid}/{start_date}/{end_date}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieves the average break time in minutes for a specified user UUID between the provided start and end dates. These dates must be 5 days! (work days) Not less, not more 🔒 Requires role: **all**",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "KPI"
+                ],
+                "summary": "Get average break time for a user within a date range",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Start Date in ISO 8601 format",
+                        "name": "start_date",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "End Date in ISO 8601 format",
+                        "name": "end_date",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "User UUID",
+                        "name": "user_uuid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.KPIAverageBreakTimeResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/kpi/work-session-team-weekly-total/{team_uuid}/{start_date}/{end_date}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieves the total work session time in minutes for a specified team UUID between the provided start and end dates. 🔒 Requires role: **manager**",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "KPI"
+                ],
+                "summary": "Get total work session time for a team within a date range",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Start Date in ISO 8601 format",
+                        "name": "start_date",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "End Date in ISO 8601 format",
+                        "name": "end_date",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Team UUID",
+                        "name": "team_uuid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.KPIWorkSessionTeamWeeklyTotalResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/kpi/work-session-user-weekly-total/{user_uuid}/{start_date}/{end_date}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieves the total work session time in minutes for a specified user UUID between the provided start and end dates. 🔒 Requires role: **any**",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "KPI"
+                ],
+                "summary": "Get total work session time for a user within a date range",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Start Date in ISO 8601 format",
+                        "name": "start_date",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "End Date in ISO 8601 format",
+                        "name": "end_date",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "User UUID",
+                        "name": "user_uuid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.KPIWorkSessionUserWeeklyTotalResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/teams": {
             "get": {
                 "security": [
@@ -578,6 +906,68 @@
                 }
             }
         },
+        "/users/reset-password": {
+            "post": {
+                "description": "Reset the password for a user by their email. 🔒 Requires role: **all**",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Reset user's password",
+                "parameters": [
+                    {
+                        "description": "Password reset payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.UserEmailPayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Password reset successfully"
+                    }
+                }
+            }
+        },
+        "/users/update-password": {
+            "post": {
+                "description": "Update the password for the currently authenticated user. 🔒 Requires role: **all**",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Update current user's password",
+                "parameters": [
+                    {
+                        "description": "Password update payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.UpdateUserPassword"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Password updated successfully"
+                    }
+                }
+            }
+        },
         "/users/update-status": {
             "put": {
                 "security": [
@@ -1056,6 +1446,181 @@
                 }
             }
         },
+        "model.KPIAverageBreakTimeResponse": {
+            "type": "object",
+            "properties": {
+                "average_break_time": {
+                    "type": "number"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                },
+                "user_uuid": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.KPIAverageTimePerShiftResponse": {
+            "type": "object",
+            "properties": {
+                "average_time_per_shift": {
+                    "type": "number"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                },
+                "total_shifts": {
+                    "type": "integer"
+                },
+                "total_time": {
+                    "type": "integer"
+                },
+                "user_uuid": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.KPIExportRequest": {
+            "type": "object",
+            "required": [
+                "end_date",
+                "kpi_type",
+                "start_date"
+            ],
+            "properties": {
+                "end_date": {
+                    "type": "string"
+                },
+                "kpi_type": {
+                    "type": "string",
+                    "enum": [
+                        "work_session_user_weekly_total",
+                        "work_session_team_weekly_total",
+                        "presence_rate",
+                        "weekly_average_break_time",
+                        "average_time_per_shift"
+                    ]
+                },
+                "start_date": {
+                    "type": "string"
+                },
+                "uuid_to_search": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.KPIExportResponse": {
+            "type": "object",
+            "properties": {
+                "file": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.KPIPresenceRateResponse": {
+            "type": "object",
+            "properties": {
+                "first_name": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "presence_rate": {
+                    "type": "number"
+                },
+                "user_uuid": {
+                    "type": "string"
+                },
+                "weekly_rate_expected": {
+                    "type": "number"
+                },
+                "weekly_time_done": {
+                    "type": "number"
+                }
+            }
+        },
+        "model.KPIWorkSessionTeamMemberWeeklyTotal": {
+            "type": "object",
+            "properties": {
+                "first_name": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "total_time": {
+                    "type": "integer"
+                },
+                "user_uuid": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.KPIWorkSessionTeamWeeklyTotalResponse": {
+            "type": "object",
+            "properties": {
+                "end_date": {
+                    "type": "string"
+                },
+                "members": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.KPIWorkSessionTeamMemberWeeklyTotal"
+                    }
+                },
+                "start_date": {
+                    "type": "string"
+                },
+                "team_name": {
+                    "type": "string"
+                },
+                "team_uuid": {
+                    "type": "string"
+                },
+                "total_time": {
+                    "type": "integer"
+                }
+            }
+        },
+        "model.KPIWorkSessionUserWeeklyTotalResponse": {
+            "type": "object",
+            "properties": {
+                "end_date": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                },
+                "total_time": {
+                    "type": "integer"
+                },
+                "user_uuid": {
+                    "type": "string"
+                }
+            }
+        },
         "model.NewTeamMember": {
             "type": "object",
             "required": [
@@ -1187,6 +1752,19 @@
                 }
             }
         },
+        "model.UpdateUserPassword": {
+            "type": "object",
+            "properties": {
+                "new_password": {
+                    "type": "string",
+                    "example": "StrongP@ssw0rd!"
+                },
+                "token": {
+                    "type": "string",
+                    "example": "e1234abc-5678-90de-f123-4567890abcde"
+                }
+            }
+        },
         "model.UpdateWeeklyRate": {
             "type": "object",
             "properties": {
@@ -1211,10 +1789,6 @@
                     "type": "string"
                 },
                 "last_name": {
-                    "type": "string"
-                },
-                "password": {
-                    "description": "Ignored by GORM, used only for input",
                     "type": "string"
                 },
                 "password_hash": {
@@ -1251,6 +1825,15 @@
                     "items": {
                         "$ref": "#/definitions/model.DashboardLayout"
                     }
+                }
+            }
+        },
+        "model.UserEmailPayload": {
+            "type": "object",
+            "properties": {
+                "user_email": {
+                    "type": "string",
+                    "example": "user@example.com"
                 }
             }
         },

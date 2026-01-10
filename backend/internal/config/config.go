@@ -4,6 +4,7 @@
 package config
 
 import (
+	MailModel "app/internal/app/mailer/model"
 	"os"
 )
 
@@ -20,6 +21,10 @@ type Config struct {
 	FrontendURL        string
 	RedisHost          string
 	RedisPort          string
+	FixturesPassword   string
+	RootUsername       string
+	RootPassword       string
+	Mail               MailModel.MailConfig
 }
 
 func LoadConfig() *Config {
@@ -36,6 +41,13 @@ func LoadConfig() *Config {
 		FrontendURL:        getEnv("FRONTEND_URL", os.Getenv("FRONTEND_URL")),
 		RedisHost:          getEnv("REDIS_HOST", os.Getenv("REDIS_HOST")),
 		RedisPort:          getEnv("REDIS_PORT", os.Getenv("REDIS_PORT")),
+		FixturesPassword:   getEnv("FIXTURES_PASSWORD", os.Getenv("FIXTURES_PASSWORD")),
+		RootUsername:       getEnv("ROOT_USERNAME", os.Getenv("ROOT_USERNAME")),
+		RootPassword:       getEnv("ROOT_PASSWORD", os.Getenv("ROOT_PASSWORD")),
+		Mail: MailModel.MailConfig{
+			APIKey:  getEnv("MAIL_API_KEY", os.Getenv("MAIL_API_KEY")),
+			BaseURL: getEnv("MAIL_BASE_URL", os.Getenv("MAIL_BASE_URL")),
+		},
 	}
 
 	return config

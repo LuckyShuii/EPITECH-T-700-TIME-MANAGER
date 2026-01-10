@@ -94,19 +94,19 @@ const updating = async (clockingStatus: boolean) => {
     <Transition name="morph" mode="out-in">
       <!-- État NOT_CLOCKED : Clock In -->
       <button v-if="currentState === 'NOT_CLOCKED'" key="clock-in" @click="toggleClock"
-        class="btn btn-success btn-lg w-full">
+        class="brutal-btn brutal-btn-success flex-1">
         Clock In
       </button>
 
       <!-- État CLOCKED_IN : Clock Out -->
       <button v-else-if="currentState === 'CLOCKED_IN'" key="clock-out" @click="toggleClock"
-        class="btn btn-error btn-lg flex-1">
+        class="brutal-btn brutal-btn-error flex-1">
         Clock Out
       </button>
 
       <!-- État PAUSED : Reprendre -->
       <button v-else-if="currentState === 'PAUSED'" key="resume" @click="togglePause"
-        class="btn btn-warning btn-lg flex-1">
+        class="brutal-btn brutal-btn-warning flex-1">
         Reprendre
       </button>
     </Transition>
@@ -115,45 +115,9 @@ const updating = async (clockingStatus: boolean) => {
     <Transition name="morph" mode="out-in">
       <!-- État CLOCKED_IN : Pause active -->
       <button v-if="currentState === 'CLOCKED_IN'" key="pause" @click="togglePause"
-        class="btn btn-warning btn-lg flex-1">
-        ⏸️ Pause
+        class="brutal-btn brutal-btn-warning flex-1">
+        Pause
       </button>
     </Transition>
   </div>
 </template>
-
-<style scoped>
-/* Transitions pour l'effet morphing */
-.morph-enter-active,
-.morph-leave-active {
-  transition: all 0.3s ease;
-}
-
-.morph-enter-from {
-  opacity: 0;
-  transform: scale(0.8);
-}
-
-.morph-leave-to {
-  opacity: 0;
-  transform: scale(0.8);
-}
-
-/* Transition smooth de la largeur du conteneur */
-.flex {
-  transition: all 0.3s ease;
-}
-
-/* Animation de respiration pour pause (optionnel) */
-@keyframes pulse {
-
-  0%,
-  100% {
-    opacity: 1;
-  }
-
-  50% {
-    opacity: 0.7;
-  }
-}
-</style>

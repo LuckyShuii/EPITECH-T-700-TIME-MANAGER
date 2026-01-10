@@ -5,7 +5,6 @@ export interface RegisterFormData {
   username: string
   phone_number: string
   roles: string[]
-  password: string
 }
 
 export interface RegisterFormErrors {

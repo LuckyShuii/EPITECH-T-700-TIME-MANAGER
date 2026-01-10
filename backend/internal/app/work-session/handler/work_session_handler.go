@@ -122,7 +122,7 @@ func (handler *WorkSessionHandler) GetWorkSessionStatus(c *gin.Context) {
 // @Param        limit        query     int     false  "Number of results to return (default 50)"
 // @Param        offset       query     int     false  "Pagination offset (default 0)"
 // @Success      200   {array}  model.WorkSessionReadHistory  "List of work session history entries"
-// @Router       /work-session/history
+// @Router       /work-session/history [get]
 func (handler *WorkSessionHandler) GetWorkSessionHistory(c *gin.Context) {
 	userUUID, err := handler.getUserUUIDFromClaims(c)
 	if err != nil {

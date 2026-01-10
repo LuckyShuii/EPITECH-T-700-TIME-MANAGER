@@ -6,8 +6,11 @@ export interface Employee {
   username: string
   phone_number: string
   roles: string[]
-  weekly_hours: number  // 35, 39, etc.
-  status: 'active' | 'disabled'
+  weekly_rate: number
+  weekly_rate_name: string
+  status: 'active' | 'inactive'
+  work_session_status?: string
+  weekly_rate_uuid?: string  // Ajout optionnel pour éviter les erreurs
 }
 
 export interface EmployeeUpdateData {
@@ -16,7 +19,7 @@ export interface EmployeeUpdateData {
   email: string
   phone_number: string
   roles: string[]
-  weekly_hours: number
-  status: 'active' | 'disabled'
+  weekly_rate_uuid: string     
+  status: 'active' | 'inactive'
+  username: string             
 }
-

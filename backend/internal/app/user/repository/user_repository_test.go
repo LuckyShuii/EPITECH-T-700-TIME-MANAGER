@@ -32,7 +32,6 @@ func TestRegisterUserAndFindIdByUuid(t *testing.T) {
 			Roles:          roles,
 			FirstDayOfWeek: &firstDay,
 		},
-		PasswordHash: "hash",
 		WeeklyRateID: nil,
 	}
 
@@ -203,5 +202,5 @@ func TestFindIdByUuidNotFound(t *testing.T) {
 	repo := repository.NewUserRepository(db)
 	_, err := repo.FindIdByUuid("123e4567-e89b-12d3-a456-426614174708")
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "record not found")
+	assert.Contains(t, err.Error(), "user not found")
 }

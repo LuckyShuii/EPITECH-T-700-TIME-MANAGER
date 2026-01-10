@@ -7,13 +7,12 @@ services:
     env_file:
       - ./backend/.env
     volumes:
-      - ./backend/cmd:/app/cmd
-      - ./backend/internal:/app/internal
+      - ./backend:/app
       - ./logs/backend.log:/var/log/app.log
     depends_on:
       - database
     command: >
-      sh -c "go run cmd/server/main.go 2>&1 | tee -a /var/log/app.log"
+      sh -c "air 2>&1 | tee -a /var/log/app.log"
 
   frontend:
     build:
@@ -35,7 +34,7 @@ services:
     image: postgres
     container_name: time-manager-database
     volumes:
-      - db_data:/var/lib/postgresql/data
+      - db_data:/var/lib/postgresql
       - ./database:/docker-entrypoint-initdb.d
       - ./logs/database.log:/var/log/app.log
     ports:

@@ -1,8 +1,13 @@
 package main
 
 import (
+	"app/internal/app/mailer"
+	"app/internal/app/mailer/provider"
 	"app/internal/config"
+	"app/internal/db"
 	"app/internal/router"
+	"context"
+	"log"
 	"time"
 
 	"app/cmd/server/docs"
@@ -11,6 +16,8 @@ import (
 
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
+
+	mailerservice "app/internal/app/mailer/service"
 )
 
 // @securityDefinitions.apikey BearerAuth
@@ -18,6 +25,31 @@ import (
 // @name Authorization
 func main() {
 	cfg := config.LoadConfig()
+
+	mailerProvider := &provider.BrevoMailer{
+		APIKey: cfg.Mail.APIKey,
+	}
+
+	mailer.Service = mailerservice.NewMailerService(mailerProvider)
+
+	// Seed database with fixtures in DEV mode
+	ctx := context.Background()
+	pool := db.ConnectPostgresPool()
+	defer pool.Close()
+
+	fixturesPath := "/app/fixtures.sql"
+	if err := db.SeedIfEmptyUsersDevOnly(ctx, pool, fixturesPath, 1, cfg.ProjectStatus, cfg.FixturesPassword); err != nil {
+		log.Printf("⚠️  Warning: Failed to seed database: %v", err)
+	} else {
+		log.Println("✅ Database seeding completed successfully")
+	}
+
+	// Create root user if not exists
+	if err := db.CreateRootUserIfNotExists(ctx, pool, cfg.RootUsername, cfg.RootPassword); err != nil {
+		log.Printf("⚠️  Warning: Failed to create root user: %v", err)
+	} else {
+		log.Println("✅ Root user created or already exists")
+	}
 
 	r := router.SetupRouter()
 

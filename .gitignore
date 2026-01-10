@@ -3,3 +3,5 @@
 frontend/package-lock.json
 
 logs/
+backend/data/
+backend/tmp/

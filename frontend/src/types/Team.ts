@@ -2,7 +2,6 @@
  * Représente un membre d'équipe avec toutes ses informations
  * Retourné par l'API dans /teams/{uuid} et /teams
  */
-
 export interface TeamMember {
   user_uuid: string
   username: string
@@ -13,7 +12,9 @@ export interface TeamMember {
   roles: string[]
   status: 'active' | 'inactive' | 'pending'
   is_manager: boolean
-  work_session_status: 'active' | 'paused' | 'no_active_session'  // ← Type plus strict
+  weekly_rate: number                    // Ajouter cette ligne
+  weekly_rate_name: string               // Ajouter cette ligne
+  work_session_status: 'active' | 'paused' | 'no_active_session'
 }
 
 /**

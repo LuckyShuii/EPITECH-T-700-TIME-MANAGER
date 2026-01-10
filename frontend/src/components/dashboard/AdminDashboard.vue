@@ -1,29 +1,49 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'  // ← AJOUTE onMounted, onUnmounted
-import { useEditModeStore } from '@/store/EditModeStore'  // ← AJOUTE
+import { ref, onMounted, onUnmounted } from 'vue'
+import { useEditModeStore } from '@/store/EditModeStore'
+import { useKpiStore } from '@/store/KpiStore'
+import { storeToRefs } from 'pinia'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 import CalendarWidget from '@/components/widget/CalendarWidget.vue'
 import BaseModal from '@/components/Modal/BaseModal.vue'
 import RegisterForm from '@/components/RegisterForm.vue'
 import StaffSettingsModal from '@/components/Modal/StaffSettingsModal.vue'
 import TeamManagementAdminModal from '@/components/Modal/TeamManagementAdminModal.vue'
+import TeamWorkingTimeCard from '@/components/KPI/cards/TeamWorkingTimeCard.vue'
+import PresenceRateCard from '@/components/KPI/cards/PresenceRateCard.vue'
+import { ArrowDownTrayIcon } from '@heroicons/vue/24/solid'
+import ExportKpiForm from '@/components/Modal/ExportKpiForm.vue'
 
-// AJOUTE CES LIGNES ↓
 const editModeStore = useEditModeStore()
+const kpiStore = useKpiStore()
 
-// Enregistre que ce dashboard est actif
-onMounted(() => {
+const { currentTeam, weekDisplayLabel, presenceRate } = storeToRefs(kpiStore)
+
+onMounted(async () => {
   editModeStore.setCurrentDashboard('admin')
+  try {
+    await kpiStore.fetchManagerTeams()
+    await kpiStore.fetchWorkingTimeTeam()
+    await kpiStore.fetchPresenceRate()  // ← Décommente ça !
+  } catch (error) {
+    console.error('Erreur lors du chargement des KPI:', error)
+  }
 })
 
-// Nettoie quand on quitte le dashboard
 onUnmounted(() => {
   editModeStore.reset()
 })
 
-// Contrôle du modal d'ajout employé
-const isAddEmployeeModalOpen = ref(false)
+const isExportModalOpen = ref(false)
+const openExportModal = () => {
+  isExportModalOpen.value = true
+}
 
+const closeExportModal = () => {
+  isExportModalOpen.value = false
+}
+
+const isAddEmployeeModalOpen = ref(false)
 const openAddEmployeeModal = () => {
   isAddEmployeeModalOpen.value = true
 }
@@ -36,16 +56,12 @@ const handleEmployeeCreated = () => {
   closeAddEmployeeModal()
 }
 
-// Contrôle du modal paramétrage effectif
 const isStaffSettingsModalOpen = ref(false)
-
 const openStaffSettingsModal = () => {
   isStaffSettingsModalOpen.value = true
 }
 
-// Contrôle du modal gestion des équipes
 const isTeamManagementModalOpen = ref(false)
-
 const openTeamManagementModal = () => {
   isTeamManagementModalOpen.value = true
 }
@@ -53,70 +69,70 @@ const openTeamManagementModal = () => {
 
 <template>
   <AdminLayout>
-    <!-- Le reste du template reste identique -->
+    <!-- Bouton: Nouvel employé -->
     <template #add-employee>
-      <button @click="openAddEmployeeModal"
-        class="h-full w-full bg-gradient-to-br from-primary-500 to-secondary-500 hover:shadow-card-hover text-white rounded-3xl shadow-card transition-all duration-300 flex flex-col items-center justify-center gap-4 group cursor-pointer">
-        <div class="text-4xl group-hover:scale-110 transition-transform duration-300">➕</div>
-        <p class="font-bold text-base">Nouvel employé</p>
+      <button @click="openAddEmployeeModal" class="brutal-btn brutal-btn-primary w-full h-full flex flex-col items-center justify-center gap-4">
+        <div class="text-2xl">+</div>
+        <p class="font-bold">Nouvel employé</p>
       </button>
     </template>
 
+    <!-- Bouton: Paramétrage effectifs -->
     <template #staff-settings>
-      <button @click="openStaffSettingsModal"
-        class="h-full w-full bg-gradient-to-br from-purple-500 to-indigo-600 hover:shadow-card-hover text-white rounded-3xl shadow-card transition-all duration-300 flex flex-col items-center justify-center gap-4 group cursor-pointer">
-        <div class="text-4xl group-hover:scale-110 transition-transform duration-300">⚙️</div>
-        <p class="font-bold text-base">Paramétrage effectifs</p>
+      <button @click="openStaffSettingsModal" class="brutal-btn brutal-btn-primary w-full h-full flex flex-col items-center justify-center gap-4">
+        <div class="text-2xl">!</div>
+        <p class="font-bold">Paramétrage effectifs</p>
       </button>
     </template>
 
-    <template #kpi-monthly>
-      <button @click="openTeamManagementModal"
-        class="h-full w-full bg-gradient-to-br from-green-500 to-teal-600 hover:shadow-card-hover text-white rounded-3xl shadow-card transition-all duration-300 flex flex-col items-center justify-center gap-4 group cursor-pointer">
-        <div class="text-4xl group-hover:scale-110 transition-transform duration-300">👥</div>
-        <p class="font-bold text-base">Gestion des équipes</p>
+    <!-- Bouton: Gestion des équipes -->
+    <template #team-gestion>
+      <button @click="openTeamManagementModal" class="brutal-btn brutal-btn-primary w-full h-full flex flex-col items-center justify-center gap-4">
+        <div class="text-2xl">=</div>
+        <p class="font-bold">Gestion des équipes</p>
       </button>
     </template>
 
+    <!-- KPI: Travail hebdomadaire équipe -->
     <template #kpi-history>
-      <div class="bg-orange-100 p-4 rounded h-full flex items-center justify-center">
-        <p class="text-sm font-medium">📈 KPI historique</p>
-      </div>
+      <TeamWorkingTimeCard
+        :data="currentTeam"
+        :loading="kpiStore.loading['workingTimeTeam']"
+        :weekLabel="weekDisplayLabel"
+      />
     </template>
 
+    <!-- Calendrier -->
     <template #calendar>
-      <div class="bg-white p-6 rounded h-full">
         <CalendarWidget />
-      </div>
     </template>
 
-    <template #widget-6>
-      <div class="bg-gray-100 p-6 rounded h-full flex items-center justify-center">
-        <p class="text-gray-500">Widget 6 - À définir</p>
-      </div>
+    <!-- KPI: Taux de présence -->
+    <template #presence-rate>
+      <PresenceRateCard
+        :data="presenceRate"
+        :loading="kpiStore.loading['presenceRate']"
+        :weekLabel="weekDisplayLabel"
+      />
     </template>
 
-    <template #remote-absence>
-      <div class="bg-indigo-100 p-4 rounded h-full flex items-center justify-center">
-        <p class="text-sm font-medium">🏠 TT / Absent</p>
-      </div>
-    </template>
 
-    <template #manager-report>
-      <div class="bg-yellow-100 p-4 rounded h-full flex items-center justify-center">
-        <p class="text-sm font-medium">👔 Rapport manager</p>
-      </div>
-    </template>
+    <!-- Export: Statistique des KPI-->
+<template #export-button>
+  <button @click="openExportModal" class="brutal-btn brutal-btn-primary w-full h-full flex flex-col items-center justify-center gap-4">
+    <ArrowDownTrayIcon class="w-5 h-5" />
+    <p class="font-bold">Export des statistiques</p>
+  </button>
+</template>
   </AdminLayout>
 
-  <!-- Modal d'ajout d'employé -->
-  <BaseModal v-model="isAddEmployeeModalOpen" title="Créer un nouvel employé" size="lg">
+  <!-- Modals -->
+  <BaseModal v-model="isAddEmployeeModalOpen" title="Créer un nouvel employé">
     <RegisterForm @success="handleEmployeeCreated" @cancel="closeAddEmployeeModal" />
   </BaseModal>
-  
-  <!-- Modal paramétrage effectif -->
+  <BaseModal v-model="isExportModalOpen" title="Exporter les statistiques KPI">
+  <ExportKpiForm />
+</BaseModal>
   <StaffSettingsModal v-model="isStaffSettingsModalOpen" />
-
-  <!-- Modal gestion des équipes -->
   <TeamManagementAdminModal v-model="isTeamManagementModalOpen" />
 </template>
