@@ -153,3 +153,4 @@ This file is executed when the PostgreSQL container is created for the first tim
 - [Notion Documentaton](https://www.notion.so/284b7b530843801d85d1c78275c809aa?v=284b7b53084381ef994d000cbb8e2988)
 - [Application Architecture](https://miro.com/app/board/uXjVN3RIUgE=/)
 - [SonarCloud Report](https://sonarcloud.io/project/overview?id=LuckyShuii_EPITECH-T-700-TIME-MANAGER)
+- [Github Personnal Repository - CI Working](https://github.com/LuckyShuii/EPITECH-T-700-TIME-MANAGER/tree/staging)
